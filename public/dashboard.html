@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tableau de bord — Skyeco Pro</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #14312a;
+    background: #f5f8f6;
+  }
+  header {
+    background: #14312a;
+    color: white;
+    padding: 18px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header .brand { font-weight: 800; font-size: 1.1rem; }
+  header button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.4);
+    color: white;
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  .wrap { max-width: 720px; margin: 40px auto; padding: 0 20px; }
+  .card {
+    background: white;
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+  }
+  .card h2 { margin: 0 0 6px; font-size: 1.15rem; }
+  .card p { color: #5b6b64; font-size: 0.92rem; margin: 4px 0; }
+  .statut { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+  .statut-actif { background: #eaf4ef; color: #1e6f4c; }
+  .statut-impaye, .statut-suspendu { background: #fdeaea; color: #991b1b; }
+  .loading, .error { text-align: center; padding: 60px 20px; color: #5b6b64; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Skyeco Pro</div>
+  <button id="btnDeconnexion">Se déconnecter</button>
+</header>
+<div class="wrap" id="app">
+  <div class="loading">Chargement…</div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://heviivnlswohnrzcguxv.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_un7u9BDV_1IL3EjYTuAoOg_ZUKZ-ZjW";
+  const app = document.getElementById("app");
+
+  const token = sessionStorage.getItem("skyeco_access_token");
+  if (!token) {
+    window.location.href = "/connexion.html";
+  }
+
+  document.getElementById("btnDeconnexion").addEventListener("click", () => {
+    sessionStorage.clear();
+    window.location.href = "/connexion.html";
+  });
+
+  const statutLabels = {
+    actif: "Actif",
+    impaye: "Impayé",
+    suspendu: "Suspendu",
+    annule: "Annulé",
+  };
+
+  (async function chargerEntreprise() {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/entreprises?select=*`, {
+        headers: {
+          apikey: SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error("Impossible de charger votre entreprise.");
+      const rows = await res.json();
+      const entreprise = rows[0];
+      if (!entreprise) throw new Error("Aucune entreprise trouvée pour ce compte.");
+
+      const statutClasse = entreprise.statut_abonnement === "actif" ? "statut-actif" : "statut-" + entreprise.statut_abonnement;
+      app.innerHTML = `
+        <div class="card">
+          <h2>${entreprise.nom}</h2>
+          <p>Adresse publique de votre formulaire : <strong>/f/${entreprise.slug}</strong> (bientôt disponible)</p>
+          <p>Statut de l'abonnement : <span class="statut ${statutClasse}">${statutLabels[entreprise.statut_abonnement] || entreprise.statut_abonnement}</span></p>
+        </div>
+        <div class="card">
+          <h2>Prochaines étapes</h2>
+          <p>Le constructeur de formulaire et les règles de prix arrivent bientôt ici.</p>
+        </div>
+      `;
+    } catch (err) {
+      app.innerHTML = `<div class="error">${err.message}</div>`;
+    }
+  })();
+</script>
+</body>
+</html>
