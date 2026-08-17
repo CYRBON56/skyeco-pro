@@ -37,6 +37,68 @@
     font-family: inherit;
   }
   input:focus { outline: none; border-color: #1e6f4c; }
+
+  .password-wrap {
+    position: relative;
+  }
+  .password-wrap input {
+    padding-right: 44px;
+  }
+  .toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    color: #5b6b64;
+  }
+  .toggle-password:hover { color: #1e6f4c; }
+  .toggle-password:focus-visible { outline: 2px solid #1e6f4c; outline-offset: 2px; border-radius: 4px; }
+
+  .strength-bar {
+    display: flex;
+    gap: 4px;
+    margin-top: 10px;
+  }
+  .strength-bar span {
+    height: 4px;
+    flex: 1;
+    border-radius: 2px;
+    background: #e2e8e5;
+    transition: background .2s ease;
+  }
+  .strength-label {
+    font-size: 0.78rem;
+    margin-top: 6px;
+    color: #5b6b64;
+  }
+  .strength-checks {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0;
+    font-size: 0.78rem;
+    color: #8a9791;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .strength-checks li { display: flex; align-items: center; gap: 6px; }
+  .strength-checks li::before {
+    content: "○";
+    font-size: 0.7rem;
+  }
+  .strength-checks li.ok {
+    color: #1e6f4c;
+  }
+  .strength-checks li.ok::before {
+    content: "●";
+  }
+
   .btn {
     width: 100%;
     background: #1e6f4c;
@@ -60,29 +122,91 @@
 <div class="card" id="app">
   <div class="brand">Skyeco Pro</div>
   <h1>Créer mon compte entreprise</h1>
-
   <label for="nomEntreprise">Nom de votre entreprise</label>
   <input type="text" id="nomEntreprise" placeholder="Ex : Plomberie Martin" />
-
   <label for="email">Email</label>
   <input type="email" id="email" placeholder="vous@entreprise.fr" />
-
   <label for="motdepasse">Mot de passe</label>
-  <input type="password" id="motdepasse" placeholder="8 caractères minimum" />
-
+  <div class="password-wrap">
+    <input type="password" id="motdepasse" placeholder="8 caractères minimum" autocomplete="new-password" />
+    <button type="button" class="toggle-password" id="togglePassword" aria-label="Afficher le mot de passe" aria-pressed="false">
+      <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+    </button>
+  </div>
+  <div class="strength-bar">
+    <span id="bar1"></span>
+    <span id="bar2"></span>
+    <span id="bar3"></span>
+    <span id="bar4"></span>
+  </div>
+  <div class="strength-label" id="strengthLabel">&nbsp;</div>
+  <ul class="strength-checks">
+    <li id="checkLength">8 caractères minimum</li>
+    <li id="checkCase">Une majuscule et une minuscule</li>
+    <li id="checkNumber">Un chiffre</li>
+  </ul>
   <button class="btn" id="btnInscription">Créer mon compte</button>
   <div id="errorBox"></div>
-
   <div class="footer-link">Déjà un compte ? <a href="/connexion.html">Se connecter</a></div>
 </div>
-
 <script>
   const SUPABASE_URL = "https://heviivnlswohnrzcguxv.supabase.co";
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_un7u9BDV_1IL3EjYTuAoOg_ZUKZ-ZjW";
   const API_URL = "/api/creer-entreprise";
-
   const btn = document.getElementById("btnInscription");
   const errorBox = document.getElementById("errorBox");
+  const passwordInput = document.getElementById("motdepasse");
+  const togglePassword = document.getElementById("togglePassword");
+  const eyeIcon = document.getElementById("eyeIcon");
+
+  const eyeOpen = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+  const eyeClosed = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+
+  togglePassword.addEventListener("click", () => {
+    const isPassword = passwordInput.type === "password";
+    passwordInput.type = isPassword ? "text" : "password";
+    togglePassword.setAttribute("aria-pressed", String(isPassword));
+    togglePassword.setAttribute("aria-label", isPassword ? "Masquer le mot de passe" : "Afficher le mot de passe");
+    eyeIcon.innerHTML = isPassword ? eyeClosed : eyeOpen;
+  });
+
+  const bars = [1, 2, 3, 4].map(n => document.getElementById("bar" + n));
+  const strengthLabel = document.getElementById("strengthLabel");
+  const checkLength = document.getElementById("checkLength");
+  const checkCase = document.getElementById("checkCase");
+  const checkNumber = document.getElementById("checkNumber");
+  const barColors = ["#c0392b", "#e07b39", "#d4a72c", "#1e6f4c"];
+  const barLabels = ["Trop faible", "Faible", "Correct", "Solide"];
+
+  function evaluatePassword(value) {
+    const hasLength = value.length >= 8;
+    const hasCase = /[a-z]/.test(value) && /[A-Z]/.test(value);
+    const hasNumber = /[0-9]/.test(value);
+    const hasLong = value.length >= 12;
+
+    checkLength.classList.toggle("ok", hasLength);
+    checkCase.classList.toggle("ok", hasCase);
+    checkNumber.classList.toggle("ok", hasNumber);
+
+    let score = 0;
+    if (hasLength) score++;
+    if (hasCase) score++;
+    if (hasNumber) score++;
+    if (hasLong) score++;
+
+    bars.forEach((bar, i) => {
+      bar.style.background = i < score ? barColors[Math.max(score - 1, 0)] : "#e2e8e5";
+    });
+
+    strengthLabel.textContent = value.length === 0 ? "\u00A0" : barLabels[Math.max(score - 1, 0)];
+
+    return { hasLength, hasCase, hasNumber, score };
+  }
+
+  passwordInput.addEventListener("input", (e) => evaluatePassword(e.target.value));
 
   function slugify(str) {
     return str
@@ -96,16 +220,24 @@
     errorBox.innerHTML = "";
     const nomEntreprise = document.getElementById("nomEntreprise").value.trim();
     const email = document.getElementById("email").value.trim();
-    const motdepasse = document.getElementById("motdepasse").value;
+    const motdepasse = passwordInput.value;
+    const strength = evaluatePassword(motdepasse);
 
-    if (!nomEntreprise || !email || motdepasse.length < 8) {
-      errorBox.innerHTML = '<div class="error">Merci de remplir tous les champs (mot de passe : 8 caractères min).</div>';
+    if (!nomEntreprise || !email) {
+      errorBox.innerHTML = '<div class="error">Merci de remplir tous les champs.</div>';
+      return;
+    }
+    if (!strength.hasLength) {
+      errorBox.innerHTML = '<div class="error">Le mot de passe doit contenir au moins 8 caractères.</div>';
+      return;
+    }
+    if (!strength.hasCase || !strength.hasNumber) {
+      errorBox.innerHTML = '<div class="error">Le mot de passe doit contenir une majuscule, une minuscule et un chiffre.</div>';
       return;
     }
 
     btn.disabled = true;
     btn.textContent = "Création en cours…";
-
     try {
       // 1) Création du compte utilisateur via Supabase Auth
       const authRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
@@ -120,7 +252,6 @@
       if (!authRes.ok) throw new Error(authData.msg || authData.error_description || "Erreur lors de la création du compte");
       const userId = authData.user?.id || authData.id;
       if (!userId) throw new Error("Compte créé mais identifiant introuvable, contactez le support.");
-
       // 2) Création de la fiche entreprise liée à ce compte (côté serveur,
       // avec la clé secrète, pour poser un slug unique proprement)
       const entrepriseRes = await fetch(API_URL, {
@@ -135,7 +266,6 @@
       });
       const entrepriseData = await entrepriseRes.json();
       if (!entrepriseData.success) throw new Error(entrepriseData.error || "Erreur lors de la création de l'entreprise");
-
       document.getElementById("app").innerHTML = `
         <div class="brand">Skyeco Pro</div>
         <div class="success">✅ Compte créé ! Vérifiez votre email pour confirmer votre adresse, puis connectez-vous.</div>
