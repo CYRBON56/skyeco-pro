@@ -33,7 +33,7 @@
     padding: 36px 32px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.06);
   }
-  .brand { font-weight: 800; font-size: 1.3rem; color: #1e6f4c; margin-bottom: 4px; }
+  .brand { font-weight: 800; font-size: 1.3rem; color: #1e6f4c; margin-bottom: 4px; display: flex; align-items: center; }
   h1 { font-size: 1.3rem; margin: 6px 0 24px; }
   label { display: block; font-weight: 600; font-size: 0.88rem; margin: 16px 0 6px; }
   input {
@@ -166,7 +166,7 @@
 </head>
 <body>
 <div class="card" id="app">
-  <div class="brand">Skyeco Pro</div>
+  <div class="brand"><img src="data:image/png;base64," alt="" width="26" height="26" style="border-radius:6px; vertical-align:middle; margin-right:8px;">Skyeco Pro</div>
   <h1>Créer mon compte entreprise</h1>
 
   <label for="siret">Numéro de SIRET</label>
@@ -390,7 +390,7 @@
       const entrepriseData = await entrepriseRes.json();
       if (!entrepriseData.success) throw new Error(entrepriseData.error || "Erreur lors de la création de l'entreprise");
       document.getElementById("app").innerHTML = `
-        <div class="brand">Skyeco Pro</div>
+        <div class="brand"><img src="data:image/png;base64," alt="" width="26" height="26" style="border-radius:6px; vertical-align:middle; margin-right:8px;">Skyeco Pro</div>
         <div class="success">✅ Compte créé ! Vérifiez votre email pour confirmer votre adresse, puis connectez-vous.</div>
       `;
     } catch (err) {
