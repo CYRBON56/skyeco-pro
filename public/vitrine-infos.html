@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Informations de votre vitrine — Skyeco Pro</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #14312a;
+    background: #f5f8f6;
+  }
+  header {
+    background: #14312a;
+    color: white;
+    padding: 18px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header .brand { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; }
+  header a.retour { color: rgba(255,255,255,0.75); text-decoration: none; font-size: 0.85rem; }
+  .wrap { max-width: 720px; margin: 32px auto 80px; padding: 0 20px; }
+  .intro { margin-bottom: 24px; }
+  .intro h1 { font-size: 1.5rem; margin: 0 0 8px; }
+  .intro p { color: #5b6b64; font-size: 0.95rem; line-height: 1.5; margin: 0; }
+
+  .section {
+    background: white;
+    border-radius: 14px;
+    padding: 26px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    margin-bottom: 18px;
+  }
+  .section h2 { font-size: 1.05rem; margin: 0 0 4px; }
+  .section .section-sub { color: #8a9490; font-size: 0.82rem; margin: 0 0 18px; }
+
+  label { display: block; font-weight: 600; font-size: 0.85rem; margin: 14px 0 6px; }
+  label:first-of-type { margin-top: 0; }
+  input[type="text"], input[type="tel"], input[type="email"], input[type="url"], textarea {
+    width: 100%;
+    border: 1.5px solid #d8e3de;
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-size: 0.92rem;
+    font-family: inherit;
+  }
+  textarea { resize: vertical; min-height: 80px; }
+  input:focus, textarea:focus { outline: none; border-color: #1e6f4c; }
+  .hint { font-size: 0.78rem; color: #8a9490; margin-top: 4px; }
+
+  .repeatable-item {
+    border: 1.5px solid #eef1ee;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .btn-remove {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #991b1b;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .btn-add {
+    background: #eef4f0;
+    color: #1e6f4c;
+    border: 1.5px dashed #1e6f4c;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .upload-zone {
+    border: 1.5px dashed #d8e3de;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .upload-zone:hover { border-color: #1e6f4c; }
+  .upload-zone input[type="file"] { display: none; }
+  .upload-zone .upload-label { font-size: 0.88rem; color: #5b6b64; }
+  .upload-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .upload-preview .thumb {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #eef1ee;
+  }
+  .upload-preview .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .upload-preview .thumb .btn-remove-thumb {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: rgba(0,0,0,0.55);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .upload-status { font-size: 0.78rem; margin-top: 8px; }
+  .upload-status.ok { color: #1e6f4c; }
+  .upload-status.error { color: #991b1b; }
+  .upload-status.loading { color: #5b6b64; }
+
+  .radio-row { display: flex; gap: 18px; margin-top: 8px; }
+  .radio-row label { display: flex; align-items: center; gap: 6px; font-weight: 500; margin: 0; font-size: 0.88rem; }
+
+  .footer-bar {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    border-top: 1px solid #eef1ee;
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 720px;
+    margin: 0 auto;
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.05);
+  }
+  .save-status { font-size: 0.82rem; color: #5b6b64; }
+  .btn-save {
+    background: #1e6f4c;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+  .loading-page { text-align: center; padding: 80px 20px; color: #5b6b64; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Skyeco Pro</div>
+  <a class="retour" href="/dashboard.html">← Retour au tableau de bord</a>
+</header>
+
+<div class="wrap" id="app">
+  <div class="loading-page">Chargement…</div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://heviivnlswohnrzcguxv.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_un7u9BDV_1IL3EjYTuAoOg_ZUKZ-ZjW";
+  const GET_VITRINE_URL = "/api/get-vitrine-infos";
+  const SAVE_VITRINE_URL = "/api/save-vitrine-infos";
+  const STORAGE_BUCKET_URL = `${SUPABASE_URL}/storage/v1/object/vitrine-media`;
+  const STORAGE_PUBLIC_URL = `${SUPABASE_URL}/storage/v1/object/public/vitrine-media`;
+
+  const app = document.getElementById("app");
+  const token = sessionStorage.getItem("skyeco_access_token");
+  if (!token) window.location.href = "/connexion.html";
+
+  const state = {
+    entreprise_id: null,
+    nom_commercial: "",
+    slogan: "",
+    description_activite: "",
+    zone_intervention: "",
+    services: [],
+    logo_url: "",
+    photos: [],
+    video_url: "",
+    telephone_public: "",
+    email_public: "",
+    adresse_publique: "",
+    domaine_souhaite: "",
+    domaine_deja_possede: false,
+    reseaux_sociaux: {},
+    temoignages: [],
+  };
+
+  function uid() {
+    return Math.random().toString(36).slice(2, 9);
+  }
+
+  async function uploadFichier(file, dossier) {
+    const ext = file.name.split(".").pop();
+    const chemin = `${dossier}/${state.entreprise_id}-${uid()}.${ext}`;
+    const res = await fetch(`${STORAGE_BUCKET_URL}/${chemin}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: SUPABASE_PUBLISHABLE_KEY,
+        "Content-Type": file.type || "application/octet-stream",
+      },
+      body: file,
+    });
+    if (!res.ok) throw new Error("Échec de l'envoi du fichier.");
+    return `${STORAGE_PUBLIC_URL}/${chemin}`;
+  }
+
+  function render() {
+    app.innerHTML = `
+      <div class="intro">
+        <h1>Les informations de votre vitrine</h1>
+        <p>Remplissez ce formulaire pour qu'on construise votre vitrine (Accueil, Services, Réalisations, Contact). Vous pouvez enregistrer et revenir plus tard, rien n'est perdu.</p>
+      </div>
+
+      <div class="section">
+        <h2>Votre activité</h2>
+        <p class="section-sub">Ce qui apparaîtra sur votre page d'accueil.</p>
+        <label for="nomCommercial">Nom commercial affiché</label>
+        <input type="text" id="nomCommercial" value="${escapeAttr(state.nom_commercial)}" placeholder="Ex : Plomberie Martin" />
+        <label for="slogan">Slogan / accroche</label>
+        <input type="text" id="slogan" value="${escapeAttr(state.slogan)}" placeholder="Ex : Votre plombier de confiance depuis 2010" />
+        <label for="descriptionActivite">Décrivez votre activité</label>
+        <textarea id="descriptionActivite" placeholder="Quelques phrases sur ce que vous faites, votre expérience, ce qui vous différencie...">${escapeHtml(state.description_activite)}</textarea>
+        <label for="zoneIntervention">Zone d'intervention</label>
+        <input type="text" id="zoneIntervention" value="${escapeAttr(state.zone_intervention)}" placeholder="Ex : Lorient et 30 km alentour" />
+      </div>
+
+      <div class="section">
+        <h2>Vos services</h2>
+        <p class="section-sub">Un service = une carte sur votre page Services.</p>
+        <div id="servicesList"></div>
+        <button type="button" class="btn-add" id="btnAddService">+ Ajouter un service</button>
+      </div>
+
+      <div class="section">
+        <h2>Votre logo</h2>
+        <p class="section-sub">Format PNG ou JPG, idéalement carré.</p>
+        <div class="upload-zone" id="logoUploadZone">
+          <input type="file" id="logoInput" accept="image/*" />
+          <div class="upload-label">Cliquez pour choisir votre logo</div>
+        </div>
+        <div class="upload-preview" id="logoPreview"></div>
+        <div class="upload-status" id="logoStatus"></div>
+      </div>
+
+      <div class="section">
+        <h2>Vos réalisations</h2>
+        <p class="section-sub">Photos avant/après ou de vos chantiers — jusqu'à une dizaine, dans l'ordre que vous voulez.</p>
+        <div class="upload-zone" id="photosUploadZone">
+          <input type="file" id="photosInput" accept="image/*" multiple />
+          <div class="upload-label">Cliquez pour ajouter des photos</div>
+        </div>
+        <div class="upload-preview" id="photosPreview"></div>
+        <div class="upload-status" id="photosStatus"></div>
+      </div>
+
+      <div class="section">
+        <h2>Vidéo (optionnel)</h2>
+        <p class="section-sub">Un lien YouTube/Vimeo, ou uploadez directement votre fichier.</p>
+        <label for="videoUrl">Lien vidéo (YouTube, Vimeo...)</label>
+        <input type="url" id="videoUrl" value="${escapeAttr(state.video_url && state.video_url.startsWith("http") && !state.video_url.includes("supabase") ? state.video_url : "")}" placeholder="https://youtube.com/..." />
+        <div class="hint">Ou uploadez un fichier vidéo directement :</div>
+        <div class="upload-zone" id="videoUploadZone" style="margin-top:8px;">
+          <input type="file" id="videoInput" accept="video/*" />
+          <div class="upload-label">Cliquez pour choisir un fichier vidéo</div>
+        </div>
+        <div class="upload-status" id="videoStatus"></div>
+      </div>
+
+      <div class="section">
+        <h2>Coordonnées publiques</h2>
+        <p class="section-sub">Affichées sur votre page Contact — peuvent différer de celles de votre compte.</p>
+        <label for="telephonePublic">Téléphone</label>
+        <input type="tel" id="telephonePublic" value="${escapeAttr(state.telephone_public)}" placeholder="06 XX XX XX XX" />
+        <label for="emailPublic">Email</label>
+        <input type="email" id="emailPublic" value="${escapeAttr(state.email_public)}" />
+        <label for="adressePublique">Adresse (si vous avez un local)</label>
+        <input type="text" id="adressePublique" value="${escapeAttr(state.adresse_publique)}" placeholder="Optionnel" />
+      </div>
+
+      <div class="section">
+        <h2>Nom de domaine</h2>
+        <p class="section-sub">L'adresse de votre futur site (ex : plomberie-martin.fr).</p>
+        <label for="domaineSouhaite">Nom de domaine souhaité</label>
+        <input type="text" id="domaineSouhaite" value="${escapeAttr(state.domaine_souhaite)}" placeholder="Ex : plomberie-martin.fr" />
+        <div class="radio-row">
+          <label><input type="radio" name="domainePossede" value="oui" ${state.domaine_deja_possede ? "checked" : ""}/> Je le possède déjà</label>
+          <label><input type="radio" name="domainePossede" value="non" ${!state.domaine_deja_possede ? "checked" : ""}/> Il faut l'acheter</label>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Témoignages clients (optionnel)</h2>
+        <div id="temoignagesList"></div>
+        <button type="button" class="btn-add" id="btnAddTemoignage">+ Ajouter un témoignage</button>
+      </div>
+
+      <div class="section">
+        <h2>Réseaux sociaux (optionnel)</h2>
+        <label for="rsFacebook">Facebook</label>
+        <input type="url" id="rsFacebook" value="${escapeAttr((state.reseaux_sociaux || {}).facebook || "")}" placeholder="https://facebook.com/..." />
+        <label for="rsInstagram">Instagram</label>
+        <input type="url" id="rsInstagram" value="${escapeAttr((state.reseaux_sociaux || {}).instagram || "")}" placeholder="https://instagram.com/..." />
+      </div>
+    `;
+
+    renderServices();
+    renderTemoignages();
+    renderLogoPreview();
+    renderPhotosPreview();
+    wireEvents();
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str || "";
+    return div.innerHTML;
+  }
+  function escapeAttr(str) {
+    return (str || "").replace(/"/g, "&quot;");
+  }
+
+  function renderServices() {
+    const container = document.getElementById("servicesList");
+    container.innerHTML = state.services
+      .map(
+        (s, i) => `
+        <div class="repeatable-item" data-index="${i}">
+          <button type="button" class="btn-remove" data-remove-service="${i}">Retirer</button>
+          <label>Nom du service</label>
+          <input type="text" data-service-nom="${i}" value="${escapeAttr(s.nom)}" placeholder="Ex : Dépannage plomberie" />
+          <label>Description courte</label>
+          <textarea data-service-description="${i}" placeholder="Une ou deux phrases">${escapeHtml(s.description)}</textarea>
+        </div>
+      `
+      )
+      .join("");
+    container.querySelectorAll("[data-remove-service]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.services.splice(Number(btn.dataset.removeService), 1);
+        renderServices();
+      });
+    });
+    container.querySelectorAll("[data-service-nom]").forEach((el) => {
+      el.addEventListener("input", () => {
+        state.services[Number(el.dataset.serviceNom)].nom = el.value;
+      });
+    });
+    container.querySelectorAll("[data-service-description]").forEach((el) => {
+      el.addEventListener("input", () => {
+        state.services[Number(el.dataset.serviceDescription)].description = el.value;
+      });
+    });
+  }
+
+  function renderTemoignages() {
+    const container = document.getElementById("temoignagesList");
+    container.innerHTML = state.temoignages
+      .map(
+        (t, i) => `
+        <div class="repeatable-item" data-index="${i}">
+          <button type="button" class="btn-remove" data-remove-temoignage="${i}">Retirer</button>
+          <label>Nom du client</label>
+          <input type="text" data-temoignage-nom="${i}" value="${escapeAttr(t.nom)}" placeholder="Ex : Marie D." />
+          <label>Témoignage</label>
+          <textarea data-temoignage-texte="${i}" placeholder="Ce que le client a dit">${escapeHtml(t.texte)}</textarea>
+        </div>
+      `
+      )
+      .join("");
+    container.querySelectorAll("[data-remove-temoignage]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.temoignages.splice(Number(btn.dataset.removeTemoignage), 1);
+        renderTemoignages();
+      });
+    });
+    container.querySelectorAll("[data-temoignage-nom]").forEach((el) => {
+      el.addEventListener("input", () => {
+        state.temoignages[Number(el.dataset.temoignageNom)].nom = el.value;
+      });
+    });
+    container.querySelectorAll("[data-temoignage-texte]").forEach((el) => {
+      el.addEventListener("input", () => {
+        state.temoignages[Number(el.dataset.temoignageTexte)].texte = el.value;
+      });
+    });
+  }
+
+  function renderLogoPreview() {
+    const preview = document.getElementById("logoPreview");
+    if (!preview) return;
+    preview.innerHTML = state.logo_url
+      ? `<div class="thumb"><img src="${state.logo_url}" /><button type="button" class="btn-remove-thumb" id="btnRemoveLogo">×</button></div>`
+      : "";
+    const btn = document.getElementById("btnRemoveLogo");
+    if (btn) btn.addEventListener("click", () => { state.logo_url = ""; renderLogoPreview(); });
+  }
+
+  function renderPhotosPreview() {
+    const preview = document.getElementById("photosPreview");
+    if (!preview) return;
+    preview.innerHTML = state.photos
+      .map(
+        (p, i) => `<div class="thumb"><img src="${p.url}" /><button type="button" class="btn-remove-thumb" data-remove-photo="${i}">×</button></div>`
+      )
+      .join("");
+    preview.querySelectorAll("[data-remove-photo]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.photos.splice(Number(btn.dataset.removePhoto), 1);
+        renderPhotosPreview();
+      });
+    });
+  }
+
+  function wireEvents() {
+    document.getElementById("nomCommercial").addEventListener("input", (e) => (state.nom_commercial = e.target.value));
+    document.getElementById("slogan").addEventListener("input", (e) => (state.slogan = e.target.value));
+    document.getElementById("descriptionActivite").addEventListener("input", (e) => (state.description_activite = e.target.value));
+    document.getElementById("zoneIntervention").addEventListener("input", (e) => (state.zone_intervention = e.target.value));
+    document.getElementById("telephonePublic").addEventListener("input", (e) => (state.telephone_public = e.target.value));
+    document.getElementById("emailPublic").addEventListener("input", (e) => (state.email_public = e.target.value));
+    document.getElementById("adressePublique").addEventListener("input", (e) => (state.adresse_publique = e.target.value));
+    document.getElementById("domaineSouhaite").addEventListener("input", (e) => (state.domaine_souhaite = e.target.value));
+    document.querySelectorAll('input[name="domainePossede"]').forEach((el) => {
+      el.addEventListener("change", (e) => (state.domaine_deja_possede = e.target.value === "oui"));
+    });
+    document.getElementById("videoUrl").addEventListener("input", (e) => (state.video_url = e.target.value));
+    document.getElementById("rsFacebook").addEventListener("input", (e) => {
+      state.reseaux_sociaux = { ...state.reseaux_sociaux, facebook: e.target.value };
+    });
+    document.getElementById("rsInstagram").addEventListener("input", (e) => {
+      state.reseaux_sociaux = { ...state.reseaux_sociaux, instagram: e.target.value };
+    });
+
+    document.getElementById("btnAddService").addEventListener("click", () => {
+      state.services.push({ nom: "", description: "" });
+      renderServices();
+    });
+    document.getElementById("btnAddTemoignage").addEventListener("click", () => {
+      state.temoignages.push({ nom: "", texte: "" });
+      renderTemoignages();
+    });
+
+    document.getElementById("logoUploadZone").addEventListener("click", () => document.getElementById("logoInput").click());
+    document.getElementById("logoInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const statusEl = document.getElementById("logoStatus");
+      statusEl.textContent = "Envoi en cours…";
+      statusEl.className = "upload-status loading";
+      try {
+        state.logo_url = await uploadFichier(file, "logos");
+        statusEl.textContent = "✓ Logo envoyé.";
+        statusEl.className = "upload-status ok";
+        renderLogoPreview();
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "upload-status error";
+      }
+    });
+
+    document.getElementById("photosUploadZone").addEventListener("click", () => document.getElementById("photosInput").click());
+    document.getElementById("photosInput").addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
+      const statusEl = document.getElementById("photosStatus");
+      statusEl.textContent = `Envoi de ${files.length} photo(s) en cours…`;
+      statusEl.className = "upload-status loading";
+      try {
+        for (const file of files) {
+          const url = await uploadFichier(file, "photos");
+          state.photos.push({ url, legende: "" });
+        }
+        statusEl.textContent = "✓ Photos envoyées.";
+        statusEl.className = "upload-status ok";
+        renderPhotosPreview();
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "upload-status error";
+      }
+    });
+
+    document.getElementById("videoUploadZone").addEventListener("click", () => document.getElementById("videoInput").click());
+    document.getElementById("videoInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const statusEl = document.getElementById("videoStatus");
+      statusEl.textContent = "Envoi de la vidéo en cours (peut prendre un moment)…";
+      statusEl.className = "upload-status loading";
+      try {
+        state.video_url = await uploadFichier(file, "videos");
+        document.getElementById("videoUrl").value = "";
+        statusEl.textContent = "✓ Vidéo envoyée.";
+        statusEl.className = "upload-status ok";
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "upload-status error";
+      }
+    });
+  }
+
+  async function sauvegarder() {
+    const btn = document.getElementById("btnSave");
+    const statusEl = document.getElementById("saveStatus");
+    btn.disabled = true;
+    statusEl.textContent = "Enregistrement…";
+    try {
+      const res = await fetch(SAVE_VITRINE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entreprise_id: state.entreprise_id,
+          nom_commercial: state.nom_commercial,
+          slogan: state.slogan,
+          description_activite: state.description_activite,
+          zone_intervention: state.zone_intervention,
+          services: state.services,
+          logo_url: state.logo_url,
+          photos: state.photos,
+          video_url: state.video_url,
+          telephone_public: state.telephone_public,
+          email_public: state.email_public,
+          adresse_publique: state.adresse_publique,
+          domaine_souhaite: state.domaine_souhaite,
+          domaine_deja_possede: state.domaine_deja_possede,
+          reseaux_sociaux: state.reseaux_sociaux,
+          temoignages: state.temoignages,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Erreur lors de l'enregistrement.");
+      statusEl.textContent = "✓ Enregistré";
+      setTimeout(() => { statusEl.textContent = ""; }, 3000);
+    } catch (err) {
+      statusEl.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function renderFooterBar() {
+    const bar = document.createElement("div");
+    bar.className = "footer-bar";
+    bar.innerHTML = `
+      <span class="save-status" id="saveStatus"></span>
+      <button class="btn-save" id="btnSave">Enregistrer</button>
+    `;
+    document.body.appendChild(bar);
+    document.getElementById("btnSave").addEventListener("click", sauvegarder);
+  }
+
+  (async function init() {
+    try {
+      const entRes = await fetch(`${SUPABASE_URL}/rest/v1/entreprises?select=id`, {
+        headers: { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${token}` },
+      });
+      const entRows = await entRes.json();
+      const entreprise = entRows[0];
+      if (!entreprise) throw new Error("Aucune entreprise trouvée pour ce compte.");
+      state.entreprise_id = entreprise.id;
+
+      const vitrineRes = await fetch(`${GET_VITRINE_URL}?entreprise_id=${entreprise.id}`);
+      const vitrineData = await vitrineRes.json();
+      if (vitrineData.success && vitrineData.vitrine) {
+        Object.assign(state, vitrineData.vitrine);
+      }
+
+      render();
+      renderFooterBar();
+    } catch (err) {
+      app.innerHTML = `<div class="loading-page">${err.message}</div>`;
+    }
+  })();
+</script>
+</body>
+</html>
