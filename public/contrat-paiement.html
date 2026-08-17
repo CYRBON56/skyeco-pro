@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Contrat et paiement — Skyeco Pro</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #14312a;
+    background: #f5f8f6;
+  }
+  header {
+    background: #14312a;
+    color: white;
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+  }
+  header .brand { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; }
+  .wrap { max-width: 680px; margin: 32px auto 80px; padding: 0 20px; }
+  .card {
+    background: white;
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    margin-bottom: 18px;
+  }
+  .card h2 { margin: 0 0 6px; font-size: 1.1rem; }
+  .card .sub { color: #8a9490; font-size: 0.82rem; margin: 0 0 18px; }
+
+  .contract-text {
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: #2c3d33;
+    max-height: 340px;
+    overflow-y: auto;
+    border: 1.5px solid #eef1ee;
+    border-radius: 10px;
+    padding: 18px;
+    background: #fbfcfa;
+  }
+  .contract-text h3 { font-size: 0.92rem; margin: 18px 0 8px; }
+  .contract-text h3:first-child { margin-top: 0; }
+  .contract-text ul { margin: 6px 0; padding-left: 20px; }
+  .contract-text li { margin-bottom: 4px; }
+
+  .signature-zone { margin-top: 20px; }
+  label { display: block; font-weight: 600; font-size: 0.85rem; margin: 14px 0 6px; }
+  input[type="text"] {
+    width: 100%;
+    border: 1.5px solid #d8e3de;
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-size: 0.92rem;
+    font-family: inherit;
+  }
+  input:focus { outline: none; border-color: #1e6f4c; }
+  .checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 16px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+  .checkbox-row input { margin-top: 3px; }
+
+  .btn {
+    border: none;
+    border-radius: 10px;
+    padding: 13px 22px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+  }
+  .btn-primary { background: #1e6f4c; color: white; margin-top: 18px; }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .payment-options { display: flex; flex-direction: column; gap: 12px; }
+  .payment-option {
+    border: 1.5px solid #d8e3de;
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .payment-option h3 { margin: 0 0 4px; font-size: 0.95rem; }
+  .payment-option p { margin: 0 0 12px; font-size: 0.83rem; color: #5b6b64; }
+  .btn-secondary {
+    background: white;
+    border: 1.5px solid #1e6f4c;
+    color: #1e6f4c;
+  }
+  .rib-box {
+    background: #eef4f0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.85rem;
+    margin-top: 10px;
+    display: none;
+  }
+  .rib-box.show { display: block; }
+  .status-msg { font-size: 0.85rem; margin-top: 10px; }
+  .status-msg.ok { color: #1e6f4c; }
+  .status-msg.error { color: #991b1b; }
+  .loading-page { text-align: center; padding: 80px 20px; color: #5b6b64; }
+  .amount { font-size: 1.8rem; font-weight: 800; color: #14312a; }
+  .amount-detail { font-size: 0.8rem; color: #8a9490; margin-top: 2px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Skyeco Pro</div>
+</header>
+
+<div class="wrap" id="app">
+  <div class="loading-page">Chargement…</div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://heviivnlswohnrzcguxv.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_un7u9BDV_1IL3EjYTuAoOg_ZUKZ-ZjW";
+  const ACCEPTER_CONTRAT_URL = "/api/accepter-contrat";
+  const CREER_SESSION_PAIEMENT_URL = "/api/creer-session-paiement";
+  const MARQUER_PAIEMENT_MANUEL_URL = "/api/marquer-paiement-manuel";
+
+  const app = document.getElementById("app");
+  const token = sessionStorage.getItem("skyeco_access_token");
+  if (!token) window.location.href = "/connexion.html";
+
+  const CONTRAT_HTML = `
+    <h3>1. Objet</h3>
+    <p>Le présent contrat a pour objet la mise à disposition par Skyeco Pro d'un système de génération de prospects qualifiés au bénéfice de l'entreprise cliente (ci-après "le Client"), comprenant la création d'une vitrine web, la gestion de campagnes publicitaires et la transmission des prospects reçus.</p>
+
+    <h3>2. Mise en place</h3>
+    <p>Moyennant un paiement unique de <strong>2 500 € HT</strong>, Skyeco Pro s'engage à fournir :</p>
+    <ul>
+      <li>Une vitrine web complète (Accueil, Services, Réalisations, Contact)</li>
+      <li>Un formulaire de devis intégré à la vitrine</li>
+      <li>La création et la configuration d'un compte Google Ads dédié au Client</li>
+      <li>La mise en ligne de la vitrine et la connexion du système de notification par SMS</li>
+    </ul>
+
+    <h3>3. Abonnement mensuel</h3>
+    <p>En complément de la mise en place, le Client souscrit à un abonnement mensuel dont le montant est fixé selon le volume de prospects souhaité, déterminé conjointement avec Skyeco Pro. Cet abonnement inclut :</p>
+    <ul>
+      <li>La gestion complète des publicités du Client</li>
+      <li>Un SMS de notification à chaque prospect qualifié reçu</li>
+      <li>Une estimation de projet incluse pour chaque demande</li>
+    </ul>
+    <p>Le Client peut ajuster son volume ou résilier son abonnement à tout moment, sans engagement de durée minimale ni préavis contractuel.</p>
+
+    <h3>4. Exclusivité des prospects</h3>
+    <p>Chaque prospect reçu par l'intermédiaire du système Skyeco Pro est réservé exclusivement au Client et n'est ni partagé ni revendu à un tiers ou concurrent.</p>
+
+    <h3>5. Propriété du système</h3>
+    <p>Le système, son code, ses automatisations et la technologie sous-jacente demeurent la propriété exclusive de Skyeco Pro. Le Client bénéficie d'un droit d'usage pendant la durée de son abonnement actif. En cas de cessation de paiement ou de résiliation, l'accès au système est suspendu ; la vitrine web et les données associées cessent d'être exploitées pour le compte du Client.</p>
+
+    <h3>6. Facturation</h3>
+    <p>Le paiement de la mise en place s'effectue au moment de la signature du présent contrat, par carte bancaire ou par virement/chèque. L'abonnement mensuel est facturé selon une périodicité et des modalités communiquées séparément au Client.</p>
+
+    <h3>7. Acceptation</h3>
+    <p>En cochant la case ci-dessous et en indiquant son nom, le Client reconnaît avoir pris connaissance des présentes conditions et les accepter sans réserve. Cette validation constitue une signature électronique au sens de l'article 1367 du Code civil.</p>
+  `;
+
+  function escapeAttr(str) {
+    return (str || "").replace(/"/g, "&quot;");
+  }
+
+  async function chargerEntreprise() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/entreprises?select=*`, {
+      headers: { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${token}` },
+    });
+    const rows = await res.json();
+    return rows[0];
+  }
+
+  function renderContratStep(entreprise) {
+    app.innerHTML = `
+      <div class="card">
+        <h2>Conditions de mise en place — Skyeco Pro</h2>
+        <p class="sub">Merci de lire et d'accepter les conditions avant de procéder au paiement.</p>
+        <div class="contract-text">${CONTRAT_HTML}</div>
+
+        <div class="signature-zone">
+          <label for="signatureNom">Nom et prénom (valant signature)</label>
+          <input type="text" id="signatureNom" placeholder="Ex : Jean Dupont" />
+          <div class="checkbox-row">
+            <input type="checkbox" id="checkAccepte" />
+            <label for="checkAccepte" style="margin:0; font-weight:500;">Je reconnais avoir lu et j'accepte les conditions ci-dessus, ainsi que le tarif de mise en place de 2 500 € HT.</label>
+          </div>
+          <button class="btn btn-primary" id="btnAccepter" disabled>Accepter et continuer vers le paiement</button>
+          <div class="status-msg" id="contratStatus"></div>
+        </div>
+      </div>
+    `;
+
+    const nomInput = document.getElementById("signatureNom");
+    const checkInput = document.getElementById("checkAccepte");
+    const btn = document.getElementById("btnAccepter");
+
+    function refreshBtn() {
+      btn.disabled = !(nomInput.value.trim().length > 2 && checkInput.checked);
+    }
+    nomInput.addEventListener("input", refreshBtn);
+    checkInput.addEventListener("change", refreshBtn);
+
+    btn.addEventListener("click", async () => {
+      const statusEl = document.getElementById("contratStatus");
+      btn.disabled = true;
+      statusEl.textContent = "Enregistrement…";
+      statusEl.className = "status-msg";
+      try {
+        const res = await fetch(ACCEPTER_CONTRAT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            entreprise_id: entreprise.id,
+            signature_nom: nomInput.value.trim(),
+          }),
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || "Erreur lors de l'enregistrement.");
+        renderPaiementStep(entreprise);
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status-msg error";
+        btn.disabled = false;
+      }
+    });
+  }
+
+  function renderPaiementStep(entreprise) {
+    app.innerHTML = `
+      <div class="card">
+        <h2>Paiement de la mise en place</h2>
+        <p class="sub">Contrat accepté ✓ — il ne reste que le règlement.</p>
+        <div class="amount">3 000 € TTC</div>
+        <div class="amount-detail">2 500 € HT + TVA 20 %</div>
+
+        <div class="payment-options" style="margin-top:22px;">
+          <div class="payment-option">
+            <h3>💳 Paiement par carte</h3>
+            <p>Paiement sécurisé en ligne, immédiat.</p>
+            <button class="btn btn-primary" id="btnPayerCarte" style="margin-top:0;">Payer 3 000 € par carte</button>
+          </div>
+          <div class="payment-option">
+            <h3>🏦 Virement ou chèque</h3>
+            <p>Votre accès sera activé dès réception et validation du paiement par Skyeco Pro.</p>
+            <button class="btn btn-secondary" id="btnPayerVirement">Je règle par virement / chèque</button>
+            <div class="rib-box" id="ribBox">
+              <strong>Coordonnées bancaires</strong><br/>
+              RMS EcoSky — RESINE MARBRE SOL SASU<br/>
+              IBAN : à communiquer par Skyeco Pro<br/>
+              Merci d'indiquer le nom de votre entreprise en référence du virement.
+            </div>
+          </div>
+        </div>
+        <div class="status-msg" id="paiementStatus"></div>
+      </div>
+    `;
+
+    document.getElementById("btnPayerCarte").addEventListener("click", async () => {
+      const statusEl = document.getElementById("paiementStatus");
+      statusEl.textContent = "Redirection vers le paiement…";
+      statusEl.className = "status-msg";
+      try {
+        const res = await fetch(CREER_SESSION_PAIEMENT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ entreprise_id: entreprise.id }),
+        });
+        const data = await res.json();
+        if (!data.success || !data.url) throw new Error(data.error || "Impossible de créer la session de paiement.");
+        window.location.href = data.url;
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status-msg error";
+      }
+    });
+
+    document.getElementById("btnPayerVirement").addEventListener("click", async () => {
+      const ribBox = document.getElementById("ribBox");
+      const statusEl = document.getElementById("paiementStatus");
+      ribBox.classList.add("show");
+      try {
+        await fetch(MARQUER_PAIEMENT_MANUEL_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ entreprise_id: entreprise.id, mode: "virement" }),
+        });
+        statusEl.textContent = "✓ Noté. Votre accès sera activé dès réception du paiement.";
+        statusEl.className = "status-msg ok";
+      } catch (err) {
+        statusEl.textContent = "Impossible d'enregistrer votre choix pour le moment.";
+        statusEl.className = "status-msg error";
+      }
+    });
+  }
+
+  (async function init() {
+    try {
+      const entreprise = await chargerEntreprise();
+      if (!entreprise) throw new Error("Aucune entreprise trouvée pour ce compte.");
+
+      if (entreprise.paiement_statut === "valide") {
+        window.location.href = "/dashboard.html";
+        return;
+      }
+
+      if (entreprise.contrat_accepte) {
+        renderPaiementStep(entreprise);
+      } else {
+        renderContratStep(entreprise);
+      }
+    } catch (err) {
+      app.innerHTML = `<div class="loading-page">${err.message}</div>`;
+    }
+  })();
+</script>
+</body>
+</html>
