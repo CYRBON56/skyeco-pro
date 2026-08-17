@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skyeco Pro — Votre propre système de prospects qualifiés</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #0F2318;
+    --ink-soft: #16301F;
+    --paper: #EDF0E7;
+    --paper-deep: #E1E6DA;
+    --cream-text: #F4F1E6;
+    --dark-text: #14231A;
+    --sage: #7B9C86;
+    --pine: #1F5C3E;
+    --pine-light: #2C7A52;
+    --amber: #F5A623;
+    --line: rgba(244,241,230,0.14);
+    --line-dark: rgba(20,35,26,0.12);
+    --radius: 14px;
+    --max: 1120px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Inter', sans-serif;
+    background:var(--ink);
+    color:var(--cream-text);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.brand{
+    font-family:'Bricolage Grotesque', sans-serif;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  a{color:inherit; text-decoration:none;}
+  img{max-width:100%; display:block;}
+  .wrap{max-width:var(--max); margin:0 auto; padding:0 28px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--amber);
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px; height:7px; border-radius:50%;
+    background:var(--amber);
+    box-shadow:0 0 0 4px rgba(245,166,35,0.18);
+  }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:14px 26px;
+    border-radius:999px;
+    font-weight:600;
+    font-size:15px;
+    cursor:pointer;
+    border:1px solid transparent;
+    transition:transform .15s ease, background .2s ease, border-color .2s ease;
+  }
+  .btn:focus-visible{outline:2px solid var(--amber); outline-offset:3px;}
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--pine-light); color:var(--cream-text);}
+  .btn-primary:hover{background:var(--pine);}
+  .btn-ghost{border-color:var(--line); color:var(--cream-text);}
+  .btn-ghost:hover{border-color:var(--cream-text);}
+  .btn-dark{background:var(--ink); color:var(--cream-text);}
+  .btn-dark:hover{background:var(--ink-soft);}
+
+  /* NAV */
+  nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(15,35,24,0.86);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-top:18px; padding-bottom:18px;
+  }
+  .brand{font-size:20px; font-weight:700; color:var(--cream-text);}
+  .brand span{color:var(--pine-light);}
+  .nav-links{display:flex; align-items:center; gap:32px; font-size:14px; font-weight:500;}
+  .nav-links a{opacity:0.85; transition:opacity .15s;}
+  .nav-links a:hover{opacity:1;}
+  .nav-cta{display:flex; align-items:center; gap:20px;}
+  @media (max-width:760px){ .nav-links{display:none;} }
+
+  /* HERO */
+  .hero{
+    padding:88px 0 96px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero .wrap{
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:56px;
+    align-items:center;
+  }
+  .hero h1{
+    font-size:clamp(34px, 4.6vw, 54px);
+    font-weight:700;
+    line-height:1.05;
+    margin:18px 0 22px;
+  }
+  .hero h1 em{
+    font-style:normal;
+    color:var(--pine-light);
+  }
+  .hero p.lead{
+    font-size:17px;
+    color:rgba(244,241,230,0.78);
+    max-width:46ch;
+    margin-bottom:34px;
+  }
+  .hero-ctas{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:38px;}
+  .hero-note{
+    font-size:13px;
+    color:var(--sage);
+    display:flex; align-items:center; gap:8px;
+  }
+
+  /* PHONE SIGNATURE ELEMENT */
+  .phone-stage{
+    position:relative;
+    display:flex; justify-content:center;
+  }
+  .phone{
+    width:280px;
+    background:linear-gradient(180deg,#132A1D,#0B1A12);
+    border-radius:36px;
+    padding:14px;
+    border:1px solid rgba(244,241,230,0.1);
+    box-shadow:0 40px 80px -30px rgba(0,0,0,0.7);
+  }
+  .phone-screen{
+    background:radial-gradient(120% 100% at 50% 0%, #1B3B27 0%, #0D1F15 70%);
+    border-radius:26px;
+    padding:26px 16px;
+    min-height:420px;
+    position:relative;
+  }
+  .phone-clock{
+    text-align:center;
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-weight:600;
+    font-size:44px;
+    color:var(--cream-text);
+    margin-top:6px;
+  }
+  .phone-date{
+    text-align:center;
+    font-size:12px;
+    color:var(--sage);
+    text-transform:capitalize;
+    margin-bottom:26px;
+  }
+  .notif{
+    background:rgba(244,241,230,0.96);
+    color:var(--dark-text);
+    border-radius:16px;
+    padding:14px 14px;
+    margin-bottom:12px;
+    display:flex; gap:11px;
+    box-shadow:0 12px 24px -10px rgba(0,0,0,0.4);
+    animation:rise .6s ease both;
+  }
+  .notif .dot{
+    width:34px; height:34px; border-radius:9px; flex:none;
+    background:var(--pine-light);
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:16px;
+  }
+  .notif .body{flex:1; min-width:0;}
+  .notif .top-row{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .notif .app{font-size:12px; font-weight:600; letter-spacing:0.02em;}
+  .notif .time{font-size:11px; color:#6b7c72; font-family:'IBM Plex Mono', monospace;}
+  .notif .title{font-size:13.5px; font-weight:700; margin-top:2px;}
+  .notif .msg{font-size:12.5px; color:#3c4a41; margin-top:2px; line-height:1.35;}
+  .notif.secondary{opacity:0.55; transform:scale(0.97);}
+  @keyframes rise{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .pulse-ring{
+    position:absolute;
+    top:-10px; right:-10px;
+    width:10px; height:10px;
+    border-radius:50%;
+    background:var(--amber);
+  }
+  .pulse-ring::after{
+    content:"";
+    position:absolute; inset:0;
+    border-radius:50%;
+    background:var(--amber);
+    animation:pulse 2s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{opacity:0.7; transform:scale(1);}
+    100%{opacity:0; transform:scale(3.4);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .notif{animation:none;}
+    .pulse-ring::after{animation:none;}
+  }
+  @media (max-width:900px){
+    .hero .wrap{grid-template-columns:1fr; text-align:left;}
+    .phone-stage{margin-top:12px;}
+  }
+
+  /* TRUST STRIP */
+  .trust{
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    padding:30px 0;
+  }
+  .trust .wrap{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:24px;
+  }
+  .trust-item{
+    display:flex; gap:12px; align-items:flex-start;
+    font-size:14.5px;
+    color:rgba(244,241,230,0.85);
+  }
+  .trust-item .mark{color:var(--pine-light); font-weight:700;}
+  @media (max-width:760px){ .trust .wrap{grid-template-columns:1fr;} }
+
+  /* SECTIONS ON LIGHT BG */
+  .section-light{
+    background:var(--paper);
+    color:var(--dark-text);
+    padding:100px 0;
+  }
+  .section-head{max-width:640px; margin-bottom:56px;}
+  .section-head .eyebrow{color:var(--pine);}
+  .section-head .eyebrow::before{background:var(--pine); box-shadow:0 0 0 4px rgba(31,92,62,0.15);}
+  .section-head h2{
+    font-size:clamp(28px,3.4vw,40px);
+    font-weight:700;
+    margin-top:16px;
+    line-height:1.1;
+  }
+  .section-head p{
+    margin-top:14px;
+    font-size:16px;
+    color:#425246;
+    max-width:56ch;
+  }
+
+  /* STEPS */
+  .steps{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:var(--line-dark);
+    border:1px solid var(--line-dark);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .step{
+    background:var(--paper);
+    padding:32px 26px;
+  }
+  .step .num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--pine);
+    margin-bottom:18px;
+  }
+  .step h3{font-size:17px; font-weight:700; margin-bottom:8px; line-height:1.25;}
+  .step p{font-size:14px; color:#4c5b50;}
+  @media (max-width:900px){ .steps{grid-template-columns:1fr 1fr;} }
+  @media (max-width:560px){ .steps{grid-template-columns:1fr;} }
+
+  /* COMPARISON */
+  .compare{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+  }
+  .compare-card{
+    border-radius:var(--radius);
+    padding:34px 30px;
+  }
+  .compare-card.bad{
+    background:#E4DED2;
+    border:1px dashed #B7AC96;
+  }
+  .compare-card.good{
+    background:var(--ink);
+    color:var(--cream-text);
+    box-shadow:0 30px 60px -30px rgba(15,35,24,0.5);
+  }
+  .compare-card h3{font-size:19px; margin-bottom:20px;}
+  .compare-card.good h3{color:var(--cream-text);}
+  .compare-card ul{list-style:none; display:flex; flex-direction:column; gap:14px;}
+  .compare-card li{
+    font-size:14.5px;
+    display:flex; gap:10px; align-items:flex-start;
+    line-height:1.4;
+  }
+  .compare-card.bad li::before{content:"×"; color:#9A6B4A; font-weight:700;}
+  .compare-card.good li::before{content:"✓"; color:var(--pine-light); font-weight:700;}
+  @media (max-width:760px){ .compare{grid-template-columns:1fr;} }
+
+  /* PRICING */
+  .pricing-grid{
+    display:grid;
+    grid-template-columns:0.85fr 1.15fr;
+    gap:22px;
+  }
+  .price-card{
+    border-radius:var(--radius);
+    padding:36px 32px;
+  }
+  .price-card.setup{
+    background:var(--ink);
+    color:var(--cream-text);
+  }
+  .price-card.setup .amount{
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-size:52px;
+    font-weight:800;
+    margin:14px 0 6px;
+    color:var(--amber);
+  }
+  .price-card.setup .amount sup{font-size:20px; margin-left:2px;}
+  .price-card.sub{
+    background:#fff;
+    border:1px solid #DAD8C8;
+  }
+  .price-card ul{list-style:none; margin-top:20px; display:flex; flex-direction:column; gap:12px;}
+  .price-card li{font-size:14.5px; display:flex; gap:10px;}
+  .price-card.setup li::before{content:"—"; color:var(--sage);}
+  .price-card.sub li::before{content:"—"; color:var(--pine);}
+  .slider-mock{
+    margin-top:26px;
+    padding:18px;
+    background:var(--paper-deep);
+    border-radius:10px;
+  }
+  .slider-mock .row{display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#5a6a5f; margin-bottom:10px;}
+  .slider-track{height:6px; background:#CBD2C2; border-radius:99px; position:relative;}
+  .slider-fill{position:absolute; left:0; top:0; bottom:0; width:38%; background:var(--pine); border-radius:99px;}
+  .slider-handle{position:absolute; left:38%; top:50%; transform:translate(-50%,-50%); width:16px; height:16px; border-radius:50%; background:var(--pine); border:3px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,0.2);}
+  @media (max-width:800px){ .pricing-grid{grid-template-columns:1fr;} }
+
+  /* FAQ */
+  .faq{display:flex; flex-direction:column; border-top:1px solid var(--line-dark);}
+  .faq-item{border-bottom:1px solid var(--line-dark); padding:24px 0;}
+  .faq-item h3{font-size:16px; font-weight:600; margin-bottom:8px;}
+  .faq-item p{font-size:14.5px; color:#4c5b50; max-width:60ch;}
+
+  /* FINAL CTA */
+  .final-cta{
+    background:var(--ink);
+    padding:96px 0;
+    text-align:center;
+  }
+  .final-cta h2{
+    font-size:clamp(28px,4vw,42px);
+    font-weight:700;
+    max-width:20ch;
+    margin:0 auto 18px;
+  }
+  .final-cta p{color:rgba(244,241,230,0.75); max-width:50ch; margin:0 auto 34px; font-size:16px;}
+  .final-ctas{display:flex; gap:14px; justify-content:center; flex-wrap:wrap;}
+
+  footer{
+    background:var(--ink);
+    border-top:1px solid var(--line);
+    padding:34px 0;
+  }
+  footer .wrap{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;
+    font-size:13px; color:var(--sage);
+  }
+
+  section[id]{scroll-margin-top:80px;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">Skyeco<span>Pro</span></div>
+    <div class="nav-links">
+      <a href="#comment-ca-marche">Comment ça marche</a>
+      <a href="#tarifs">Tarifs</a>
+      <a href="#faq">Questions</a>
+    </div>
+    <div class="nav-cta">
+      <a class="btn btn-primary" href="inscription.html">Créer mon compte</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Prospection automatisée — France entière</div>
+      <h1>Arrêtez d'acheter des prospects.<br><em>Faites-les venir à vous.</em></h1>
+      <p class="lead">
+        Skyeco Pro construit votre page, pilote vos publicités Google Ads et vous
+        prévient par SMS à chaque nouveau prospect qualifié — avec une estimation
+        de projet déjà calculée.
+      </p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="inscription.html">Demander un rendez-vous</a>
+        <a class="btn btn-ghost" href="#comment-ca-marche">Voir comment ça marche</a>
+      </div>
+      <div class="hero-note">
+        <span class="mono">→</span> Mise en place unique, puis un abonnement qui suit votre volume de prospects.
+      </div>
+    </div>
+
+    <div class="phone-stage">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="phone-clock">09:41</div>
+          <div class="phone-date" id="phoneDate">—</div>
+
+          <div class="notif">
+            <div class="pulse-ring"></div>
+            <div class="dot">✆</div>
+            <div class="body">
+              <div class="top-row">
+                <span class="app">SKYECO PRO</span>
+                <span class="time">à l'instant</span>
+              </div>
+              <div class="title">Nouveau prospect qualifié</div>
+              <div class="msg">Terrasse 42 m² · Budget estimé ≈ 2 800 € · Le Mans (72)</div>
+            </div>
+          </div>
+
+          <div class="notif secondary">
+            <div class="dot">✆</div>
+            <div class="body">
+              <div class="top-row">
+                <span class="app">SKYECO PRO</span>
+                <span class="time">il y a 3 h</span>
+              </div>
+              <div class="title">Nouveau prospect qualifié</div>
+              <div class="msg">Clôture 28 m · Budget estimé ≈ 1 950 €</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="trust">
+  <div class="wrap">
+    <div class="trust-item"><span class="mark">01</span> Une page pensée pour votre activité, pas un modèle générique</div>
+    <div class="trust-item"><span class="mark">02</span> Des prospects qualifiés avant même votre premier appel</div>
+    <div class="trust-item"><span class="mark">03</span> Une estimation de projet calculée automatiquement</div>
+  </div>
+</div>
+
+<section class="section-light" id="comment-ca-marche">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Comment ça marche</div>
+      <h2>Quatre étapes, zéro complexité de votre côté.</h2>
+      <p>On s'occupe de la partie technique. Vous, vous recevez les prospects.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="num">01</div>
+        <h3>On construit votre page</h3>
+        <p>Une page à l'image de votre activité, pensée pour transformer un visiteur en prospect.</p>
+      </div>
+      <div class="step">
+        <div class="num">02</div>
+        <h3>On configure vos publicités</h3>
+        <p>Compte Google Ads créé et piloté pour votre zone géographique et votre métier.</p>
+      </div>
+      <div class="step">
+        <div class="num">03</div>
+        <h3>Vous recevez un SMS par prospect</h3>
+        <p>Coordonnées, besoin et estimation du projet, dès qu'un visiteur remplit le formulaire.</p>
+      </div>
+      <div class="step">
+        <div class="num">04</div>
+        <h3>Vous ajustez votre volume</h3>
+        <p>L'abonnement suit le nombre de prospects que vous souhaitez recevoir chaque mois.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-light" style="padding-top:0;">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Pourquoi pas juste acheter des prospects</div>
+      <h2>Un prospect loué, ou un système à vous.</h2>
+      <p>Les plateformes de leads vendent le même contact à plusieurs entreprises. Skyeco Pro construit un canal réservé au vôtre.</p>
+    </div>
+
+    <div class="compare">
+      <div class="compare-card bad">
+        <h3>Acheter des prospects</h3>
+        <ul>
+          <li>Le même contact est revendu à plusieurs concurrents</li>
+          <li>Aucune idée du budget avant le premier appel</li>
+          <li>Vous payez, qualifié ou non</li>
+          <li>Vous dépendez d'un catalogue que vous ne contrôlez pas</li>
+        </ul>
+      </div>
+      <div class="compare-card good">
+        <h3>Avec Skyeco Pro</h3>
+        <ul>
+          <li>Chaque prospect reçu est réservé à votre entreprise</li>
+          <li>Une estimation déjà en main avant de décrocher</li>
+          <li>Vous ajustez le volume selon votre activité</li>
+          <li>Publicités, page et qualification gérées de bout en bout</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-light" id="tarifs" style="padding-top:0;">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Tarifs</div>
+      <h2>Une mise en place, puis un abonnement à votre rythme.</h2>
+      <p>Pas d'abonnement figé : vous choisissez le nombre de prospects que vous voulez recevoir chaque mois.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <div class="price-card setup">
+        <div class="eyebrow" style="color:var(--sage);">Mise en place</div>
+        <div class="amount">2 500<sup>€</sup></div>
+        <p style="color:rgba(244,241,230,0.7); font-size:14px;">Paiement unique, à l'inscription</p>
+        <ul>
+          <li>Page dédiée à votre activité</li>
+          <li>Formulaire de contact et de devis</li>
+          <li>Création et configuration du compte Google Ads</li>
+          <li>Mise en ligne et connexion au SMS</li>
+        </ul>
+      </div>
+      <div class="price-card sub">
+        <div class="eyebrow">Abonnement mensuel</div>
+        <h3 style="margin-top:14px; font-size:20px;">Selon le volume de prospects souhaité</h3>
+        <ul>
+          <li>Gestion complète de vos publicités</li>
+          <li>Un SMS à chaque prospect qualifié reçu</li>
+          <li>Estimation de projet incluse pour chaque demande</li>
+          <li>Vous ajustez ou arrêtez à tout moment</li>
+        </ul>
+        <div class="slider-mock">
+          <div class="row"><span>PROSPECTS / MOIS</span><span>TARIF ESTIMÉ</span></div>
+          <div class="slider-track">
+            <div class="slider-fill"></div>
+            <div class="slider-handle"></div>
+          </div>
+          <div class="row" style="margin-top:12px; margin-bottom:0;"><span>Le montant exact dépend de votre secteur et de votre zone — établi avec vous au moment de l'inscription.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-light" id="faq" style="padding-top:0; padding-bottom:110px;">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Questions fréquentes</div>
+      <h2>Ce qu'on nous demande le plus souvent.</h2>
+    </div>
+
+    <div class="faq">
+      <div class="faq-item">
+        <h3>Le prospect m'appartient-il ?</h3>
+        <p>Chaque prospect reçu est réservé à votre entreprise : il n'est jamais partagé ni revendu à un concurrent.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Qui gère les publicités Google Ads ?</h3>
+        <p>Nous créons et pilotons votre compte pour vous. Vous n'avez rien à configurer ni à surveiller.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Et si je veux arrêter ?</h3>
+        <p>Vous pouvez arrêter ou ajuster votre volume de prospects à tout moment.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Comment l'estimation de projet est-elle calculée ?</h3>
+        <p>À partir des informations que vous nous donnez sur votre activité et vos tarifs, chaque demande reçoit une estimation adaptée avant même que vous ne rappeliez le prospect.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="wrap">
+    <h2>Prêt à recevoir vos propres prospects ?</h2>
+    <p>Un rendez-vous suffit pour définir votre page, votre zone et votre volume de départ.</p>
+    <div class="final-ctas">
+      <a class="btn btn-primary" href="inscription.html">Demander un rendez-vous</a>
+      <a class="btn btn-dark" href="inscription.html">Créer mon compte</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>Skyeco Pro — système de prospection géré de A à Z</div>
+    <div>France entière</div>
+  </div>
+</footer>
+
+<script>
+  var d = new Date();
+  var options = { weekday: 'long', day: 'numeric', month: 'long' };
+  document.getElementById('phoneDate').textContent = d.toLocaleDateString('fr-FR', options);
+</script>
+
+</body>
+</html>
