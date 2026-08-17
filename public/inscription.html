@@ -4,6 +4,14 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Créer mon compte — Skyeco Pro</title>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18394348169"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-18394348169');
+</script>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -37,6 +45,44 @@
     font-family: inherit;
   }
   input:focus { outline: none; border-color: #1e6f4c; }
+  input:disabled { background: #f0f3f1; color: #7a8a83; }
+
+  .siret-wrap {
+    position: relative;
+  }
+  .siret-status {
+    font-size: 0.78rem;
+    margin-top: 6px;
+    min-height: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .siret-status.loading { color: #5b6b64; }
+  .siret-status.found { color: #1e6f4c; }
+  .siret-status.error { color: #991b1b; }
+  .spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid #d8e3de;
+    border-top-color: #1e6f4c;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .company-preview {
+    background: #f0f6f2;
+    border: 1px solid #cfe3d6;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: #1e6f4c;
+    display: none;
+  }
+  .company-preview.show { display: block; }
+  .company-preview strong { display: block; font-size: 0.92rem; margin-bottom: 2px; }
 
   .password-wrap {
     position: relative;
@@ -122,6 +168,14 @@
 <div class="card" id="app">
   <div class="brand">Skyeco Pro</div>
   <h1>Créer mon compte entreprise</h1>
+
+  <label for="siret">Numéro de SIRET</label>
+  <div class="siret-wrap">
+    <input type="text" id="siret" placeholder="14 chiffres, ex : 93999787000018" inputmode="numeric" maxlength="14" />
+  </div>
+  <div class="siret-status" id="siretStatus"></div>
+  <div class="company-preview" id="companyPreview"></div>
+
   <label for="nomEntreprise">Nom de votre entreprise</label>
   <input type="text" id="nomEntreprise" placeholder="Ex : Plomberie Martin" />
   <label for="email">Email</label>
@@ -156,11 +210,78 @@
   const SUPABASE_URL = "https://heviivnlswohnrzcguxv.supabase.co";
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_un7u9BDV_1IL3EjYTuAoOg_ZUKZ-ZjW";
   const API_URL = "/api/creer-entreprise";
+  const SIRENE_API = "https://recherche-entreprises.api.gouv.fr/search";
+
   const btn = document.getElementById("btnInscription");
   const errorBox = document.getElementById("errorBox");
   const passwordInput = document.getElementById("motdepasse");
   const togglePassword = document.getElementById("togglePassword");
   const eyeIcon = document.getElementById("eyeIcon");
+  const siretInput = document.getElementById("siret");
+  const siretStatus = document.getElementById("siretStatus");
+  const companyPreview = document.getElementById("companyPreview");
+  const nomEntrepriseInput = document.getElementById("nomEntreprise");
+
+  let adresseSiege = "";
+  let siretLookupToken = 0;
+
+  siretInput.addEventListener("input", (e) => {
+    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 14);
+    const value = e.target.value;
+    companyPreview.classList.remove("show");
+    adresseSiege = "";
+
+    if (value.length !== 14) {
+      siretStatus.className = "siret-status";
+      siretStatus.innerHTML = value.length > 0 ? `${value.length}/14 chiffres` : "";
+      return;
+    }
+
+    siretStatus.className = "siret-status loading";
+    siretStatus.innerHTML = '<span class="spinner"></span> Recherche en cours…';
+
+    const myToken = ++siretLookupToken;
+    lookupSiret(value, myToken);
+  });
+
+  async function lookupSiret(siret, myToken) {
+    try {
+      const res = await fetch(`${SIRENE_API}?q=${siret}&page=1&per_page=1`);
+      if (myToken !== siretLookupToken) return; // une saisie plus récente a pris le relais
+      if (!res.ok) throw new Error("recherche indisponible");
+      const data = await res.json();
+      const result = data.results && data.results[0];
+
+      if (!result) {
+        siretStatus.className = "siret-status error";
+        siretStatus.textContent = "Aucun établissement trouvé pour ce SIRET.";
+        return;
+      }
+
+      const nom = result.nom_complet || result.nom_raison_sociale || "";
+      const siege = result.siege || {};
+      const adresseParts = [
+        siege.numero_voie, siege.type_voie, siege.libelle_voie
+      ].filter(Boolean).join(" ");
+      const adresseComplete = [
+        adresseParts,
+        [siege.code_postal, siege.libelle_commune].filter(Boolean).join(" ")
+      ].filter(Boolean).join(", ");
+
+      if (nom) nomEntrepriseInput.value = nom;
+      adresseSiege = adresseComplete;
+
+      siretStatus.className = "siret-status found";
+      siretStatus.textContent = "✓ Établissement trouvé";
+
+      companyPreview.innerHTML = `<strong>${nom || "Nom non communiqué"}</strong>${adresseComplete || "Adresse non communiquée"}`;
+      companyPreview.classList.add("show");
+    } catch (err) {
+      if (myToken !== siretLookupToken) return;
+      siretStatus.className = "siret-status error";
+      siretStatus.textContent = "Recherche indisponible, saisissez le nom manuellement.";
+    }
+  }
 
   const eyeOpen = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
   const eyeClosed = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
@@ -218,7 +339,7 @@
 
   btn.addEventListener("click", async () => {
     errorBox.innerHTML = "";
-    const nomEntreprise = document.getElementById("nomEntreprise").value.trim();
+    const nomEntreprise = nomEntrepriseInput.value.trim();
     const email = document.getElementById("email").value.trim();
     const motdepasse = passwordInput.value;
     const strength = evaluatePassword(motdepasse);
@@ -262,6 +383,8 @@
           nom: nomEntreprise,
           slug: slugify(nomEntreprise),
           email_contact: email,
+          siret: siretInput.value || null,
+          adresse: adresseSiege || null,
         }),
       });
       const entrepriseData = await entrepriseRes.json();
