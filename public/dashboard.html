@@ -257,6 +257,10 @@
       const rows = await res.json();
       const entreprise = rows[0];
       if (!entreprise) throw new Error("Aucune entreprise trouvée pour ce compte.");
+      if (!entreprise.contrat_accepte || entreprise.paiement_statut !== "valide") {
+        window.location.href = "/contrat-paiement.html";
+        return;
+      }
       const statutClasse = entreprise.abonnement_actif ? "statut-actif" : "statut-suspendu";
       app.innerHTML = `
         <div class="card">
