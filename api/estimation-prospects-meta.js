@@ -63,9 +63,14 @@ const INTEREST_QUERY_MAP = {
 };
 
 // Résout l'activité ("Couvreur"...) en centre d'intérêt Meta le plus pertinent.
+// On essaie d'abord les termes anglais mappés (plus fiables sur la taxonomie
+// Meta) avant le terme français brut, qui peut matcher un intérêt totalement
+// hors sujet par coïncidence de nom (ex. "Clôture" a pu matcher un intérêt
+// lié à l'escrime plutôt qu'à la pose de clôtures).
 async function resolveInterest(activite) {
   const key = activite.toLowerCase();
-  const queries = [activite, ...(INTEREST_QUERY_MAP[key] || ["home improvement"])];
+  const mapped = INTEREST_QUERY_MAP[key] || ["home improvement"];
+  const queries = [...mapped, activite];
 
   for (const q of queries) {
     const data = await metaGet("/search", { type: "adinterest", q, limit: "5" });
@@ -76,11 +81,15 @@ async function resolveInterest(activite) {
 }
 
 // Résout la zone ("Morbihan", "Vannes"...) en cible géographique Meta.
+// country_code="FR" est indispensable : sans lui, la recherche peut renvoyer
+// un lieu du même nom dans n'importe quel pays (ex. "Morbihan" a pu matcher
+// une ville homonyme à l'étranger).
 async function resolveGeo(zone) {
   const data = await metaGet("/search", {
     type: "adgeolocation",
     q: zone,
-    location_types: ["region", "city", "country"],
+    location_types: ["region", "city"],
+    country_code: "FR",
     limit: "5",
   });
   const results = data.data || [];
