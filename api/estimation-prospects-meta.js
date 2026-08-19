@@ -1,0 +1,171 @@
+// api/estimation-prospects-meta.js
+// Calcule une estimation du potentiel de prospects via l'API Meta Marketing
+// (Facebook/Instagram Ads) pour un couple activité + zone géographique donné.
+//
+// IMPORTANT — Meta fonctionne différemment de Google Ads : il n'y a pas de
+// "volume de recherche" (les gens ne tapent pas de requête, l'algorithme cible
+// des audiences par centres d'intérêt/comportement). Les métriques renvoyées
+// sont donc différentes :
+//   - audiencePotentielle : nombre de comptes Meta atteignables avec ce ciblage
+//   - cpmMin / cpmMax     : coût estimé pour 1000 affichages (pas un CPC)
+//   - clientsEstimesParMois : basé sur des hypothèses de CTR + conversion,
+//     configurables (aucune de ces deux valeurs n'est fournie par l'API Meta)
+//
+// Étapes de l'API Meta Marketing utilisées :
+//   - GET /search?type=adinterest      -> résout l'activité en centre d'intérêt Meta
+//   - GET /search?type=adgeolocation   -> résout la zone en cible géographique Meta
+//   - GET /act_{id}/delivery_estimate  -> audience potentielle + CPM estimé
+//
+// Variables d'environnement requises (Vercel > Project Settings > Environment Variables) :
+//   META_ADS_ENABLED       "true" pour activer cette source (sinon toujours désactivée)
+//   META_ACCESS_TOKEN      Token d'accès système (System User) avec la permission ads_read
+//   META_AD_ACCOUNT_ID     Identifiant du compte publicitaire, SANS le préfixe "act_"
+//   META_CTR_DEFAULT       Optionnel, ex. "0.01" pour 1% de taux de clic (défaut : 0.01)
+//   CONVERSION_RATE_DEFAULT Optionnel, partagé avec l'estimation Google (défaut : 0.03)
+//
+// Tant que META_ADS_ENABLED n'est pas "true" ou que les autres variables manquent,
+// l'endpoint répond en 503 avec la liste des variables manquantes plutôt que de
+// planter — le front-end masque alors simplement le panneau Meta.
+
+const API_VERSION = "v21.0";
+const BASE_URL = `https://graph.facebook.com/${API_VERSION}`;
+
+const REQUIRED_ENV = ["META_ACCESS_TOKEN", "META_AD_ACCOUNT_ID"];
+
+async function metaGet(path, params) {
+  const url = new URL(`${BASE_URL}${path}`);
+  Object.entries(params).forEach(([key, value]) => {
+    url.searchParams.set(key, typeof value === "string" ? value : JSON.stringify(value));
+  });
+  url.searchParams.set("access_token", process.env.META_ACCESS_TOKEN);
+
+  const res = await fetch(url.toString());
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Erreur Meta API (${res.status}): ${text}`);
+  }
+  return res.json();
+}
+
+// Résout l'activité ("Couvreur"...) en centre d'intérêt Meta le plus pertinent.
+async function resolveInterest(activite) {
+  const data = await metaGet("/search", {
+    type: "adinterest",
+    q: activite,
+    limit: "5",
+  });
+  const results = data.data || [];
+  return results.length ? results[0] : null; // { id, name, audience_size_lower_bound, ... }
+}
+
+// Résout la zone ("Morbihan", "Vannes"...) en cible géographique Meta.
+async function resolveGeo(zone) {
+  const data = await metaGet("/search", {
+    type: "adgeolocation",
+    q: zone,
+    location_types: ["region", "city", "country"],
+    limit: "5",
+  });
+  const results = data.data || [];
+  return results.length ? results[0] : null; // { key, name, type, ... }
+}
+
+async function fetchDeliveryEstimate(interest, geo) {
+  const accountId = process.env.META_AD_ACCOUNT_ID;
+  const targetingSpec = {
+    geo_locations: geo
+      ? { [`${geo.type}s`]: [{ key: geo.key }] }
+      : { countries: ["FR"] },
+    interests: interest ? [{ id: interest.id, name: interest.name }] : undefined,
+    publisher_platforms: ["facebook", "instagram"],
+  };
+
+  const data = await metaGet(`/act_${accountId}/delivery_estimate`, {
+    optimization_goal: "REACH",
+    targeting_spec: targetingSpec,
+  });
+
+  const estimate = data.data && data.data[0];
+  return estimate || null;
+}
+
+function microToEuros(value) {
+  if (value === undefined || value === null) return null;
+  return Math.round((Number(value) / 100) * 100) / 100; // Meta renvoie des centimes
+}
+
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST" && req.method !== "GET") {
+    return res.status(405).json({ success: false, error: "Méthode non autorisée" });
+  }
+
+  if (process.env.META_ADS_ENABLED !== "true") {
+    return res.status(503).json({
+      success: false,
+      disabled: true,
+      error: "La source Meta Ads n'est pas activée.",
+    });
+  }
+
+  const source = req.method === "GET" ? req.query : req.body || {};
+  const activite = (source.activite || "").toString().trim();
+  const zone = (source.zone || "").toString().trim();
+
+  if (!activite || !zone) {
+    return res.status(400).json({ success: false, error: "Activité et zone requises." });
+  }
+
+  const missing = REQUIRED_ENV.filter((key) => !process.env[key]);
+  if (missing.length) {
+    return res.status(503).json({
+      success: false,
+      error: "Le calculateur Meta n'est pas encore configuré.",
+      missingEnv: missing,
+    });
+  }
+
+  try {
+    const [interest, geo] = await Promise.all([resolveInterest(activite), resolveGeo(zone)]);
+    const estimate = await fetchDeliveryEstimate(interest, geo);
+
+    if (!estimate) {
+      return res.status(200).json({
+        success: true,
+        found: false,
+        message: "Pas assez de données Meta pour cette combinaison activité / zone.",
+      });
+    }
+
+    const audience = estimate.estimate_mau || null;
+    const cpmLow = microToEuros(estimate.bid_estimate?.low_inclusive);
+    const cpmHigh = microToEuros(estimate.bid_estimate?.high_inclusive);
+
+    const ctr = Number(process.env.META_CTR_DEFAULT || 0.01);
+    const conversionRate = Number(process.env.CONVERSION_RATE_DEFAULT || 0.03);
+    const estimatedClicks = audience ? Math.round(audience * ctr) : null;
+    const estimatedClients = estimatedClicks ? Math.round(estimatedClicks * conversionRate) : null;
+
+    return res.status(200).json({
+      success: true,
+      found: true,
+      activite,
+      zone,
+      audiencePotentielle: audience,
+      cpmMin: cpmLow,
+      cpmMax: cpmHigh,
+      tauxClic: ctr,
+      tauxConversion: conversionRate,
+      clientsEstimesParMois: estimatedClients,
+    });
+  } catch (err) {
+    console.error("estimation-prospects-meta error:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: "Erreur lors du calcul de l'estimation Meta, merci de réessayer.",
+    });
+  }
+}
