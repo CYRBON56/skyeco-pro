@@ -612,16 +612,6 @@
             <div class="calc-note">Sur les <span id="resNoteTotal">—</span> recherches mensuelles liées à ce métier dans cette zone, on estime qu'une petite part ira au bout de la démarche jusqu'au devis — c'est une hypothèse prudente, pas une donnée Google Ads.</div>
           </div>
 
-          <div class="calc-card" id="calcResultMeta" style="display:none;">
-            <div class="calc-label"><span class="badge">M</span>Résultat estimé — Meta</div>
-            <div class="calc-result-row"><span class="k">Audience potentielle</span><span class="v accent" id="resAudience">—</span></div>
-            <div class="calc-result-row"><span class="k">CPM estimé</span><span class="v" id="resCpm">—</span></div>
-            <div class="calc-result-row"><span class="k">Taux de clic moyen</span><span class="v" id="resCtr">—</span></div>
-            <div class="calc-result-row"><span class="k">Taux de conversion moyen</span><span class="v" id="resConversionMeta">—</span></div>
-            <div class="calc-result-row"><span class="k">Clients estimés / mois</span><span class="v accent" id="resClientsMeta">—</span></div>
-            <div class="calc-note" id="resNoteMeta">Estimation basée sur l'audience Meta atteignable, pas sur un volume de recherche — Meta cible par centres d'intérêt plutôt que par intention de recherche active.</div>
-          </div>
-
           <div class="calc-card calc-cta" id="calcCta" style="display:none;">
             <div class="calc-label"><span class="badge">S</span>Ça vous intéresse ?</div>
             <p style="font-size:12.5px; color:#4c5b50; margin-bottom:12px; line-height:1.5;">Un rendez-vous suffit pour définir votre page, votre zone et votre volume de départ.</p>
@@ -932,7 +922,6 @@
   var calcBtn = document.getElementById('calcBtn');
   var calcMsg = document.getElementById('calcMsg');
   var calcResultGoogle = document.getElementById('calcResultGoogle');
-  var calcResultMeta = document.getElementById('calcResultMeta');
   var calcCta = document.getElementById('calcCta');
 
   function showCta() {
@@ -983,16 +972,7 @@
   }
 
   function renderMeta(data) {
-    if (!data.success || !data.found) return false;
-    document.getElementById('resAudience').textContent = data.audiencePotentielle != null ? ('≈ ' + data.audiencePotentielle.toLocaleString('fr-FR')) : '—';
-    document.getElementById('resCpm').textContent = (data.cpmMin != null && data.cpmMax != null)
-      ? (data.cpmMin.toFixed(2).replace('.', ',') + ' € – ' + data.cpmMax.toFixed(2).replace('.', ',') + ' €')
-      : '—';
-    document.getElementById('resCtr').textContent = data.tauxClic != null ? (Math.round(data.tauxClic * 1000) / 10 + ' %') : '—';
-    document.getElementById('resConversionMeta').textContent = data.tauxConversion != null ? (Math.round(data.tauxConversion * 100) + ' %') : '—';
-    document.getElementById('resClientsMeta').textContent = data.clientsEstimesParMois != null ? ('≈ ' + data.clientsEstimesParMois) : '—';
-    calcResultMeta.style.display = 'block';
-    return true;
+    return false;
   }
 
   calcBtn.addEventListener('click', function () {
@@ -1012,22 +992,12 @@
     calcBtn.disabled = true;
     calcBtn.textContent = 'Calcul en cours...';
 
-    Promise.all([
-      fetchSource('/api/estimation-prospects', activite, zone),
-      fetchSource('/api/estimation-prospects-meta', activite, zone)
-    ])
-      .then(function (results) {
-        var googleData = results[0];
-        var metaData = results[1];
-
+    fetchSource('/api/estimation-prospects', activite, zone)
+      .then(function (googleData) {
         var googleShown = renderGoogle(googleData, activite, zone);
-        var metaShown = renderMeta(metaData);
 
-        if (!googleShown && !metaShown) {
-          // Ni l'une ni l'autre source n'a pu répondre (pas configurées, en
-          // attente d'approbation, ou erreur) : message clair, mais on laisse
-          // quand même la porte ouverte à une demande de rappel.
-          calcMsg.textContent = googleData.error || metaData.error || 'Estimation momentanément indisponible.';
+        if (!googleShown) {
+          calcMsg.textContent = googleData.error || 'Estimation momentanément indisponible.';
         }
         showCta();
 
