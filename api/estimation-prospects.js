@@ -1,6 +1,8 @@
 // api/estimation-prospects.js
 // Calcule une estimation du potentiel de prospects (recherches Google, concurrence,
-// CPC, clients estimés) pour un couple activité + zone géographique donné.
+// CPC) pour un couple activité + zone géographique donné, détaillé mot-clé par
+// mot-clé (pas de moyenne agrégée — chaque ligne du seed est renvoyée telle quelle
+// pour affichage en tableau côté front).
 //
 // Données réelles récupérées via l'API Google Ads (Keyword Planner) :
 //   - geoTargetConstants:suggest        -> résout le nom de la zone en identifiant Google Ads
@@ -13,18 +15,18 @@
 //   GOOGLE_ADS_REFRESH_TOKEN      Refresh token OAuth2 généré une fois pour le compte Google Ads
 //   GOOGLE_ADS_LOGIN_CUSTOMER_ID  Identifiant du compte manager (MCC), sans tirets
 //   GOOGLE_ADS_CUSTOMER_ID        Identifiant du compte Google Ads interrogé, sans tirets
-//   CONVERSION_RATE_DEFAULT       Optionnel, ex. "0.03" pour 3 % (défaut : 0.03)
 //
 // Tant que ces variables ne sont pas configurées, l'endpoint répond en 503 avec la
 // liste des variables manquantes plutôt que de planter — le front-end bascule alors
 // sur un message clair et laisse quand même la possibilité de demander un rappel.
 //
-// Hypothèses documentées (non fournies telles quelles par l'API Google Ads) :
-//   - "Concurrents actifs" est une estimation dérivée de l'indice de concurrence
-//     Google Ads (competitionIndex, 0-100), convertie en un nombre d'annonceurs
-//     plausible. Ce n'est pas un décompte réel d'entreprises concurrentes.
-//   - "Taux de conversion moyen" est une hypothèse commerciale fixe (configurable
-//     via CONVERSION_RATE_DEFAULT), pas une donnée Google Ads.
+// Note documentée (non fournie telle quelle par l'API Google Ads) :
+//   - "Concurrence" est directement l'indice competitionIndex (0-100) de Google Ads,
+//     converti en libellé faible/moyenne/élevée pour l'affichage.
+//   - "Taux de conversion" est une hypothèse commerciale fixe et volontairement
+//     prudente (configurable via CONVERSION_RATE_DEFAULT, 2% par défaut) : parmi
+//     les gens qui tapent une recherche liée au métier, seule une petite fraction
+//     va jusqu'à demander un devis. Ce n'est pas une donnée Google Ads.
 
 const API_VERSION = "v18";
 const BASE_URL = `https://googleads.googleapis.com/${API_VERSION}`;
@@ -81,7 +83,10 @@ function adsHeaders(accessToken) {
   return headers;
 }
 
-// Résout un nom de zone ("Morbihan", "Vannes"...) en identifiant Google Ads.
+// Résout un nom de zone ("Morbihan", "Bretagne", "Vannes"...) en identifiant
+// Google Ads. Renvoie aussi le nom canonique retourné par Google, utile pour
+// confirmer côté front que la bonne zone a été comprise (ex: distinguer un
+// département d'une ville homonyme).
 async function resolveGeoTarget(accessToken, zone) {
   const res = await fetch(`${BASE_URL}/geoTargetConstants:suggest`, {
     method: "POST",
@@ -99,7 +104,11 @@ async function resolveGeoTarget(accessToken, zone) {
   const data = await res.json();
   const suggestion =
     data.geoTargetConstantSuggestions && data.geoTargetConstantSuggestions[0];
-  return suggestion ? suggestion.geoTargetConstant.resourceName : null; // ex: "geoTargetConstants/1006585"
+  if (!suggestion) return { resourceName: null, canonicalName: null };
+  return {
+    resourceName: suggestion.geoTargetConstant.resourceName, // ex: "geoTargetConstants/1006585"
+    canonicalName: suggestion.geoTargetConstant.name || null,
+  };
 }
 
 async function fetchKeywordIdeas(accessToken, activite, zone, geoTargetResourceName) {
@@ -139,55 +148,34 @@ function microsToEuros(micros) {
   return Math.round((Number(micros) / 1_000_000) * 100) / 100;
 }
 
-// Voir note en tête de fichier : approximation, pas une donnée exacte.
-function estimateCompetitorCount(competitionIndex) {
-  if (competitionIndex === null || competitionIndex === undefined) return null;
-  return Math.max(1, Math.round((competitionIndex / 100) * 25));
+function competitionLabel(index) {
+  if (index === null || index === undefined) return "Inconnue";
+  if (index < 33) return "Faible";
+  if (index < 66) return "Moyenne";
+  return "Élevée";
 }
 
-function aggregateMetrics(results, activite) {
-  if (!results.length) return null;
-
-  const exact = results.find(
-    (r) => r.text && r.text.toLowerCase() === activite.toLowerCase()
-  );
-  const pool = exact
-    ? [exact]
-    : results
-        .slice()
-        .sort(
-          (a, b) =>
-            (b.keywordIdeaMetrics?.avgMonthlySearches || 0) -
-            (a.keywordIdeaMetrics?.avgMonthlySearches || 0)
-        )
-        .slice(0, 3);
-
-  const searches = pool.map((r) => Number(r.keywordIdeaMetrics?.avgMonthlySearches || 0));
-  const avgSearches = Math.round(searches.reduce((a, b) => a + b, 0) / pool.length);
-
-  const competitionIndexes = pool
-    .map((r) => r.keywordIdeaMetrics?.competitionIndex)
-    .filter((v) => v !== undefined && v !== null)
-    .map(Number);
-  const avgCompetitionIndex = competitionIndexes.length
-    ? Math.round(competitionIndexes.reduce((a, b) => a + b, 0) / competitionIndexes.length)
-    : null;
-
-  const lowBids = pool
-    .map((r) => r.keywordIdeaMetrics?.lowTopOfPageBidMicros)
-    .filter(Boolean)
-    .map(Number);
-  const highBids = pool
-    .map((r) => r.keywordIdeaMetrics?.highTopOfPageBidMicros)
-    .filter(Boolean)
-    .map(Number);
-
-  return {
-    avgSearches,
-    avgCompetitionIndex,
-    lowCpc: lowBids.length ? microsToEuros(Math.min(...lowBids)) : null,
-    highCpc: highBids.length ? microsToEuros(Math.max(...highBids)) : null,
-  };
+// Transforme chaque résultat brut de l'API en une ligne prête à afficher,
+// triée par volume de recherche décroissant. Ne garde que les mots-clés qui
+// ont au moins une métrique exploitable (évite les lignes 100% vides).
+function buildKeywordRows(results) {
+  return results
+    .map((r) => {
+      const m = r.keywordIdeaMetrics || {};
+      const searches = m.avgMonthlySearches !== undefined ? Number(m.avgMonthlySearches) : null;
+      const competitionIndex = m.competitionIndex !== undefined ? Number(m.competitionIndex) : null;
+      const lowCpc = microsToEuros(m.lowTopOfPageBidMicros);
+      const highCpc = microsToEuros(m.highTopOfPageBidMicros);
+      return {
+        motCle: r.text,
+        recherchesParMois: searches,
+        concurrence: competitionLabel(competitionIndex),
+        cpcMin: lowCpc,
+        cpcMax: highCpc,
+      };
+    })
+    .filter((row) => row.recherchesParMois !== null)
+    .sort((a, b) => (b.recherchesParMois || 0) - (a.recherchesParMois || 0));
 }
 
 export default async function handler(req, res) {
@@ -218,32 +206,38 @@ export default async function handler(req, res) {
 
   try {
     const accessToken = await getAccessToken();
-    const geoTargetResourceName = await resolveGeoTarget(accessToken, zone);
+    const { resourceName: geoTargetResourceName, canonicalName: zoneResolue } = await resolveGeoTarget(
+      accessToken,
+      zone
+    );
     const results = await fetchKeywordIdeas(accessToken, activite, zone, geoTargetResourceName);
-    const metrics = aggregateMetrics(results, activite);
+    const keywords = buildKeywordRows(results);
 
-    if (!metrics) {
+    if (!keywords.length) {
       return res.status(200).json({
         success: true,
         found: false,
+        activite,
+        zone,
+        zoneResolue,
         message: "Pas assez de données Google Ads pour cette combinaison activité / zone.",
       });
     }
 
-    const conversionRate = Number(process.env.CONVERSION_RATE_DEFAULT || 0.03);
-    const estimatedClients = Math.max(0, Math.round(metrics.avgSearches * conversionRate));
+    const totalSearches = keywords.reduce((sum, k) => sum + (k.recherchesParMois || 0), 0);
+    const conversionRate = Number(process.env.CONVERSION_RATE_DEFAULT || 0.02);
+    const clientsEstimesParMois = Math.max(0, Math.round(totalSearches * conversionRate));
 
     return res.status(200).json({
       success: true,
       found: true,
       activite,
       zone,
-      recherchesParMois: metrics.avgSearches,
-      concurrentsActifs: estimateCompetitorCount(metrics.avgCompetitionIndex),
-      cpcMin: metrics.lowCpc,
-      cpcMax: metrics.highCpc,
+      zoneResolue, // nom canonique renvoyé par Google, pour vérifier que la bonne zone a été comprise
+      keywords, // tableau détaillé, un objet par mot-clé
+      totalRecherchesParMois: totalSearches,
       tauxConversion: conversionRate,
-      clientsEstimesParMois: estimatedClients,
+      clientsEstimesParMois,
     });
   } catch (err) {
     console.error("estimation-prospects error:", err.message);
