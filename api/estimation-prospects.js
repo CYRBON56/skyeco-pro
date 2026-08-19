@@ -29,7 +29,7 @@
 //       clics -> (taux de conversion, CONVERSION_RATE_DEFAULT, 3% par défaut) -> clients
 //     Ni l'une ni l'autre n'est une donnée Google Ads réelle.
 
-const API_VERSION = "v18";
+const API_VERSION = "v23";
 const BASE_URL = `https://googleads.googleapis.com/${API_VERSION}`;
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 
