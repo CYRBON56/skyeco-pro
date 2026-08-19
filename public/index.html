@@ -543,14 +543,24 @@
             <div class="calc-msg" id="calcMsg"></div>
           </div>
 
-          <div class="calc-card" id="calcResult" style="display:none;">
-            <div class="calc-label"><span class="badge">S</span>Résultat estimé</div>
+          <div class="calc-card" id="calcResultGoogle" style="display:none;">
+            <div class="calc-label"><span class="badge">G</span>Résultat estimé — Google</div>
             <div class="calc-result-row"><span class="k">Recherches / mois</span><span class="v accent" id="resSearches">—</span></div>
             <div class="calc-result-row"><span class="k">Concurrents actifs</span><span class="v" id="resCompetitors">—</span></div>
             <div class="calc-result-row"><span class="k">Coût par clic estimé</span><span class="v" id="resCpc">—</span></div>
             <div class="calc-result-row"><span class="k">Taux de conversion moyen</span><span class="v" id="resConversion">—</span></div>
             <div class="calc-result-row"><span class="k">Clients estimés / mois</span><span class="v accent" id="resClients">—</span></div>
             <div class="calc-note" id="resNote"></div>
+          </div>
+
+          <div class="calc-card" id="calcResultMeta" style="display:none;">
+            <div class="calc-label"><span class="badge">M</span>Résultat estimé — Meta</div>
+            <div class="calc-result-row"><span class="k">Audience potentielle</span><span class="v accent" id="resAudience">—</span></div>
+            <div class="calc-result-row"><span class="k">CPM estimé</span><span class="v" id="resCpm">—</span></div>
+            <div class="calc-result-row"><span class="k">Taux de clic moyen</span><span class="v" id="resCtr">—</span></div>
+            <div class="calc-result-row"><span class="k">Taux de conversion moyen</span><span class="v" id="resConversionMeta">—</span></div>
+            <div class="calc-result-row"><span class="k">Clients estimés / mois</span><span class="v accent" id="resClientsMeta">—</span></div>
+            <div class="calc-note" id="resNoteMeta">Estimation basée sur l'audience Meta atteignable, pas sur un volume de recherche — Meta cible par centres d'intérêt plutôt que par intention de recherche active.</div>
           </div>
 
           <div class="calc-card calc-cta" id="calcCta" style="display:none;">
@@ -754,10 +764,12 @@
   // TODO : remplacer par le vrai lien Calendly avant mise en production.
   var CALENDLY_URL = "https://calendly.com/c-bon-ecosky/devis-skyeco-pro-appel-telephonique";
 
-  // ---- Calculateur de potentiel (connecté à l'API Google Ads) -------
+  // ---- Calculateur de potentiel (Google Ads + Meta Ads, chaque source ----
+  // ---- s'active/se désactive indépendamment via les variables Vercel) ----
   var calcBtn = document.getElementById('calcBtn');
   var calcMsg = document.getElementById('calcMsg');
-  var calcResult = document.getElementById('calcResult');
+  var calcResultGoogle = document.getElementById('calcResultGoogle');
+  var calcResultMeta = document.getElementById('calcResultMeta');
   var calcCta = document.getElementById('calcCta');
 
   function showCta() {
@@ -765,10 +777,49 @@
     calcCta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
+  function fetchSource(url, activite, zone) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ activite: activite, zone: zone })
+    })
+      .then(function (res) { return res.json(); })
+      .catch(function () { return { success: false, error: 'network' }; });
+  }
+
+  function renderGoogle(data, activite, zone) {
+    if (!data.success || !data.found) return false;
+    document.getElementById('resSearches').textContent = '≈ ' + data.recherchesParMois;
+    document.getElementById('resCompetitors').textContent = (data.concurrentsActifs != null) ? data.concurrentsActifs : '—';
+    document.getElementById('resCpc').textContent = (data.cpcMin != null && data.cpcMax != null)
+      ? (data.cpcMin.toFixed(2).replace('.', ',') + ' € – ' + data.cpcMax.toFixed(2).replace('.', ',') + ' €')
+      : '—';
+    document.getElementById('resConversion').textContent = Math.round(data.tauxConversion * 100) + ' %';
+    document.getElementById('resClients').textContent = '≈ ' + data.clientsEstimesParMois;
+    document.getElementById('resNote').textContent = 'Basé sur les volumes de recherche Google pour "' + activite.toLowerCase() + '" dans ' + zone + ', avec un taux de conversion moyen de ' + Math.round(data.tauxConversion * 100) + ' % des prospects en clients.';
+    calcResultGoogle.style.display = 'block';
+    return true;
+  }
+
+  function renderMeta(data) {
+    if (!data.success || !data.found) return false;
+    document.getElementById('resAudience').textContent = data.audiencePotentielle != null ? ('≈ ' + data.audiencePotentielle.toLocaleString('fr-FR')) : '—';
+    document.getElementById('resCpm').textContent = (data.cpmMin != null && data.cpmMax != null)
+      ? (data.cpmMin.toFixed(2).replace('.', ',') + ' € – ' + data.cpmMax.toFixed(2).replace('.', ',') + ' €')
+      : '—';
+    document.getElementById('resCtr').textContent = data.tauxClic != null ? (Math.round(data.tauxClic * 1000) / 10 + ' %') : '—';
+    document.getElementById('resConversionMeta').textContent = data.tauxConversion != null ? (Math.round(data.tauxConversion * 100) + ' %') : '—';
+    document.getElementById('resClientsMeta').textContent = data.clientsEstimesParMois != null ? ('≈ ' + data.clientsEstimesParMois) : '—';
+    calcResultMeta.style.display = 'block';
+    return true;
+  }
+
   calcBtn.addEventListener('click', function () {
     var activite = document.getElementById('calcActivite').value;
     var zone = document.getElementById('calcZone').value.trim();
     calcMsg.textContent = '';
+    calcResultGoogle.style.display = 'none';
+    calcResultMeta.style.display = 'none';
 
     if (!zone) {
       calcMsg.textContent = "Merci d'indiquer votre zone géographique.";
@@ -778,44 +829,26 @@
     calcBtn.disabled = true;
     calcBtn.textContent = 'Calcul en cours...';
 
-    fetch('/api/estimation-prospects', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ activite: activite, zone: zone })
-    })
-      .then(function (res) { return res.json(); })
-      .then(function (data) {
-        if (!data.success) {
-          // Calculateur pas encore connecté (variables Google Ads manquantes) ou
-          // erreur technique : on prévient, mais on laisse quand même la porte
-          // ouverte à une demande de rappel.
-          calcMsg.textContent = data.error || 'Estimation momentanément indisponible.';
-          showCta();
-          return;
-        }
-        if (!data.found) {
-          calcMsg.textContent = data.message || 'Pas assez de données pour cette zone.';
-          showCta();
-          return;
-        }
+    Promise.all([
+      fetchSource('/api/estimation-prospects', activite, zone),
+      fetchSource('/api/estimation-prospects-meta', activite, zone)
+    ])
+      .then(function (results) {
+        var googleData = results[0];
+        var metaData = results[1];
 
-        document.getElementById('resSearches').textContent = '≈ ' + data.recherchesParMois;
-        document.getElementById('resCompetitors').textContent = (data.concurrentsActifs != null) ? data.concurrentsActifs : '—';
-        document.getElementById('resCpc').textContent = (data.cpcMin != null && data.cpcMax != null)
-          ? (data.cpcMin.toFixed(2).replace('.', ',') + ' € – ' + data.cpcMax.toFixed(2).replace('.', ',') + ' €')
-          : '—';
-        document.getElementById('resConversion').textContent = Math.round(data.tauxConversion * 100) + ' %';
-        document.getElementById('resClients').textContent = '≈ ' + data.clientsEstimesParMois;
-        document.getElementById('resNote').textContent = 'Basé sur les volumes de recherche Google pour "' + activite.toLowerCase() + '" dans ' + zone + ', avec un taux de conversion moyen de ' + Math.round(data.tauxConversion * 100) + ' % des prospects en clients.';
+        var googleShown = renderGoogle(googleData, activite, zone);
+        var metaShown = renderMeta(metaData);
 
-        calcResult.style.display = 'block';
+        if (!googleShown && !metaShown) {
+          // Ni l'une ni l'autre source n'a pu répondre (pas configurées, en
+          // attente d'approbation, ou erreur) : message clair, mais on laisse
+          // quand même la porte ouverte à une demande de rappel.
+          calcMsg.textContent = googleData.error || metaData.error || 'Estimation momentanément indisponible.';
+        }
         showCta();
 
         if (window.gtag) { gtag('event', 'test_potentiel_calcule', { activite: activite, zone: zone }); }
-      })
-      .catch(function () {
-        calcMsg.textContent = 'Erreur technique, merci de réessayer.';
-        showCta();
       })
       .finally(function () {
         calcBtn.disabled = false;
