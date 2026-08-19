@@ -125,7 +125,7 @@ async function fetchKeywordIdeas(accessToken, activite, zone, geoTargetResourceN
   const body = {
     language: "languageConstants/1003", // Français
     keywordSeed: { keywords: seedKeywords },
-    keywordPlanNetwork: "GOOGLE_SEARCH",
+    keywordPlanNetwork: "GOOGLE_SEARCH_AND_PARTNERS", // recherche Google + sites partenaires (YouTube Search, etc.), volume plus large que GOOGLE_SEARCH seul
   };
   if (geoTargetResourceName) {
     body.geoTargetConstants = [geoTargetResourceName];
