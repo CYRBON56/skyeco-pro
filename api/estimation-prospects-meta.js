@@ -55,67 +55,156 @@ const INTEREST_QUERY_MAP = {
   couvreur: ["roofing", "home improvement"],
   terrassier: ["excavation", "construction"],
   étanchéité: ["waterproofing", "home improvement"],
-  clôture: ["fencing", "home improvement"],
+  clôture: ["garden fence", "home improvement"],
   charpentier: ["carpentry", "home improvement"],
   maçon: ["masonry", "construction"],
   électricien: ["electrician", "home improvement"],
   plombier: ["plumbing", "home improvement"],
 };
 
-// Résout l'activité ("Couvreur"...) en centre d'intérêt Meta le plus pertinent.
-async function resolveInterest(activite) {
+// Résout l'activité ("Couvreur"...) en centres d'intérêt Meta les plus
+// pertinents. On combine plusieurs intérêts liés (jusqu'à 3) plutôt qu'un
+// seul : Meta traite les entrées du tableau "interests" comme une union
+// ("OU"), ce qui donne une audience plus réaliste qu'un intérêt unique et
+// souvent trop niche (l'audience se limitait à ~1000, plancher de
+// confidentialité de Meta pour un ciblage trop étroit).
+async function resolveInterests(activite) {
   const key = activite.toLowerCase();
-  const queries = [activite, ...(INTEREST_QUERY_MAP[key] || ["home improvement"])];
+  const mapped = INTEREST_QUERY_MAP[key] || ["home improvement"];
+  const queries = [...mapped, activite];
 
+  const found = [];
+  const seenIds = new Set();
   for (const q of queries) {
     const data = await metaGet("/search", { type: "adinterest", q, limit: "5" });
     const results = data.data || [];
-    if (results.length) return results[0]; // { id, name, audience_size_lower_bound, ... }
+    for (const r of results) {
+      if (!seenIds.has(r.id)) {
+        seenIds.add(r.id);
+        found.push(r);
+      }
+      if (found.length >= 3) break;
+    }
+    if (found.length >= 3) break;
   }
-  return null;
+  return found; // tableau d'intérêts, potentiellement vide
 }
 
+// Meta utilise des pluriels irréguliers pour les clés de géo-ciblage : ce
+// n'est PAS un simple "+s" (ex. "city" -> "cities", pas "citys"). Une clé
+// mal orthographiée est silencieusement ignorée par l'API, ce qui peut
+// donner un ciblage vide ou incohérent sans message d'erreur explicite.
+const GEO_TYPE_PLURAL = {
+  country: "countries",
+  region: "regions",
+  city: "cities",
+  zip: "zips",
+};
+
 // Résout la zone ("Morbihan", "Vannes"...) en cible géographique Meta.
+// country_code="FR" est indispensable : sans lui, la recherche peut renvoyer
+// un lieu du même nom dans n'importe quel pays. On priorise le type "region"
+// (département) sur "city" : cibler une seule petite ville donne une
+// audience quasi nulle une fois croisée avec un centre d'intérêt, alors
+// qu'un département a une population large et pertinente pour ce cas d'usage.
 async function resolveGeo(zone) {
   const data = await metaGet("/search", {
     type: "adgeolocation",
     q: zone,
-    location_types: ["region", "city", "country"],
-    limit: "5",
+    location_types: ["region", "city"],
+    country_code: "FR",
+    limit: "10",
   });
   const results = data.data || [];
-  return results.length ? results[0] : null; // { key, name, type, ... }
+  if (!results.length) return null;
+  const region = results.find((r) => r.type === "region");
+  return region || results[0]; // { key, name, type, ... }
 }
 
-async function fetchDeliveryEstimate(interest, geo) {
-  const accountId = process.env.META_AD_ACCOUNT_ID;
-  const targetingSpec = {
+function buildTargetingSpec(interests, geo) {
+  return {
     geo_locations: geo
-      ? { [`${geo.type}s`]: [{ key: geo.key }] }
+      ? { [GEO_TYPE_PLURAL[geo.type] || `${geo.type}s`]: [{ key: geo.key }] }
       : { countries: ["FR"] },
-    interests: interest ? [{ id: interest.id, name: interest.name }] : undefined,
+    interests:
+      interests && interests.length
+        ? interests.map((i) => ({ id: i.id, name: i.name }))
+        : undefined,
     publisher_platforms: ["facebook", "instagram"],
   };
+}
 
-  // Log de diagnostic : montre précisément ce que la résolution activité/zone
-  // a trouvé côté Meta, et le ciblage exact envoyé à l'API.
+// Certains centres d'intérêt renvoyés par la recherche Meta sont dépréciés :
+// Meta refuse alors la requête (code 100, error_subcode 1870247) et indique
+// dans le message d'erreur l'identifiant à retirer. On extrait ces IDs et on
+// relance la requête sans eux, une seule fois, plutôt que d'échouer.
+function extractDeprecatedInterestIds(errorMessage) {
+  const matches = errorMessage.matchAll(/"deprecated_interest_id":"(\d+)"/g);
+  return [...matches].map((m) => m[1]);
+}
+
+async function deliveryEstimateWithRetry(path, params, interests, geo) {
+  try {
+    return await metaGet(path, params);
+  } catch (err) {
+    const deprecatedIds = extractDeprecatedInterestIds(err.message);
+    if (deprecatedIds.length && interests && interests.length) {
+      const filtered = interests.filter((i) => !deprecatedIds.includes(i.id));
+      if (filtered.length !== interests.length) {
+        console.log(
+          "estimation-prospects-meta retry without deprecated interests:",
+          JSON.stringify({ deprecatedIds, remaining: filtered.map((i) => i.id) })
+        );
+        const retryParams = { ...params, targeting_spec: buildTargetingSpec(filtered, geo) };
+        return await metaGet(path, retryParams);
+      }
+    }
+    throw err;
+  }
+}
+
+// Deux appels séparés sont nécessaires : l'objectif REACH donne l'audience
+// atteignable (estimate_mau) mais jamais de coût ; un objectif comme
+// LINK_CLICKS donne l'estimation de coût (bid_estimate / CPM) mais une
+// audience moins fiable. On combine les deux résultats.
+async function fetchDeliveryEstimates(interests, geo) {
+  const accountId = process.env.META_AD_ACCOUNT_ID;
+  const targetingSpec = buildTargetingSpec(interests, geo);
+
   console.log(
     "estimation-prospects-meta resolved targeting:",
-    JSON.stringify({ interest, geo, targetingSpec })
+    JSON.stringify({ interests, geo, targetingSpec })
   );
 
-  const data = await metaGet(`/act_${accountId}/delivery_estimate`, {
-    optimization_goal: "REACH",
-    targeting_spec: targetingSpec,
-  });
+  const [reachData, clicksData] = await Promise.all([
+    deliveryEstimateWithRetry(
+      `/act_${accountId}/delivery_estimate`,
+      { optimization_goal: "REACH", targeting_spec: targetingSpec },
+      interests,
+      geo
+    ).catch((err) => {
+      console.error("estimation-prospects-meta REACH error:", err.message);
+      return null;
+    }),
+    deliveryEstimateWithRetry(
+      `/act_${accountId}/delivery_estimate`,
+      { optimization_goal: "LINK_CLICKS", targeting_spec: targetingSpec },
+      interests,
+      geo
+    ).catch((err) => {
+      console.error("estimation-prospects-meta LINK_CLICKS error:", err.message);
+      return null;
+    }),
+  ]);
 
-  // Log de diagnostic : la forme exacte de la réponse Meta varie selon les
-  // comptes / versions d'API. Ce log apparaît dans Vercel > Logs et permet
-  // d'ajuster précisément les noms de champs si besoin.
-  console.log("estimation-prospects-meta raw response:", JSON.stringify(data));
+  console.log(
+    "estimation-prospects-meta raw response:",
+    JSON.stringify({ reachData, clicksData })
+  );
 
-  const estimate = data.data && data.data[0];
-  return estimate || null;
+  const reachEstimate = reachData?.data?.[0] || null;
+  const clicksEstimate = clicksData?.data?.[0] || null;
+  return { reachEstimate, clicksEstimate };
 }
 
 // Cherche une valeur numérique parmi plusieurs noms de champs possibles,
@@ -193,10 +282,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const [interest, geo] = await Promise.all([resolveInterest(activite), resolveGeo(zone)]);
-    const estimate = await fetchDeliveryEstimate(interest, geo);
+    const [interests, geo] = await Promise.all([resolveInterests(activite), resolveGeo(zone)]);
+    const { reachEstimate, clicksEstimate } = await fetchDeliveryEstimates(interests, geo);
 
-    if (!estimate) {
+    if (!reachEstimate && !clicksEstimate) {
       return res.status(200).json({
         success: true,
         found: false,
@@ -204,8 +293,8 @@ export default async function handler(req, res) {
       });
     }
 
-    const audience = extractAudience(estimate);
-    const { low: cpmLow, high: cpmHigh } = extractCpm(estimate);
+    const audience = extractAudience(reachEstimate) ?? extractAudience(clicksEstimate);
+    const { low: cpmLow, high: cpmHigh } = extractCpm(clicksEstimate || reachEstimate);
 
     const ctr = Number(process.env.META_CTR_DEFAULT || 0.01);
     const conversionRate = Number(process.env.CONVERSION_RATE_DEFAULT || 0.03);
