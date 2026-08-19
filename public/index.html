@@ -478,7 +478,17 @@
         <circle cx="22" cy="20" r="7" fill="#F4F1E6"/>
         <path d="M10 40c0-7.2 5.4-12 12-12s12 4.8 12 11.2" fill="none" stroke="#F4F1E6" stroke-width="4" stroke-linecap="round"/>
         <circle cx="38" cy="34" r="10" fill="#F5A623"/>
-        <path d="M33.5 34.2l3 3 6-6.2" fill="none" stroke="#16301F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="38" y="39" font-family="'Bricolage Grotesque', sans-serif" font-size="13" font-weight="800" fill="#16301F" text-anchor="middle">€</text>
+        <circle cx="11" cy="12" r="6" fill="#F5A623"/>
+        <text x="11" y="16.5" font-family="'Bricolage Grotesque', sans-serif" font-size="8" font-weight="800" fill="#16301F" text-anchor="middle">€</text>
+        <circle cx="44" cy="14" r="5.5" fill="#F5A623"/>
+        <text x="44" y="18" font-family="'Bricolage Grotesque', sans-serif" font-size="7.5" font-weight="800" fill="#16301F" text-anchor="middle">€</text>
+        <g transform="translate(6,32) rotate(-8)">
+          <rect x="0" y="0" width="11" height="14" rx="1.5" fill="#F4F1E6"/>
+          <rect x="2" y="3" width="7" height="1.3" fill="#7B9C86"/>
+          <rect x="2" y="6" width="7" height="1.3" fill="#7B9C86"/>
+          <rect x="2" y="9" width="4.5" height="1.3" fill="#F5A623"/>
+        </g>
       </svg>
       Skyeco<span>Pro</span>
     </div>
@@ -510,8 +520,8 @@
       </div>
 
       <div class="hero-ctas">
-        <a class="btn btn-primary" href="inscription.html">Demander un rendez-vous</a>
-        <a class="btn btn-ghost" href="https://salesflow-ecosky.vercel.app/estimation.html" target="_blank" rel="noopener">Voir le système en direct ↗</a>
+        <a class="btn btn-primary" href="https://salesflow-ecosky.vercel.app/estimation.html" target="_blank" rel="noopener">Voir le système en direct ↗</a>
+        <a class="btn btn-ghost" href="https://www.ecosky.fr/index.html" target="_blank" rel="noopener">Voir un site vitrine</a>
       </div>
       <div class="hero-note">
         <span class="mono">→</span> Sans engagement de durée — mise en place unique, puis un abonnement que vous ajustez ou arrêtez quand vous voulez.
@@ -521,7 +531,7 @@
     <div class="phone-stage">
       <div class="phone">
         <div class="phone-screen">
-          <div class="phone-clock">09:41</div>
+          <div class="phone-clock" id="phoneClock">09:41</div>
           <div class="phone-date" id="phoneDate">—</div>
 
           <div class="calc-card">
@@ -759,6 +769,16 @@
   var d = new Date();
   var options = { weekday: 'long', day: 'numeric', month: 'long' };
   document.getElementById('phoneDate').textContent = d.toLocaleDateString('fr-FR', options);
+
+  // ---- Horloge en temps reel ------------------------------------------
+  function updateClock() {
+    var now = new Date();
+    var h = String(now.getHours()).padStart(2, '0');
+    var m = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('phoneClock').textContent = h + ':' + m;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
 
   // ---- Lien Calendly -------------------------------------------------
   // TODO : remplacer par le vrai lien Calendly avant mise en production.
