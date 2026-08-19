@@ -189,7 +189,9 @@
 
     (async function chargerHistorique() {
       try {
-        const res = await fetch(`${CHAT_HISTORIQUE_URL}?entreprise_id=${encodeURIComponent(entrepriseId)}`);
+        const res = await fetch(`${CHAT_HISTORIQUE_URL}?entreprise_id=${encodeURIComponent(entrepriseId)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await res.json();
         if (data.success) {
           history = data.messages || [];
@@ -215,7 +217,10 @@
       try {
         const res = await fetch(CHAT_SEND_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({ entreprise_id: entrepriseId, message: texte }),
         });
         const data = await res.json();
@@ -247,7 +252,7 @@
 
   (async function chargerEntreprise() {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/entreprises?select=*`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/entreprises?select=*&owner_user_id=eq.${encodeURIComponent(await getMyUserId())}`, {
         headers: {
           apikey: SUPABASE_PUBLISHABLE_KEY,
           Authorization: `Bearer ${token}`,
@@ -291,6 +296,21 @@
       app.innerHTML = `<div class="error">${err.message}</div>`;
     }
   })();
+
+  // Récupère l'id de l'utilisateur connecté à partir du token, pour filtrer
+  // explicitement la requête sur entreprises (défense en profondeur, en
+  // plus des policies RLS côté Supabase).
+  async function getMyUserId() {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: {
+        apikey: SUPABASE_PUBLISHABLE_KEY,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) throw new Error("Session invalide, merci de vous reconnecter.");
+    const data = await res.json();
+    return data.id;
+  }
 </script>
 </body>
 </html>
