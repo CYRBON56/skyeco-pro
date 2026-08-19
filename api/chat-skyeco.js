@@ -25,9 +25,26 @@ async function supabaseRequest(path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+// Vérifie que le token envoyé par le client correspond bien à un utilisateur
+// Supabase Auth valide, et renvoie son user id. Renvoie null si le token est
+// absent, invalide ou expiré.
+async function getUserIdFromToken(authHeader) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
+  const token = authHeader.slice(7);
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: {
+      apikey: SUPABASE_SERVICE_KEY,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data && data.id ? data.id : null;
+}
+
 async function getEntrepriseContext(entreprise_id) {
   const [entreprises, tousLesProspects, prospectsCeMois] = await Promise.all([
-    supabaseRequest(`entreprises?id=eq.${entreprise_id}&select=nom,created_at,abonnement_actif,plan`),
+    supabaseRequest(`entreprises?id=eq.${entreprise_id}&select=nom,created_at,abonnement_actif,plan,owner_user_id`),
     supabaseRequest(`prospects?entreprise_id=eq.${entreprise_id}&select=id`),
     supabaseRequest(
       `prospects?entreprise_id=eq.${entreprise_id}&created_at=gte.${new Date(
@@ -42,6 +59,7 @@ async function getEntrepriseContext(entreprise_id) {
   if (!entreprise) return null;
 
   return {
+    owner_user_id: entreprise.owner_user_id,
     nom: entreprise.nom,
     inscrit_depuis: entreprise.created_at,
     abonnement_actif: entreprise.abonnement_actif,
@@ -73,7 +91,7 @@ Ton : professionnel, direct, chaleureux. Réponses courtes (quelques phrases), p
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).send("Method not allowed");
 
@@ -83,9 +101,20 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: "entreprise_id et message requis" });
     }
 
+    // Vérifie l'identité de l'appelant avant de faire quoi que ce soit
+    const userId = await getUserIdFromToken(req.headers.authorization);
+    if (!userId) {
+      return res.status(401).json({ success: false, error: "Non authentifié" });
+    }
+
     const ctx = await getEntrepriseContext(entreprise_id);
     if (!ctx) {
       return res.status(404).json({ success: false, error: "Entreprise introuvable" });
+    }
+
+    // Vérifie que l'entreprise demandée appartient bien à l'utilisateur connecté
+    if (ctx.owner_user_id !== userId) {
+      return res.status(403).json({ success: false, error: "Accès refusé" });
     }
 
     // 1) Enregistre le message du client
