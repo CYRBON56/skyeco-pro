@@ -958,13 +958,15 @@
 
   calcBtn.addEventListener('click', function () {
     var activite = document.getElementById('calcActivite').value;
-    var zone = document.getElementById('calcZone').value.trim();
+    var region = document.getElementById('calcRegion').value;
+    var departement = document.getElementById('calcZone').value;
+    var zone = departement || region;
     calcMsg.textContent = '';
     calcResultGoogle.style.display = 'none';
     calcResultMeta.style.display = 'none';
 
-    if (!zone) {
-      calcMsg.textContent = "Merci d'indiquer votre zone géographique.";
+    if (!region) {
+      calcMsg.textContent = "Merci d'indiquer au moins votre région.";
       return;
     }
 
