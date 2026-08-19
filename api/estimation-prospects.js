@@ -23,10 +23,11 @@
 // Note documentée (non fournie telle quelle par l'API Google Ads) :
 //   - "Concurrence" est directement l'indice competitionIndex (0-100) de Google Ads,
 //     converti en libellé faible/moyenne/élevée pour l'affichage.
-//   - "Taux de conversion" est une hypothèse commerciale fixe et volontairement
-//     prudente (configurable via CONVERSION_RATE_DEFAULT, 2% par défaut) : parmi
-//     les gens qui tapent une recherche liée au métier, seule une petite fraction
-//     va jusqu'à demander un devis. Ce n'est pas une donnée Google Ads.
+//   - "Taux de clic" et "Taux de conversion" sont deux hypothèses commerciales
+//     fixes et volontairement prudentes, appliquées en cascade :
+//       recherches -> (taux de clic, CLICK_RATE_DEFAULT, 2% par défaut) -> clics
+//       clics -> (taux de conversion, CONVERSION_RATE_DEFAULT, 3% par défaut) -> clients
+//     Ni l'une ni l'autre n'est une donnée Google Ads réelle.
 
 const API_VERSION = "v18";
 const BASE_URL = `https://googleads.googleapis.com/${API_VERSION}`;
@@ -225,8 +226,10 @@ export default async function handler(req, res) {
     }
 
     const totalSearches = keywords.reduce((sum, k) => sum + (k.recherchesParMois || 0), 0);
-    const conversionRate = Number(process.env.CONVERSION_RATE_DEFAULT || 0.02);
-    const clientsEstimesParMois = Math.max(0, Math.round(totalSearches * conversionRate));
+    const clickRate = Number(process.env.CLICK_RATE_DEFAULT || 0.02);
+    const conversionRate = Number(process.env.CONVERSION_RATE_DEFAULT || 0.03);
+    const clicsEstimesParMois = Math.max(0, Math.round(totalSearches * clickRate));
+    const clientsEstimesParMois = Math.max(0, Math.round(clicsEstimesParMois * conversionRate));
 
     return res.status(200).json({
       success: true,
@@ -236,6 +239,8 @@ export default async function handler(req, res) {
       zoneResolue, // nom canonique renvoyé par Google, pour vérifier que la bonne zone a été comprise
       keywords, // tableau détaillé, un objet par mot-clé
       totalRecherchesParMois: totalSearches,
+      tauxClic: clickRate,
+      clicsEstimesParMois,
       tauxConversion: conversionRate,
       clientsEstimesParMois,
     });
