@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
 <style>
   :root{
     --ink: #0F2318;
@@ -278,6 +279,17 @@
   .calc-note{
     font-size:10.5px; color:#8a8578; margin-top:9px; line-height:1.5;
   }
+  .calc-msg{
+    font-size:11.5px; color:#b3541f; margin-top:9px; line-height:1.4; min-height:0;
+  }
+  .calc-cta{
+    border:1px solid rgba(31,92,62,0.25);
+  }
+  .calc-cta .calc-btn{
+    background:var(--amber); color:var(--dark-text);
+  }
+  .calc-cta .calc-btn:hover{ background:#e0951a; }
+  .calc-btn:disabled{ opacity:0.65; cursor:default; }
 
   /* TRUST STRIP */
   .trust{
@@ -501,29 +513,38 @@
           <div class="phone-date" id="phoneDate">—</div>
 
           <div class="calc-card">
-            <div class="calc-label"><span class="badge">S</span>Calculez votre potentiel de prospects</div>
-            <label>SIRET</label>
-            <input type="text" placeholder="123 456 789 00012">
+            <div class="calc-label"><span class="badge">S</span>Testez votre potentiel de prospects</div>
             <label>Activité</label>
-            <select>
+            <select id="calcActivite">
               <option>Couvreur</option>
               <option>Terrassier</option>
               <option>Étanchéité</option>
               <option>Clôture</option>
+              <option>Charpentier</option>
+              <option>Maçon</option>
+              <option>Électricien</option>
+              <option>Plombier</option>
             </select>
             <label>Zone géographique</label>
-            <input type="text" placeholder="Ex. Morbihan, Vannes...">
-            <button class="calc-btn">Calculer mon potentiel</button>
+            <input type="text" id="calcZone" placeholder="Ex. Morbihan, Vannes...">
+            <button class="calc-btn" id="calcBtn" type="button">Calculer mon potentiel</button>
+            <div class="calc-msg" id="calcMsg"></div>
           </div>
 
-          <div class="calc-card">
+          <div class="calc-card" id="calcResult" style="display:none;">
             <div class="calc-label"><span class="badge">S</span>Résultat estimé</div>
-            <div class="calc-result-row"><span class="k">Recherches / mois</span><span class="v accent">≈ 340</span></div>
-            <div class="calc-result-row"><span class="k">Concurrents actifs</span><span class="v">12</span></div>
-            <div class="calc-result-row"><span class="k">Coût par clic estimé</span><span class="v">1,80 € – 3,20 €</span></div>
-            <div class="calc-result-row"><span class="k">Taux de conversion moyen</span><span class="v">3 %</span></div>
-            <div class="calc-result-row"><span class="k">Clients estimés / mois</span><span class="v accent">≈ 10</span></div>
-            <div class="calc-note">Basé sur les volumes de recherche Google pour "couvreur" dans le Morbihan, avec un taux de conversion moyen de 3 % des prospects en clients.</div>
+            <div class="calc-result-row"><span class="k">Recherches / mois</span><span class="v accent" id="resSearches">—</span></div>
+            <div class="calc-result-row"><span class="k">Concurrents actifs</span><span class="v" id="resCompetitors">—</span></div>
+            <div class="calc-result-row"><span class="k">Coût par clic estimé</span><span class="v" id="resCpc">—</span></div>
+            <div class="calc-result-row"><span class="k">Taux de conversion moyen</span><span class="v" id="resConversion">—</span></div>
+            <div class="calc-result-row"><span class="k">Clients estimés / mois</span><span class="v accent" id="resClients">—</span></div>
+            <div class="calc-note" id="resNote"></div>
+          </div>
+
+          <div class="calc-card calc-cta" id="calcCta" style="display:none;">
+            <div class="calc-label"><span class="badge">S</span>Ça vous intéresse ?</div>
+            <p style="font-size:12.5px; color:#4c5b50; margin-bottom:12px; line-height:1.5;">Un rendez-vous suffit pour définir votre page, votre zone et votre volume de départ.</p>
+            <button class="calc-btn" id="calendlyBtn" type="button">📞 Demander un rappel téléphonique</button>
           </div>
         </div>
       </div>
@@ -711,10 +732,93 @@
   </div>
 </footer>
 
+<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 <script>
   var d = new Date();
   var options = { weekday: 'long', day: 'numeric', month: 'long' };
   document.getElementById('phoneDate').textContent = d.toLocaleDateString('fr-FR', options);
+
+  // ---- Lien Calendly -------------------------------------------------
+  // TODO : remplacer par le vrai lien Calendly avant mise en production.
+  var CALENDLY_URL = "https://calendly.com/VOTRE-COMPTE/30min";
+
+  // ---- Calculateur de potentiel (connecté à l'API Google Ads) -------
+  var calcBtn = document.getElementById('calcBtn');
+  var calcMsg = document.getElementById('calcMsg');
+  var calcResult = document.getElementById('calcResult');
+  var calcCta = document.getElementById('calcCta');
+
+  function showCta() {
+    calcCta.style.display = 'block';
+    calcCta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  calcBtn.addEventListener('click', function () {
+    var activite = document.getElementById('calcActivite').value;
+    var zone = document.getElementById('calcZone').value.trim();
+    calcMsg.textContent = '';
+
+    if (!zone) {
+      calcMsg.textContent = "Merci d'indiquer votre zone géographique.";
+      return;
+    }
+
+    calcBtn.disabled = true;
+    calcBtn.textContent = 'Calcul en cours...';
+
+    fetch('/api/estimation-prospects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ activite: activite, zone: zone })
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (!data.success) {
+          // Calculateur pas encore connecté (variables Google Ads manquantes) ou
+          // erreur technique : on prévient, mais on laisse quand même la porte
+          // ouverte à une demande de rappel.
+          calcMsg.textContent = data.error || 'Estimation momentanément indisponible.';
+          showCta();
+          return;
+        }
+        if (!data.found) {
+          calcMsg.textContent = data.message || 'Pas assez de données pour cette zone.';
+          showCta();
+          return;
+        }
+
+        document.getElementById('resSearches').textContent = '≈ ' + data.recherchesParMois;
+        document.getElementById('resCompetitors').textContent = (data.concurrentsActifs != null) ? data.concurrentsActifs : '—';
+        document.getElementById('resCpc').textContent = (data.cpcMin != null && data.cpcMax != null)
+          ? (data.cpcMin.toFixed(2).replace('.', ',') + ' € – ' + data.cpcMax.toFixed(2).replace('.', ',') + ' €')
+          : '—';
+        document.getElementById('resConversion').textContent = Math.round(data.tauxConversion * 100) + ' %';
+        document.getElementById('resClients').textContent = '≈ ' + data.clientsEstimesParMois;
+        document.getElementById('resNote').textContent = 'Basé sur les volumes de recherche Google pour "' + activite.toLowerCase() + '" dans ' + zone + ', avec un taux de conversion moyen de ' + Math.round(data.tauxConversion * 100) + ' % des prospects en clients.';
+
+        calcResult.style.display = 'block';
+        showCta();
+
+        if (window.gtag) { gtag('event', 'test_potentiel_calcule', { activite: activite, zone: zone }); }
+      })
+      .catch(function () {
+        calcMsg.textContent = 'Erreur technique, merci de réessayer.';
+        showCta();
+      })
+      .finally(function () {
+        calcBtn.disabled = false;
+        calcBtn.textContent = 'Calculer mon potentiel';
+      });
+  });
+
+  document.getElementById('calendlyBtn').addEventListener('click', function () {
+    if (window.gtag) { gtag('event', 'demande_rappel', {}); }
+    if (window.Calendly) {
+      Calendly.initPopupWidget({ url: CALENDLY_URL });
+    } else {
+      window.open(CALENDLY_URL, '_blank');
+    }
+  });
 </script>
 
 </body>
