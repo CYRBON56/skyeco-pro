@@ -583,13 +583,33 @@
           </div>
 
           <div class="calc-card" id="calcResultGoogle" style="display:none;">
-            <div class="calc-label"><span class="badge">G</span>Résultat estimé — Google</div>
-            <div class="calc-result-row"><span class="k">Recherches / mois</span><span class="v accent" id="resSearches">—</span></div>
-            <div class="calc-result-row"><span class="k">Concurrents actifs</span><span class="v" id="resCompetitors">—</span></div>
-            <div class="calc-result-row"><span class="k">Coût par clic estimé</span><span class="v" id="resCpc">—</span></div>
-            <div class="calc-result-row"><span class="k">Taux de conversion moyen</span><span class="v" id="resConversion">—</span></div>
+            <div class="calc-label"><span class="badge">G</span>Résultat détaillé — Google</div>
+            <div id="resZone" style="font-size:12px; color:#5a6a5f; margin-bottom:10px;"></div>
+            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+              <thead>
+                <tr style="text-align:left; color:#5a6a5f; border-bottom:1px solid #e3ddce;">
+                  <th style="padding:4px 6px 4px 0; font-weight:600;">Mot-clé</th>
+                  <th style="padding:4px 6px; font-weight:600;">Rech./mois</th>
+                  <th style="padding:4px 6px; font-weight:600;">% du total</th>
+                  <th style="padding:4px 6px; font-weight:600;">Concurrence</th>
+                  <th style="padding:4px 0 4px 6px; font-weight:600;">CPC</th>
+                </tr>
+              </thead>
+              <tbody id="resKeywordRows"></tbody>
+              <tfoot>
+                <tr style="border-top:1.5px solid #d6d2c2; font-weight:700;">
+                  <td style="padding:6px 6px 4px 0;">Total</td>
+                  <td style="padding:6px 6px 4px 6px;" id="resTotalSearches">—</td>
+                  <td style="padding:6px;">100 %</td>
+                  <td colspan="2"></td>
+                </tr>
+              </tfoot>
+            </table>
+            <div class="calc-result-row" style="margin-top:12px; padding-top:10px; border-top:1px solid #e3ddce;">
+              <span class="k">Taux de conversion estimé</span><span class="v" id="resConversion">—</span>
+            </div>
             <div class="calc-result-row"><span class="k">Clients estimés / mois</span><span class="v accent" id="resClients">—</span></div>
-            <div class="calc-note" id="resNote"></div>
+            <div class="calc-note">Sur les <span id="resNoteTotal">—</span> recherches mensuelles liées à ce métier dans cette zone, on estime qu'une petite part ira au bout de la démarche jusqu'au devis — c'est une hypothèse prudente, pas une donnée Google Ads.</div>
           </div>
 
           <div class="calc-card" id="calcResultMeta" style="display:none;">
@@ -932,14 +952,32 @@
 
   function renderGoogle(data, activite, zone) {
     if (!data.success || !data.found) return false;
-    document.getElementById('resSearches').textContent = '≈ ' + data.recherchesParMois;
-    document.getElementById('resCompetitors').textContent = (data.concurrentsActifs != null) ? data.concurrentsActifs : '—';
-    document.getElementById('resCpc').textContent = (data.cpcMin != null && data.cpcMax != null)
-      ? (data.cpcMin.toFixed(2).replace('.', ',') + ' € – ' + data.cpcMax.toFixed(2).replace('.', ',') + ' €')
-      : '—';
+    var zoneLabel = data.zoneResolue || zone;
+    document.getElementById('resZone').textContent = 'Zone : ' + zoneLabel + ' — activité : ' + activite;
+    var totalSearches = data.keywords.reduce(function (sum, k) {
+      return sum + (k.recherchesParMois || 0);
+    }, 0);
+    var rowsHtml = data.keywords.map(function (k) {
+      var cpc = (k.cpcMin != null && k.cpcMax != null)
+        ? (k.cpcMin.toFixed(2).replace('.', ',') + '€–' + k.cpcMax.toFixed(2).replace('.', ',') + '€')
+        : '—';
+      var searches = k.recherchesParMois != null ? k.recherchesParMois : '—';
+      var pct = (totalSearches > 0 && k.recherchesParMois != null)
+        ? Math.round((k.recherchesParMois / totalSearches) * 100) + ' %'
+        : '—';
+      return '<tr style="border-bottom:1px solid #f0ede0;">' +
+        '<td style="padding:6px 6px 6px 0;">' + k.motCle + '</td>' +
+        '<td style="padding:6px;">' + searches + '</td>' +
+        '<td style="padding:6px;">' + pct + '</td>' +
+        '<td style="padding:6px;">' + k.concurrence + '</td>' +
+        '<td style="padding:6px 0 6px 6px;">' + cpc + '</td>' +
+        '</tr>';
+    }).join('');
+    document.getElementById('resKeywordRows').innerHTML = rowsHtml;
+    document.getElementById('resTotalSearches').textContent = totalSearches;
     document.getElementById('resConversion').textContent = Math.round(data.tauxConversion * 100) + ' %';
     document.getElementById('resClients').textContent = '≈ ' + data.clientsEstimesParMois;
-    document.getElementById('resNote').textContent = 'Basé sur les volumes de recherche Google pour "' + activite.toLowerCase() + '" dans ' + zone + ', avec un taux de conversion moyen de ' + Math.round(data.tauxConversion * 100) + ' % des prospects en clients.';
+    document.getElementById('resNoteTotal').textContent = totalSearches;
     calcResultGoogle.style.display = 'block';
     return true;
   }
