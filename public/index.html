@@ -546,18 +546,8 @@
 
           <div class="calc-card">
             <div class="calc-label"><span class="badge">S</span>Testez votre potentiel de prospects</div>
-            <label>Activité</label>
-            <select id="calcActivite">
-              <option>Couvreur</option>
-              <option>Terrassier</option>
-              <option>Étanchéité</option>
-              <option>Clôture</option>
-              <option>Charpentier</option>
-              <option>Maçon</option>
-              <option>Électricien</option>
-              <option>Plombier</option>
-              <option>Paysagiste</option>
-            </select>
+            <label>Activité ou mot-clé</label>
+            <input type="text" id="calcActivite" placeholder="Ex. paysagiste, couvreur, devis toiture...">
             <label>Zone géographique</label>
             <select id="calcRegion">
               <option value="">Choisissez votre région</option>
@@ -606,10 +596,12 @@
               </tfoot>
             </table>
             <div class="calc-result-row" style="margin-top:12px; padding-top:10px; border-top:1px solid #e3ddce;">
-              <span class="k">Taux de conversion estimé</span><span class="v" id="resConversion">—</span>
+              <span class="k">Taux de clic estimé</span><span class="v" id="resTauxClic">—</span>
             </div>
+            <div class="calc-result-row"><span class="k">Clics estimés / mois</span><span class="v" id="resClics">—</span></div>
+            <div class="calc-result-row"><span class="k">Taux de conversion estimé</span><span class="v" id="resConversion">—</span></div>
             <div class="calc-result-row"><span class="k">Clients estimés / mois</span><span class="v accent" id="resClients">—</span></div>
-            <div class="calc-note">Sur les <span id="resNoteTotal">—</span> recherches mensuelles liées à ce métier dans cette zone, on estime qu'une petite part ira au bout de la démarche jusqu'au devis — c'est une hypothèse prudente, pas une donnée Google Ads.</div>
+            <div class="calc-note">Sur les <span id="resNoteTotal">—</span> recherches mensuelles liées à ce métier dans cette zone : une partie clique sur l'annonce, puis une partie de ces clics se transforme en client — deux hypothèses prudentes, pas des données Google Ads.</div>
           </div>
 
           <div class="calc-card calc-cta" id="calcCta" style="display:none;">
@@ -964,6 +956,8 @@
     }).join('');
     document.getElementById('resKeywordRows').innerHTML = rowsHtml;
     document.getElementById('resTotalSearches').textContent = totalSearches;
+    document.getElementById('resTauxClic').textContent = Math.round(data.tauxClic * 100) + ' %';
+    document.getElementById('resClics').textContent = '≈ ' + data.clicsEstimesParMois;
     document.getElementById('resConversion').textContent = Math.round(data.tauxConversion * 100) + ' %';
     document.getElementById('resClients').textContent = '≈ ' + data.clientsEstimesParMois;
     document.getElementById('resNoteTotal').textContent = totalSearches;
@@ -976,14 +970,17 @@
   }
 
   calcBtn.addEventListener('click', function () {
-    var activite = document.getElementById('calcActivite').value;
+    var activite = document.getElementById('calcActivite').value.trim();
     var region = document.getElementById('calcRegion').value;
     var departement = document.getElementById('calcZone').value;
     var zone = departement || region;
     calcMsg.textContent = '';
     calcResultGoogle.style.display = 'none';
-    calcResultMeta.style.display = 'none';
 
+    if (!activite) {
+      calcMsg.textContent = "Merci d'indiquer votre activité ou un mot-clé.";
+      return;
+    }
     if (!region) {
       calcMsg.textContent = "Merci d'indiquer au moins votre région.";
       return;
