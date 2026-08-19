@@ -85,8 +85,48 @@ async function fetchDeliveryEstimate(interest, geo) {
     targeting_spec: targetingSpec,
   });
 
+  // Log de diagnostic : la forme exacte de la réponse Meta varie selon les
+  // comptes / versions d'API. Ce log apparaît dans Vercel > Logs et permet
+  // d'ajuster précisément les noms de champs si besoin.
+  console.log("estimation-prospects-meta raw response:", JSON.stringify(data));
+
   const estimate = data.data && data.data[0];
   return estimate || null;
+}
+
+// Cherche une valeur numérique parmi plusieurs noms de champs possibles,
+// car l'API Meta a renommé/varie ces champs selon les versions et comptes.
+function firstDefined(obj, keys) {
+  for (const key of keys) {
+    const value = key.split(".").reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
+    if (value !== undefined && value !== null) return value;
+  }
+  return null;
+}
+
+function extractAudience(estimate) {
+  const lower = firstDefined(estimate, ["estimate_mau_lower_bound", "estimate_dau_lower_bound"]);
+  const upper = firstDefined(estimate, ["estimate_mau_upper_bound", "estimate_dau_upper_bound"]);
+  if (lower !== null && upper !== null) {
+    return Math.round((Number(lower) + Number(upper)) / 2);
+  }
+  const direct = firstDefined(estimate, ["estimate_mau", "estimate_dau", "users"]);
+  return direct !== null ? Number(direct) : null;
+}
+
+function extractCpm(estimate) {
+  const low = firstDefined(estimate, [
+    "bid_estimate.low_inclusive",
+    "bid_estimate.min_bid",
+    "bid_estimations.0.min_bid",
+    "bid_estimations.0.median_bid",
+  ]);
+  const high = firstDefined(estimate, [
+    "bid_estimate.high_inclusive",
+    "bid_estimate.max_bid",
+    "bid_estimations.0.max_bid",
+  ]);
+  return { low: microToEuros(low), high: microToEuros(high) };
 }
 
 function microToEuros(value) {
@@ -140,9 +180,8 @@ export default async function handler(req, res) {
       });
     }
 
-    const audience = estimate.estimate_mau || null;
-    const cpmLow = microToEuros(estimate.bid_estimate?.low_inclusive);
-    const cpmHigh = microToEuros(estimate.bid_estimate?.high_inclusive);
+    const audience = extractAudience(estimate);
+    const { low: cpmLow, high: cpmHigh } = extractCpm(estimate);
 
     const ctr = Number(process.env.META_CTR_DEFAULT || 0.01);
     const conversionRate = Number(process.env.CONVERSION_RATE_DEFAULT || 0.03);
