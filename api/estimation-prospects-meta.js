@@ -139,7 +139,10 @@ function buildTargetingSpec(interests, geo) {
 // dans le message d'erreur l'identifiant à retirer. On extrait ces IDs et on
 // relance la requête sans eux, une seule fois, plutôt que d'échouer.
 function extractDeprecatedInterestIds(errorMessage) {
-  const matches = errorMessage.matchAll(/"deprecated_interest_id":"(\d+)"/g);
+  // Les guillemets internes du message d'erreur Meta sont échappés (\"),
+  // il faut les "déséchapper" avant d'appliquer le regex, sinon aucun match.
+  const cleaned = errorMessage.replace(/\\"/g, '"');
+  const matches = cleaned.matchAll(/"deprecated_interest_id":"(\d+)"/g);
   return [...matches].map((m) => m[1]);
 }
 
