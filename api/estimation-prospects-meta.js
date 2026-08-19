@@ -55,7 +55,7 @@ const INTEREST_QUERY_MAP = {
   couvreur: ["roofing", "home improvement"],
   terrassier: ["excavation", "construction"],
   étanchéité: ["waterproofing", "home improvement"],
-  clôture: ["fencing", "home improvement"],
+  clôture: ["garden fence", "home improvement"],
   charpentier: ["carpentry", "home improvement"],
   maçon: ["masonry", "construction"],
   électricien: ["electrician", "home improvement"],
@@ -80,27 +80,42 @@ async function resolveInterest(activite) {
   return null;
 }
 
+// Meta utilise des pluriels irréguliers pour les clés de géo-ciblage : ce
+// n'est PAS un simple "+s" (ex. "city" -> "cities", pas "citys"). Une clé
+// mal orthographiée est silencieusement ignorée par l'API, ce qui peut
+// donner un ciblage vide ou incohérent sans message d'erreur explicite.
+const GEO_TYPE_PLURAL = {
+  country: "countries",
+  region: "regions",
+  city: "cities",
+  zip: "zips",
+};
+
 // Résout la zone ("Morbihan", "Vannes"...) en cible géographique Meta.
 // country_code="FR" est indispensable : sans lui, la recherche peut renvoyer
-// un lieu du même nom dans n'importe quel pays (ex. "Morbihan" a pu matcher
-// une ville homonyme à l'étranger).
+// un lieu du même nom dans n'importe quel pays. On priorise le type "region"
+// (département) sur "city" : cibler une seule petite ville donne une
+// audience quasi nulle une fois croisée avec un centre d'intérêt, alors
+// qu'un département a une population large et pertinente pour ce cas d'usage.
 async function resolveGeo(zone) {
   const data = await metaGet("/search", {
     type: "adgeolocation",
     q: zone,
     location_types: ["region", "city"],
     country_code: "FR",
-    limit: "5",
+    limit: "10",
   });
   const results = data.data || [];
-  return results.length ? results[0] : null; // { key, name, type, ... }
+  if (!results.length) return null;
+  const region = results.find((r) => r.type === "region");
+  return region || results[0]; // { key, name, type, ... }
 }
 
 async function fetchDeliveryEstimate(interest, geo) {
   const accountId = process.env.META_AD_ACCOUNT_ID;
   const targetingSpec = {
     geo_locations: geo
-      ? { [`${geo.type}s`]: [{ key: geo.key }] }
+      ? { [GEO_TYPE_PLURAL[geo.type] || `${geo.type}s`]: [{ key: geo.key }] }
       : { countries: ["FR"] },
     interests: interest ? [{ id: interest.id, name: interest.name }] : undefined,
     publisher_platforms: ["facebook", "instagram"],
