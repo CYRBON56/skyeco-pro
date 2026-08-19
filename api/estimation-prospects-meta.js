@@ -47,15 +47,32 @@ async function metaGet(path, params) {
   return res.json();
 }
 
+// Les intitulés de métiers français bruts ("Couvreur") ne correspondent pas
+// toujours à la taxonomie de centres d'intérêt de Meta (souvent en anglais,
+// orientée grand public). On mappe chaque activité du site vers des termes de
+// recherche plus susceptibles de matcher un centre d'intérêt Meta existant.
+const INTEREST_QUERY_MAP = {
+  couvreur: ["roofing", "home improvement"],
+  terrassier: ["excavation", "construction"],
+  étanchéité: ["waterproofing", "home improvement"],
+  clôture: ["fencing", "home improvement"],
+  charpentier: ["carpentry", "home improvement"],
+  maçon: ["masonry", "construction"],
+  électricien: ["electrician", "home improvement"],
+  plombier: ["plumbing", "home improvement"],
+};
+
 // Résout l'activité ("Couvreur"...) en centre d'intérêt Meta le plus pertinent.
 async function resolveInterest(activite) {
-  const data = await metaGet("/search", {
-    type: "adinterest",
-    q: activite,
-    limit: "5",
-  });
-  const results = data.data || [];
-  return results.length ? results[0] : null; // { id, name, audience_size_lower_bound, ... }
+  const key = activite.toLowerCase();
+  const queries = [activite, ...(INTEREST_QUERY_MAP[key] || ["home improvement"])];
+
+  for (const q of queries) {
+    const data = await metaGet("/search", { type: "adinterest", q, limit: "5" });
+    const results = data.data || [];
+    if (results.length) return results[0]; // { id, name, audience_size_lower_bound, ... }
+  }
+  return null;
 }
 
 // Résout la zone ("Morbihan", "Vannes"...) en cible géographique Meta.
@@ -79,6 +96,13 @@ async function fetchDeliveryEstimate(interest, geo) {
     interests: interest ? [{ id: interest.id, name: interest.name }] : undefined,
     publisher_platforms: ["facebook", "instagram"],
   };
+
+  // Log de diagnostic : montre précisément ce que la résolution activité/zone
+  // a trouvé côté Meta, et le ciblage exact envoyé à l'API.
+  console.log(
+    "estimation-prospects-meta resolved targeting:",
+    JSON.stringify({ interest, geo, targetingSpec })
+  );
 
   const data = await metaGet(`/act_${accountId}/delivery_estimate`, {
     optimization_goal: "REACH",
