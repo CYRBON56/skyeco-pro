@@ -1,254 +1,170 @@
 // api/estimation-prospects.js
-// Calcule une estimation du potentiel de prospects (recherches Google, concurrence,
-// CPC) pour un couple activité + zone géographique donné, détaillé mot-clé par
-// mot-clé (pas de moyenne agrégée — chaque ligne du seed est renvoyée telle quelle
-// pour affichage en tableau côté front).
+// POST /api/estimation-prospects
+// Body attendu : { activite: "paysagiste", zone: "Morbihan" }  (zone = département OU région)
 //
-// Données réelles récupérées via l'API Google Ads (Keyword Planner) :
-//   - geoTargetConstants:suggest        -> résout le nom de la zone en identifiant Google Ads
-//   - customers/{id}:generateKeywordIdeas -> volumes de recherche, concurrence, CPC
+// 1) Résout la zone géographique saisie en Geo Target Constant Google (France).
+// 2) Interroge le Keyword Plan Idea Service pour obtenir le volume de recherche
+//    mensuel et le CPC estimé pour le mot-clé (et quelques idées proches).
+// 3) Applique des hypothèses prudentes de taux de clic / taux de conversion
+//    pour donner une estimation de clients potentiels par mois.
 //
-// Variables d'environnement requises (Vercel > Project Settings > Environment Variables) :
-//   GOOGLE_ADS_DEVELOPER_TOKEN    Jeton développeur (ads.google.com/aw/apicenter)
-//   GOOGLE_ADS_CLIENT_ID          Client OAuth2 (console.cloud.google.com)
-//   GOOGLE_ADS_CLIENT_SECRET      Secret OAuth2
-//   GOOGLE_ADS_REFRESH_TOKEN      Refresh token OAuth2 généré une fois pour le compte Google Ads
-//   GOOGLE_ADS_LOGIN_CUSTOMER_ID  Identifiant du compte manager (MCC), sans tirets
-//   GOOGLE_ADS_CUSTOMER_ID        Identifiant du compte Google Ads interrogé, sans tirets
+// Réponse renvoyée (format attendu par la page d'accueil skyeco-pro) :
+// {
+//   success: true,
+//   found: true,
+//   zoneResolue: "Morbihan",
+//   keywords: [{ motCle, recherchesParMois, cpcMin, cpcMax, concurrence }, ...],
+//   tauxClic: 0.05,
+//   clicsEstimesParMois: 12,
+//   tauxConversion: 0.15,
+//   clientsEstimesParMois: 2
+// }
 //
-// Tant que ces variables ne sont pas configurées, l'endpoint répond en 503 avec la
-// liste des variables manquantes plutôt que de planter — le front-end bascule alors
-// sur un message clair et laisse quand même la possibilité de demander un rappel.
-//
-// Note documentée (non fournie telle quelle par l'API Google Ads) :
-//   - "Concurrence" est directement l'indice competitionIndex (0-100) de Google Ads,
-//     converti en libellé faible/moyenne/élevée pour l'affichage.
-//   - "Taux de clic" et "Taux de conversion" sont deux hypothèses commerciales
-//     fixes et volontairement prudentes, appliquées en cascade :
-//       recherches -> (taux de clic, CLICK_RATE_DEFAULT, 2% par défaut) -> clics
-//       clics -> (taux de conversion, CONVERSION_RATE_DEFAULT, 3% par défaut) -> clients
-//     Ni l'une ni l'autre n'est une donnée Google Ads réelle.
+// Nécessite le package "google-ads-api" (npm i google-ads-api).
+// Variables d'environnement requises (Vercel, projet skyeco-pro) :
+//   GOOGLE_ADS_DEVELOPER_TOKEN
+//   GOOGLE_ADS_CLIENT_ID
+//   GOOGLE_ADS_CLIENT_SECRET
+//   GOOGLE_ADS_REFRESH_TOKEN
+//   GOOGLE_ADS_CUSTOMER_ID        (compte client, ex: 5452754443)
+//   GOOGLE_ADS_LOGIN_CUSTOMER_ID  (MCC, ex: 7353350497)
 
-const API_VERSION = "v23";
-const BASE_URL = `https://googleads.googleapis.com/${API_VERSION}`;
-const TOKEN_URL = "https://oauth2.googleapis.com/token";
+import { GoogleAdsApi } from 'google-ads-api';
 
-const REQUIRED_ENV = [
-  "GOOGLE_ADS_DEVELOPER_TOKEN",
-  "GOOGLE_ADS_CLIENT_ID",
-  "GOOGLE_ADS_CLIENT_SECRET",
-  "GOOGLE_ADS_REFRESH_TOKEN",
-  "GOOGLE_ADS_CUSTOMER_ID",
-];
+const LANGUAGE_FRENCH = 'languageConstants/1002';
 
-// Le token est mis en cache le temps de l'exécution de la fonction serverless
-// (utile si plusieurs appels réutilisent la même instance chaude).
-let cachedToken = null; // { accessToken, expiresAt }
+// Hypothèses prudentes, affichées comme telles côté front (pas des données Google Ads).
+const TAUX_CLIC = 0.05; // 5% des recherches mènent à un clic sur l'annonce
+const TAUX_CONVERSION = 0.15; // 15% des clics se transforment en client
 
-async function getAccessToken() {
-  if (cachedToken && cachedToken.expiresAt > Date.now() + 30000) {
-    return cachedToken.accessToken;
-  }
-  const params = new URLSearchParams({
-    client_id: process.env.GOOGLE_ADS_CLIENT_ID,
-    client_secret: process.env.GOOGLE_ADS_CLIENT_SECRET,
-    refresh_token: process.env.GOOGLE_ADS_REFRESH_TOKEN,
-    grant_type: "refresh_token",
-  });
-  const res = await fetch(TOKEN_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: params.toString(),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Erreur OAuth Google (${res.status}): ${text}`);
-  }
-  const data = await res.json();
-  cachedToken = {
-    accessToken: data.access_token,
-    expiresAt: Date.now() + (data.expires_in || 3000) * 1000,
-  };
-  return cachedToken.accessToken;
-}
+const COMPETITION_LABELS = {
+  0: 'Inconnue',
+  1: 'Inconnue',
+  2: 'Faible',
+  3: 'Moyenne',
+  4: 'Élevée',
+  UNSPECIFIED: 'Inconnue',
+  UNKNOWN: 'Inconnue',
+  LOW: 'Faible',
+  MEDIUM: 'Moyenne',
+  HIGH: 'Élevée',
+};
 
-function adsHeaders(accessToken) {
-  const headers = {
-    Authorization: `Bearer ${accessToken}`,
-    "developer-token": process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
-    "Content-Type": "application/json",
-  };
-  if (process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID) {
-    headers["login-customer-id"] = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID;
-  }
-  return headers;
-}
-
-// Résout un nom de zone ("Morbihan", "Bretagne", "Vannes"...) en identifiant
-// Google Ads. Renvoie aussi le nom canonique retourné par Google, utile pour
-// confirmer côté front que la bonne zone a été comprise (ex: distinguer un
-// département d'une ville homonyme).
-async function resolveGeoTarget(accessToken, zone) {
-  const res = await fetch(`${BASE_URL}/geoTargetConstants:suggest`, {
-    method: "POST",
-    headers: adsHeaders(accessToken),
-    body: JSON.stringify({
-      locale: "fr",
-      countryCode: "FR",
-      locationNames: { names: [zone] },
-    }),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Erreur résolution zone (${res.status}): ${text}`);
-  }
-  const data = await res.json();
-  const suggestion =
-    data.geoTargetConstantSuggestions && data.geoTargetConstantSuggestions[0];
-  if (!suggestion) return { resourceName: null, canonicalName: null };
-  return {
-    resourceName: suggestion.geoTargetConstant.resourceName, // ex: "geoTargetConstants/1006585"
-    canonicalName: suggestion.geoTargetConstant.name || null,
-  };
-}
-
-async function fetchKeywordIdeas(accessToken, activite, zone, geoTargetResourceName) {
-  const customerId = process.env.GOOGLE_ADS_CUSTOMER_ID;
-  const seedKeywords = [
-    activite,
-    `${activite} ${zone}`,
-    `devis ${activite}`,
-    `${activite} urgence`,
-    `entreprise ${activite}`,
-  ];
-
-  const body = {
-    language: "languageConstants/1003", // Français
-    keywordSeed: { keywords: seedKeywords },
-    keywordPlanNetwork: "GOOGLE_SEARCH_AND_PARTNERS", // recherche Google + sites partenaires (YouTube Search, etc.), volume plus large que GOOGLE_SEARCH seul
-  };
-  if (geoTargetResourceName) {
-    body.geoTargetConstants = [geoTargetResourceName];
-  }
-
-  const res = await fetch(`${BASE_URL}/customers/${customerId}:generateKeywordIdeas`, {
-    method: "POST",
-    headers: adsHeaders(accessToken),
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Erreur Keyword Planner (${res.status}): ${text}`);
-  }
-  const data = await res.json();
-  return data.results || [];
-}
+const client = new GoogleAdsApi({
+  client_id: process.env.GOOGLE_ADS_CLIENT_ID,
+  client_secret: process.env.GOOGLE_ADS_CLIENT_SECRET,
+  developer_token: process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
+});
 
 function microsToEuros(micros) {
-  if (!micros) return null;
-  return Math.round((Number(micros) / 1_000_000) * 100) / 100;
-}
-
-function competitionLabel(index) {
-  if (index === null || index === undefined) return "Inconnue";
-  if (index < 33) return "Faible";
-  if (index < 66) return "Moyenne";
-  return "Élevée";
-}
-
-// Transforme chaque résultat brut de l'API en une ligne prête à afficher,
-// triée par volume de recherche décroissant. Ne garde que les mots-clés qui
-// ont au moins une métrique exploitable (évite les lignes 100% vides).
-function buildKeywordRows(results) {
-  return results
-    .map((r) => {
-      const m = r.keywordIdeaMetrics || {};
-      const searches = m.avgMonthlySearches !== undefined ? Number(m.avgMonthlySearches) : null;
-      const competitionIndex = m.competitionIndex !== undefined ? Number(m.competitionIndex) : null;
-      const lowCpc = microsToEuros(m.lowTopOfPageBidMicros);
-      const highCpc = microsToEuros(m.highTopOfPageBidMicros);
-      return {
-        motCle: r.text,
-        recherchesParMois: searches,
-        concurrence: competitionLabel(competitionIndex),
-        cpcMin: lowCpc,
-        cpcMax: highCpc,
-      };
-    })
-    .filter((row) => row.recherchesParMois !== null)
-    .sort((a, b) => (b.recherchesParMois || 0) - (a.recherchesParMois || 0));
+  if (micros == null) return null;
+  return Math.round((micros / 1_000_000) * 100) / 100;
 }
 
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST" && req.method !== "GET") {
-    return res.status(405).json({ success: false, error: "Méthode non autorisée" });
-  }
-
-  const source = req.method === "GET" ? req.query : req.body || {};
-  const activite = (source.activite || "").toString().trim();
-  const zone = (source.zone || "").toString().trim();
-
-  if (!activite || !zone) {
-    return res.status(400).json({ success: false, error: "Activité et zone requises." });
-  }
-
-  const missing = REQUIRED_ENV.filter((key) => !process.env[key]);
-  if (missing.length) {
-    return res.status(503).json({
-      success: false,
-      error: "Le calculateur n'est pas encore connecté à Google Ads.",
-      missingEnv: missing,
-    });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Méthode non autorisée' });
   }
 
   try {
-    const accessToken = await getAccessToken();
-    const { resourceName: geoTargetResourceName, canonicalName: zoneResolue } = await resolveGeoTarget(
-      accessToken,
-      zone
-    );
-    const results = await fetchKeywordIdeas(accessToken, activite, zone, geoTargetResourceName);
-    const keywords = buildKeywordRows(results);
+    const { activite, zone } = req.body || {};
 
-    if (!keywords.length) {
+    if (!activite || !activite.trim()) {
+      return res.status(400).json({ success: false, error: "Le champ 'activite' est requis" });
+    }
+    if (!zone || !zone.trim()) {
+      return res.status(400).json({ success: false, error: "Le champ 'zone' est requis" });
+    }
+
+    const customer = client.Customer({
+      customer_id: process.env.GOOGLE_ADS_CUSTOMER_ID,
+      login_customer_id: process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID,
+      refresh_token: process.env.GOOGLE_ADS_REFRESH_TOKEN,
+    });
+
+    // 1) Résolution géographique
+    const geoSuggestions = await customer.geoTargetConstants.suggestGeoTargetConstants({
+      locale: 'fr',
+      country_code: 'FR',
+      location_names: { names: [zone.trim()] },
+    });
+
+    const suggestions = geoSuggestions?.geo_target_constant_suggestions || [];
+    if (suggestions.length === 0) {
       return res.status(200).json({
         success: true,
         found: false,
-        activite,
-        zone,
-        zoneResolue,
-        message: "Pas assez de données Google Ads pour cette combinaison activité / zone.",
+        error: `Zone géographique "${zone}" non reconnue par Google.`,
       });
     }
 
+    const geo = suggestions[0].geo_target_constant;
+    const geoResourceName = geo.resource_name;
+    const zoneResolue = geo.name;
+
+    // 2) Idées de mots-clés + volumes de recherche
+    const ideas = await customer.keywordPlanIdeas.generateKeywordIdeas({
+      customer_id: process.env.GOOGLE_ADS_CUSTOMER_ID,
+      keyword_seed: { keywords: [activite.trim()] },
+      geo_target_constants: [geoResourceName],
+      language: LANGUAGE_FRENCH,
+      keyword_plan_network: 'GOOGLE_SEARCH',
+    });
+
+    const results = ideas?.results || ideas || [];
+    if (!results.length) {
+      return res.status(200).json({
+        success: true,
+        found: false,
+        error: `Aucune donnée de recherche pour "${activite}" dans cette zone.`,
+      });
+    }
+
+    // On garde les 5 idées avec le plus de volume (l'idée correspondant
+    // exactement au mot-clé saisi, si présente, passe en premier).
+    const sorted = [...results].sort(
+      (a, b) => (b.keyword_idea_metrics?.avg_monthly_searches || 0) - (a.keyword_idea_metrics?.avg_monthly_searches || 0)
+    );
+    const exactIndex = sorted.findIndex(
+      (r) => (r.text || '').toLowerCase() === activite.trim().toLowerCase()
+    );
+    if (exactIndex > 0) {
+      const [exact] = sorted.splice(exactIndex, 1);
+      sorted.unshift(exact);
+    }
+    const top = sorted.slice(0, 5);
+
+    const keywords = top.map((r) => {
+      const m = r.keyword_idea_metrics || {};
+      return {
+        motCle: r.text,
+        recherchesParMois: m.avg_monthly_searches ?? 0,
+        cpcMin: microsToEuros(m.low_top_of_page_bid_micros),
+        cpcMax: microsToEuros(m.high_top_of_page_bid_micros),
+        concurrence: COMPETITION_LABELS[m.competition] || 'Inconnue',
+      };
+    });
+
     const totalSearches = keywords.reduce((sum, k) => sum + (k.recherchesParMois || 0), 0);
-    const clickRate = Number(process.env.CLICK_RATE_DEFAULT || 0.02);
-    const conversionRate = Number(process.env.CONVERSION_RATE_DEFAULT || 0.03);
-    const clicsEstimesParMois = Math.max(0, Math.round(totalSearches * clickRate));
-    const clientsEstimesParMois = Math.max(0, Math.round(clicsEstimesParMois * conversionRate));
+    const clicsEstimesParMois = Math.round(totalSearches * TAUX_CLIC);
+    const clientsEstimesParMois = Math.round(clicsEstimesParMois * TAUX_CONVERSION);
 
     return res.status(200).json({
       success: true,
       found: true,
-      activite,
-      zone,
-      zoneResolue, // nom canonique renvoyé par Google, pour vérifier que la bonne zone a été comprise
-      keywords, // tableau détaillé, un objet par mot-clé
-      totalRecherchesParMois: totalSearches,
-      tauxClic: clickRate,
+      zoneResolue,
+      keywords,
+      tauxClic: TAUX_CLIC,
       clicsEstimesParMois,
-      tauxConversion: conversionRate,
+      tauxConversion: TAUX_CONVERSION,
       clientsEstimesParMois,
     });
-  } catch (err) {
-    console.error("estimation-prospects error:", err.message);
+  } catch (error) {
+    console.error('Erreur estimation-prospects:', error);
     return res.status(500).json({
       success: false,
-      error: "Erreur lors du calcul de l'estimation, merci de réessayer.",
+      error: "Estimation momentanément indisponible.",
+      detail: error.message,
     });
   }
 }
