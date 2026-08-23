@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skyeco Pro — Finaliser votre demande</title>
+<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink:#1C2226;
+    --paper:#F4F2EC;
+    --steel:#3D5A73;
+    --steel-dark:#2A4054;
+    --signal:#E8622C;
+    --concrete:#8B8D85;
+    --line:#D8D4C8;
+    --card:#FFFFFF;
+    --ok:#2F7A4F;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:'Work Sans', sans-serif; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2, .eyebrow, nav .brand, .step-label{
+    font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.02em;
+  }
+  a{ color:inherit; }
+  .wrap{ max-width:720px; margin:0 auto; padding:0 24px; }
+
+  nav{
+    background:var(--ink); color:var(--paper);
+    border-bottom:3px solid var(--signal);
+  }
+  nav .inner{
+    max-width:720px; margin:0 auto; padding:0 24px;
+    display:flex; align-items:center; justify-content:space-between; height:64px;
+  }
+  nav .brand{ font-size:1.15rem; font-weight:700; letter-spacing:0.06em; }
+  nav .brand span{ color:var(--signal); }
+  nav a.back{ font-size:0.85rem; color:#D9D6CC; text-decoration:none; }
+
+  header.summary{
+    background:linear-gradient(180deg, var(--ink) 0%, var(--steel-dark) 100%);
+    color:var(--paper); padding:44px 0 40px;
+  }
+  header.summary .eyebrow{ color:var(--signal); font-size:0.8rem; font-weight:600; margin-bottom:10px; }
+  header.summary h1{ font-size:1.6rem; font-weight:700; margin-bottom:6px; }
+  header.summary .price-line{ color:#D9D6CC; font-size:0.95rem; text-transform:none; letter-spacing:normal; font-family:'Work Sans',sans-serif; }
+  header.summary .price-line strong{ color:var(--paper); }
+
+  main{ padding:44px 0 80px; }
+
+  .steps{ display:flex; gap:10px; margin-bottom:36px; }
+  .step-pill{
+    flex:1; text-align:center; padding:9px 8px;
+    font-family:'Oswald', sans-serif; font-size:0.72rem; font-weight:600;
+    letter-spacing:0.06em; text-transform:uppercase;
+    border:1px solid var(--line); border-radius:2px; color:var(--concrete);
+    background:#fff;
+  }
+  .step-pill.active{ border-color:var(--signal); color:var(--signal); }
+  .step-pill.done{ border-color:var(--ok); color:var(--ok); }
+
+  .panel{
+    background:var(--card); border:1px solid var(--line); border-radius:4px;
+    padding:30px 28px; margin-bottom:24px;
+  }
+  .panel h2{ font-size:1.05rem; font-weight:600; color:var(--ink); margin-bottom:6px; }
+  .panel .hint{ color:var(--concrete); font-size:0.85rem; text-transform:none; letter-spacing:normal; font-family:'Work Sans',sans-serif; margin-bottom:20px; }
+
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block; font-size:0.8rem; font-weight:600; color:var(--concrete);
+    margin-bottom:6px; text-transform:uppercase; letter-spacing:0.04em;
+  }
+  .siret-row{ display:flex; gap:10px; }
+  input[type=text], input[type=tel], input[type=email]{
+    width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:2px;
+    font-family:'Work Sans', sans-serif; font-size:0.95rem; background:#fff;
+  }
+  input:focus{ outline:2px solid var(--steel); outline-offset:1px; }
+  input[readonly]{ background:#F0EFE9; color:#555; }
+
+  .btn-search{
+    background:var(--steel-dark); color:#fff; border:none; border-radius:2px;
+    padding:0 20px; font-family:'Oswald', sans-serif; font-weight:600;
+    letter-spacing:0.03em; text-transform:uppercase; font-size:0.85rem; cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn-search:disabled{ opacity:0.6; cursor:progress; }
+
+  .lookup-status{
+    font-size:0.85rem; margin-top:10px; display:none;
+  }
+  .lookup-status.ok{ color:var(--ok); display:block; }
+  .lookup-status.err{ color:var(--signal); display:block; }
+
+  .autofill-box{
+    display:none; margin-top:18px; padding-top:18px; border-top:1px dashed var(--line);
+  }
+  .autofill-box.show{ display:block; }
+
+  .btn-primary{
+    background:var(--signal); color:#fff; border:none; border-radius:2px;
+    padding:14px 24px; font-family:'Oswald', sans-serif; font-weight:600;
+    letter-spacing:0.03em; text-transform:uppercase; font-size:0.9rem;
+    cursor:pointer; width:100%; margin-top:6px;
+  }
+  .btn-primary:disabled{ background:var(--concrete); cursor:not-allowed; }
+
+  .calendly-block{ display:none; }
+  .calendly-block.show{ display:block; }
+  .calendly-inline-widget{ min-width:280px; height:640px; }
+
+  footer{
+    padding:22px 0; text-align:center; color:var(--concrete); font-size:0.8rem;
+    border-top:1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <div class="brand">SKY<span>ECO</span> PRO</div>
+    <a class="back" href="tarifs.html">← Retour aux formules</a>
+  </div>
+</nav>
+
+<header class="summary">
+  <div class="wrap">
+    <div class="eyebrow">Votre demande</div>
+    <h1 id="formule-title">Formule sélectionnée</h1>
+    <p class="price-line">Prix : <strong id="formule-prix">—</strong> — étape suivante : identifier votre entreprise puis choisir un créneau de rendez-vous.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="steps">
+    <div class="step-pill active" id="step-pill-1">1. Entreprise</div>
+    <div class="step-pill" id="step-pill-2">2. Rendez-vous</div>
+  </div>
+
+  <div class="panel" id="panel-siret">
+    <h2>Votre entreprise</h2>
+    <p class="hint">Indiquez votre numéro SIRET (14 chiffres) : vos informations sont récupérées automatiquement.</p>
+
+    <div class="field">
+      <label for="siret">Numéro SIRET</label>
+      <div class="siret-row">
+        <input type="text" id="siret" inputmode="numeric" placeholder="Ex : 93999787000018" maxlength="14">
+        <button class="btn-search" id="btn-siret">Rechercher</button>
+      </div>
+      <div class="lookup-status" id="lookup-status"></div>
+    </div>
+
+    <div class="autofill-box" id="autofill-box">
+      <div class="field">
+        <label for="raison-sociale">Raison sociale</label>
+        <input type="text" id="raison-sociale" readonly>
+      </div>
+      <div class="field">
+        <label for="adresse">Adresse</label>
+        <input type="text" id="adresse" readonly>
+      </div>
+      <div class="field">
+        <label for="activite">Activité (APE)</label>
+        <input type="text" id="activite" readonly>
+      </div>
+      <div class="field">
+        <label for="tel-contact">Votre téléphone</label>
+        <input type="tel" id="tel-contact" placeholder="06 XX XX XX XX">
+      </div>
+      <div class="field">
+        <label for="email-contact">Votre email</label>
+        <input type="email" id="email-contact" placeholder="vous@entreprise.fr">
+      </div>
+      <button class="btn-primary" id="btn-continue">Continuer vers la prise de rendez-vous</button>
+    </div>
+  </div>
+
+  <div class="panel calendly-block" id="panel-calendly">
+    <h2>Choisissez un créneau</h2>
+    <p class="hint">15 minutes suffisent pour cadrer votre projet et démarrer.</p>
+    <!-- Remplacer l'URL ci-dessous par le lien Calendly réel de RMS EcoSky -->
+    <div class="calendly-inline-widget" data-url="https://calendly.com/rms-ecosky/rdv-skyeco-pro"></div>
+  </div>
+
+</main>
+
+<footer>
+  Skyeco Pro — un site professionnel, pensé pour les artisans et entreprises du BTP.
+</footer>
+
+<script>
+  // Récupère la formule choisie depuis l'URL (?formule=... et &prix=...)
+  var params = new URLSearchParams(window.location.search);
+  var formule = params.get('formule') || 'Formule non précisée';
+  var prix = params.get('prix') || '—';
+  document.getElementById('formule-title').textContent = formule;
+  document.getElementById('formule-prix').textContent = prix;
+
+  // Recherche SIRET via l'API publique gratuite recherche-entreprises.api.gouv.fr
+  document.getElementById('btn-siret').addEventListener('click', function(){
+    var siret = document.getElementById('siret').value.replace(/\s/g, '');
+    var status = document.getElementById('lookup-status');
+    var box = document.getElementById('autofill-box');
+    var btn = document.getElementById('btn-siret');
+
+    if(siret.length !== 14){
+      status.className = 'lookup-status err';
+      status.textContent = "Le SIRET doit comporter 14 chiffres.";
+      return;
+    }
+
+    btn.disabled = true;
+    status.className = 'lookup-status';
+    status.textContent = '';
+
+    fetch('https://recherche-entreprises.api.gouv.fr/search?q=' + siret + '&per_page=1')
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        btn.disabled = false;
+        if(!data.results || data.results.length === 0){
+          status.className = 'lookup-status err';
+          status.textContent = "Aucune entreprise trouvée pour ce SIRET. Vérifiez le numéro ou continuez manuellement.";
+          return;
+        }
+        var res = data.results[0];
+        var siege = res.siege || {};
+        document.getElementById('raison-sociale').value = res.nom_complet || res.nom_raison_sociale || '';
+        document.getElementById('adresse').value = siege.adresse || '';
+        document.getElementById('activite').value = (siege.activite_principale || res.activite_principale || '') ;
+        status.className = 'lookup-status ok';
+        status.textContent = "Entreprise trouvée et pré-remplie ci-dessous.";
+        box.classList.add('show');
+      })
+      .catch(function(){
+        btn.disabled = false;
+        status.className = 'lookup-status err';
+        status.textContent = "Recherche indisponible pour le moment. Vous pouvez continuer manuellement.";
+      });
+  });
+
+  // Passage à l'étape 2 : prise de RDV Calendly
+  document.getElementById('btn-continue').addEventListener('click', function(){
+    document.getElementById('panel-siret').style.display = 'none';
+    document.getElementById('panel-calendly').classList.add('show');
+    document.getElementById('step-pill-1').classList.remove('active');
+    document.getElementById('step-pill-1').classList.add('done');
+    document.getElementById('step-pill-2').classList.add('active');
+    document.getElementById('panel-calendly').scrollIntoView({behavior:'smooth'});
+  });
+</script>
+
+</body>
+</html>
