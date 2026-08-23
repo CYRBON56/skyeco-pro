@@ -14,7 +14,7 @@ import twilio from "twilio";
 
 const LIEN = "https://skyeco-pro.vercel.app/tarifs.html";
 const MESSAGE = (nom) =>
-  `Bonjour${nom ? " " + nom : ""}, on construit des sites vitrines pour les artisans du BTP en Bretagne, prix fixe dès 990€. ` +
+  `Bonjour${nom ? " " + nom : ""}, Skyeco Pro construit des sites vitrines pour les artisans du BTP en Bretagne, prix fixe dès 990€. ` +
   `Voir les formules : ${LIEN} — Répondez STOP pour ne plus recevoir de message.`;
 
 export default async function handler(req, res) {
