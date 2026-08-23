@@ -11,11 +11,28 @@
 //   Body: { ids: ["uuid1", "uuid2", ...] }
 
 import twilio from "twilio";
+import crypto from "crypto";
 
 const BASE_URL = "https://skyeco-pro.vercel.app";
-const MESSAGE = (nom, id) =>
-  `Bonjour${nom ? " " + nom : ""}, Skyeco Pro construit des sites vitrines pour les artisans du BTP, prix fixe dès 590€. ` +
-  `Voir les formules : ${BASE_URL}/api/lien?p=${id} — Répondez STOP pour ne plus recevoir de message.`;
+const MAX_NOM = 32; // marge calculée pour rester sous 160 caractères même avec un long nom d'entreprise
+
+// Message volontairement composé uniquement de caractères GSM-7 (pas de €, pas
+// de tiret cadratin —, pas d'accent hors norme comme ê) et d'un lien court
+// avec token de 8 caractères (au lieu de l'UUID complet), avec le nom tronqué
+// si besoin, pour GARANTIR 160 caractères max : 1 seul segment facturé par
+// SMS au lieu de 4.
+const MESSAGE = (nom, token) => {
+  const nomCourt = (nom || "").slice(0, MAX_NOM);
+  return (
+    `Bonjour, Skyeco Pro (pour ${nomCourt}) : site vitrine artisan BTP dès 590 euros. ` +
+    `Voir: ${BASE_URL}/l?p=${token} STOP=stop`
+  );
+};
+
+// Génère un token court, url-safe, pour le lien de tracking.
+function genererToken() {
+  return crypto.randomBytes(6).toString("base64url").slice(0, 8);
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -41,7 +58,7 @@ export default async function handler(req, res) {
   try {
     const idsFilter = ids.map((id) => `"${id}"`).join(",");
     const resp = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/prospects_sms?id=in.(${idsFilter})&select=id,nom,telephone_e164,opt_out`,
+      `${process.env.SUPABASE_URL}/rest/v1/prospects_sms?id=in.(${idsFilter})&select=id,nom,telephone_e164,opt_out,clic_token`,
       { headers: supaHeaders }
     );
     if (!resp.ok) throw new Error("Lecture Supabase impossible.");
@@ -51,13 +68,26 @@ export default async function handler(req, res) {
     const prospects = tousLesProspects.filter((p) => !p.opt_out);
     const ignoresOptOut = tousLesProspects.filter((p) => p.opt_out).map((p) => p.id);
 
+    // Assure que chaque prospect a un token de tracking avant l'envoi
+    // (généré une seule fois, réutilisé pour les envois suivants).
+    for (const p of prospects) {
+      if (!p.clic_token) {
+        p.clic_token = genererToken();
+        await fetch(`${process.env.SUPABASE_URL}/rest/v1/prospects_sms?id=eq.${encodeURIComponent(p.id)}`, {
+          method: "PATCH",
+          headers: { ...supaHeaders, Prefer: "return=minimal" },
+          body: JSON.stringify({ clic_token: p.clic_token }),
+        });
+      }
+    }
+
     const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
     const results = [];
     for (const p of prospects) {
       try {
         await client.messages.create({
-          body: MESSAGE(p.nom, p.id),
+          body: MESSAGE(p.nom, p.clic_token),
           from: process.env.TWILIO_FROM_NUMBER,
           to: p.telephone_e164,
         });
