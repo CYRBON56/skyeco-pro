@@ -50,6 +50,7 @@
   .statut-envoye { background:#eaf4ef; color:#1e6f4c; }
   .statut-attente { background:#f0e9da; color:#8a6b1f; }
   .statut-optout { background:#fdeaea; color:#991b1b; }
+  .statut-clique { background:#e8f0fe; color:#1a56db; margin-left:4px; }
 
   .stats-bar { display:flex; gap:14px; flex-wrap:wrap; margin-top:8px; }
   .stat-box { flex:1; min-width:120px; background:#fbfcfa; border:1px solid #eef1ee; border-radius:10px; padding:12px 14px; text-align:center; }
@@ -164,10 +165,12 @@
     var optout = prospects.filter(function(p){ return p.opt_out; }).length;
     var envoyes = prospects.filter(function(p){ return p.sms_envoye && !p.opt_out; }).length;
     var attente = total - envoyes - optout;
+    var cliques = prospects.filter(function(p){ return p.lien_clique; }).length;
     bar.innerHTML =
       '<div class="stat-box"><div class="num">' + total + '</div><div class="lbl">Total prospects</div></div>' +
       '<div class="stat-box"><div class="num">' + envoyes + '</div><div class="lbl">SMS envoyés</div></div>' +
       '<div class="stat-box"><div class="num">' + attente + '</div><div class="lbl">En attente</div></div>' +
+      '<div class="stat-box"><div class="num">' + cliques + '</div><div class="lbl">Liens cliqués</div></div>' +
       '<div class="stat-box optout"><div class="num">' + optout + '</div><div class="lbl">Désabonnés (STOP)</div></div>';
   }
 
@@ -197,6 +200,9 @@
         : p.sms_envoye
         ? '<span class="statut statut-envoye">Envoyé' + (p.date_envoi ? ' — ' + new Date(p.date_envoi).toLocaleDateString('fr-FR') : '') + '</span>'
         : '<span class="statut statut-attente">En attente</span>';
+      if (p.lien_clique) {
+        statutHtml += '<span class="statut statut-clique">🔗 Cliqué' + (p.clic_date ? ' — ' + new Date(p.clic_date).toLocaleDateString('fr-FR') : '') + '</span>';
+      }
       return '<tr>' +
         '<td><input type="checkbox" class="row-check" data-id="' + p.id + '"></td>' +
         '<td>' + escapeHtml(p.nom || '') + '</td>' +
