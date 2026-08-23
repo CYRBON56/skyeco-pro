@@ -275,7 +275,7 @@
 <nav>
   <div class="wrap">
     <div class="brand">SKY<span>ECO</span> PRO</div>
-    <a class="cta" href="#contact">Être rappelé</a>
+    <a class="cta" href="#" data-open-rappel>Être rappelé immédiat</a>
   </div>
 </nav>
 
@@ -286,7 +286,7 @@
     <p class="lead">Skyeco Pro construit votre site vitrine professionnel, avec ou sans formulaire de devis, avec ou sans gestion de vos campagnes Google Ads. Mise en ligne rapide, prix fixes, sans surprise.</p>
     <div class="hero-actions">
       <a class="btn-primary" href="#pricing">Voir les formules</a>
-      <a class="btn-ghost" href="tel:+33645688394">Nous appeler — 06 45 68 83 94</a>
+      <a class="btn-ghost" href="#" data-open-rappel>Être rappelé immédiat</a>
     </div>
   </div>
 </header>
@@ -370,9 +370,10 @@
 <section class="contact" id="contact">
   <div class="wrap">
     <h2>Un site en ligne, sans y passer vos soirées.</h2>
-    <p id="contact-lead">Laissez-nous vos coordonnées ou appelez directement : on vous rappelle pour cadrer votre projet et démarrer.</p>
+    <p id="contact-lead">Laissez-nous vos coordonnées : on vous rappelle pour cadrer votre projet et démarrer.</p>
     <div id="formule-selectionnee" class="formule-badge" hidden></div>
-    <a class="btn-primary" href="tel:+33645688394">Appeler maintenant — 06 45 68 83 94</a>
+    <a class="btn-primary" href="#" data-open-rappel>Être rappelé immédiat</a>
+    <p class="rappel-souscat">On vous envoie un SMS pour confirmer votre numéro, puis on vous rappelle dans la foulée.</p>
   </div>
 </section>
 
@@ -396,6 +397,47 @@
   </div>
 </section>
 
+<!-- Modal "Être rappelé immédiat" -->
+<div id="rappel-overlay" class="rappel-overlay" hidden>
+  <div class="rappel-modal" role="dialog" aria-modal="true" aria-labelledby="rappel-title">
+    <button type="button" class="rappel-close" id="rappel-close" aria-label="Fermer">✕</button>
+    <h3 id="rappel-title">Être rappelé immédiat</h3>
+
+    <div id="rappel-step-phone">
+      <p class="rappel-txt">Laissez votre numéro, on vous envoie un code par SMS pour le confirmer.</p>
+      <input type="tel" id="rappel-phone" placeholder="06 12 34 56 78" inputmode="tel">
+      <button type="button" class="btn-primary rappel-btn" id="rappel-send">Recevoir le code par SMS</button>
+      <p class="rappel-error" id="rappel-error-phone" hidden></p>
+    </div>
+
+    <div id="rappel-step-code" hidden>
+      <p class="rappel-txt">Code envoyé au <strong id="rappel-phone-recap"></strong>. Saisissez-le ci-dessous :</p>
+      <input type="text" id="rappel-code" placeholder="123456" inputmode="numeric" maxlength="6">
+      <button type="button" class="btn-primary rappel-btn" id="rappel-confirm">Confirmer et être rappelé</button>
+      <button type="button" class="rappel-retry" id="rappel-retry">Renvoyer le code / changer de numéro</button>
+      <p class="rappel-error" id="rappel-error-code" hidden></p>
+    </div>
+
+    <div id="rappel-step-done" hidden>
+      <p class="rappel-txt rappel-success">✓ Numéro confirmé. On vous rappelle très vite !</p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .rappel-souscat{ margin-top:14px; font-size:.85rem; color:#9A968C; text-transform:none; letter-spacing:normal; font-family:'Work Sans',sans-serif; }
+  .rappel-overlay{ position:fixed; inset:0; background:rgba(10,10,10,.72); display:flex; align-items:center; justify-content:center; z-index:999; padding:20px; }
+  .rappel-modal{ background:#1B1B1B; border:1px solid #333; border-radius:6px; padding:32px 28px; max-width:380px; width:100%; position:relative; }
+  .rappel-modal h3{ font-family:'Oswald',sans-serif; color:#F4F2ED; font-size:1.3rem; margin-bottom:14px; }
+  .rappel-close{ position:absolute; top:14px; right:14px; background:none; border:none; color:#9A968C; font-size:1.1rem; cursor:pointer; }
+  .rappel-txt{ color:#C9C6BC; font-family:'Work Sans',sans-serif; font-size:.92rem; margin-bottom:16px; line-height:1.4; }
+  .rappel-modal input{ width:100%; padding:12px 14px; background:#0F0F0F; border:1px solid #3A3A3A; border-radius:4px; color:#F4F2ED; font-size:1rem; margin-bottom:12px; font-family:'Work Sans',sans-serif; }
+  .rappel-btn{ width:100%; text-align:center; border:none; cursor:pointer; }
+  .rappel-retry{ display:block; width:100%; background:none; border:none; color:#9A968C; font-size:.82rem; margin-top:10px; cursor:pointer; text-decoration:underline; }
+  .rappel-error{ color:#E4572E; font-size:.82rem; margin-top:10px; }
+  .rappel-success{ color:#8FBF6E; font-weight:600; }
+</style>
+
 <script>
   document.querySelectorAll('.plan .cta[data-formule]').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -406,6 +448,120 @@
       lead.textContent = "On vous rappelle pour cadrer votre projet sur cette base et démarrer.";
     });
   });
+
+  (function(){
+    var overlay = document.getElementById('rappel-overlay');
+    var stepPhone = document.getElementById('rappel-step-phone');
+    var stepCode = document.getElementById('rappel-step-code');
+    var stepDone = document.getElementById('rappel-step-done');
+    var phoneInput = document.getElementById('rappel-phone');
+    var codeInput = document.getElementById('rappel-code');
+    var errPhone = document.getElementById('rappel-error-phone');
+    var errCode = document.getElementById('rappel-error-code');
+    var currentPhone = '';
+    var formuleActuelle = '';
+
+    function openModal(){
+      var badge = document.getElementById('formule-selectionnee');
+      formuleActuelle = (!badge.hidden && badge.textContent) ? badge.textContent.replace('Formule sélectionnée : ', '') : '';
+      overlay.hidden = false;
+      stepPhone.hidden = false;
+      stepCode.hidden = true;
+      stepDone.hidden = true;
+      errPhone.hidden = true;
+      errCode.hidden = true;
+      phoneInput.value = '';
+      codeInput.value = '';
+    }
+    function closeModal(){ overlay.hidden = true; }
+
+    document.querySelectorAll('[data-open-rappel]').forEach(function(btn){
+      btn.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
+    });
+    document.getElementById('rappel-close').addEventListener('click', closeModal);
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) closeModal(); });
+
+    document.getElementById('rappel-send').addEventListener('click', function(){
+      errPhone.hidden = true;
+      var phone = phoneInput.value.trim();
+      if (!/^0[1-9](\s?\d{2}){4}$/.test(phone.replace(/[.-]/g,''))) {
+        errPhone.textContent = 'Merci de saisir un numéro français valide.';
+        errPhone.hidden = false;
+        return;
+      }
+      currentPhone = phone;
+      this.disabled = true;
+      this.textContent = 'Envoi en cours…';
+      var self = this;
+      fetch('/api/verify-send-code', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ phone: phone })
+      }).then(function(r){ return r.json(); }).then(function(data){
+        self.disabled = false;
+        self.textContent = 'Recevoir le code par SMS';
+        if (data.success) {
+          document.getElementById('rappel-phone-recap').textContent = phone;
+          stepPhone.hidden = true;
+          stepCode.hidden = false;
+        } else {
+          errPhone.textContent = data.error || "Envoi impossible, réessayez.";
+          errPhone.hidden = false;
+        }
+      }).catch(function(){
+        self.disabled = false;
+        self.textContent = 'Recevoir le code par SMS';
+        errPhone.textContent = "Erreur réseau, réessayez.";
+        errPhone.hidden = false;
+      });
+    });
+
+    document.getElementById('rappel-retry').addEventListener('click', function(){
+      stepCode.hidden = true;
+      stepPhone.hidden = false;
+      errCode.hidden = true;
+    });
+
+    document.getElementById('rappel-confirm').addEventListener('click', function(){
+      errCode.hidden = true;
+      var code = codeInput.value.trim();
+      if (!/^\d{4,6}$/.test(code)) {
+        errCode.textContent = 'Code invalide.';
+        errCode.hidden = false;
+        return;
+      }
+      this.disabled = true;
+      this.textContent = 'Vérification…';
+      var self = this;
+      fetch('/api/verify-check-code', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ phone: currentPhone, code: code })
+      }).then(function(r){ return r.json(); }).then(function(data){
+        self.disabled = false;
+        self.textContent = 'Confirmer et être rappelé';
+        if (data.success && data.valid) {
+          fetch('/api/demande-rappel', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ phone: currentPhone, formule: formuleActuelle })
+          }).finally(function(){
+            stepCode.hidden = true;
+            stepDone.hidden = false;
+            setTimeout(closeModal, 3500);
+          });
+        } else {
+          errCode.textContent = "Code incorrect, réessayez.";
+          errCode.hidden = false;
+        }
+      }).catch(function(){
+        self.disabled = false;
+        self.textContent = 'Confirmer et être rappelé';
+        errCode.textContent = "Erreur réseau, réessayez.";
+        errCode.hidden = false;
+      });
+    });
+  })();
 </script>
 
 </body>
