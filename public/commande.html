@@ -199,10 +199,10 @@
       <div class="lookup-status" id="lookup-status"></div>
     </div>
 
-    <div class="autofill-box" id="autofill-box">
+    <div class="autofill-box show" id="autofill-box">
       <div class="field">
         <label for="raison-sociale">Raison sociale</label>
-        <input type="text" id="raison-sociale" readonly>
+        <input type="text" id="raison-sociale" readonly placeholder="Sera rempli après recherche SIRET (facultatif)">
       </div>
       <div class="field">
         <label for="adresse">Adresse</label>
@@ -212,28 +212,29 @@
         <label for="activite">Activité (APE)</label>
         <input type="text" id="activite" readonly>
       </div>
-      <div class="field">
-        <label for="tel-contact">Votre téléphone</label>
-        <input type="tel" id="tel-contact" placeholder="06 XX XX XX XX" required>
-        <div class="field-error" id="tel-error"></div>
-        <button type="button" class="btn-search" id="btn-send-code" style="display:none; margin-top:10px;">Envoyer le code par SMS</button>
-      </div>
-
-      <div class="field" id="code-field" style="display:none;">
-        <label for="sms-code">Code reçu par SMS</label>
-        <div class="siret-row">
-          <input type="text" id="sms-code" inputmode="numeric" maxlength="6" placeholder="123456">
-          <button type="button" class="btn-search" id="btn-check-code">Vérifier</button>
-        </div>
-        <div class="lookup-status" id="code-status"></div>
-      </div>
-
-      <div class="field">
-        <label for="email-contact">Votre email</label>
-        <input type="email" id="email-contact" placeholder="vous@entreprise.fr">
-      </div>
-      <button class="btn-primary" id="btn-continue" disabled>Continuer vers la prise de rendez-vous</button>
     </div>
+
+    <div class="field">
+      <label for="tel-contact">Votre téléphone</label>
+      <input type="tel" id="tel-contact" placeholder="06 XX XX XX XX" required>
+      <div class="field-error" id="tel-error"></div>
+      <button type="button" class="btn-search" id="btn-send-code" style="display:none; margin-top:10px;">Envoyer le code par SMS</button>
+    </div>
+
+    <div class="field" id="code-field" style="display:none;">
+      <label for="sms-code">Code reçu par SMS</label>
+      <div class="siret-row">
+        <input type="text" id="sms-code" inputmode="numeric" maxlength="6" placeholder="123456">
+        <button type="button" class="btn-search" id="btn-check-code">Vérifier</button>
+      </div>
+      <div class="lookup-status" id="code-status"></div>
+    </div>
+
+    <div class="field">
+      <label for="email-contact">Votre email</label>
+      <input type="email" id="email-contact" placeholder="vous@entreprise.fr">
+    </div>
+    <button class="btn-primary" id="btn-continue" disabled>Continuer vers la prise de rendez-vous</button>
   </div>
 
   <div class="panel slots-block" id="panel-calendly">
