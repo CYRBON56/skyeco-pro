@@ -5,22 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Skyeco Pro — Votre entreprise, enfin visible en ligne</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
 
   :root{
-    --ink:#1C2226;
-    --paper:#F4F2EC;
-    --steel:#3D5A73;
-    --steel-dark:#2A4054;
-    --signal:#E8622C;
-    --concrete:#8B8D85;
-    --line:#D8D4C8;
+    --ink:#14181A;
+    --ink-2:#1D2326;
+    --paper:#F5F1E6;
+    --steel:#3E6E8E;
+    --steel-dark:#223B4C;
+    --signal:#DE5A2C;
+    --safety:#E8AC1E;
+    --concrete:#87877D;
+    --line:#DAD4C2;
     --card:#FFFFFF;
   }
 
   *{ box-sizing:border-box; margin:0; padding:0; }
-
   html{ scroll-behavior:smooth; }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *{ animation:none !important; transition:none !important; }
+  }
 
   body{
     background:var(--paper);
@@ -36,9 +42,25 @@
     letter-spacing:0.02em;
   }
 
-  a{ color:inherit; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
 
+  a{ color:inherit; }
   .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  /* reveal-on-scroll */
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease; }
+  .reveal.is-visible{ opacity:1; transform:translateY(0); }
+
+  /* corner registration marks — blueprint signature */
+  .plan, header.hero .wrap, .process-step{ position:relative; }
+  .crosshair{ position:absolute; width:14px; height:14px; pointer-events:none; opacity:.55; }
+  .crosshair::before, .crosshair::after{ content:""; position:absolute; background:currentColor; }
+  .crosshair::before{ width:100%; height:1px; top:50%; left:0; }
+  .crosshair::after{ width:1px; height:100%; left:50%; top:0; }
+  .crosshair.tl{ top:10px; left:10px; }
+  .crosshair.tr{ top:10px; right:10px; }
+  .crosshair.bl{ bottom:10px; left:10px; }
+  .crosshair.br{ bottom:10px; right:10px; }
 
   /* NAV */
   nav{
@@ -55,33 +77,40 @@
     padding:9px 18px; border-radius:2px; font-size:0.85rem;
     text-decoration:none; letter-spacing:0.04em; text-transform:uppercase;
     font-family:'Oswald', sans-serif;
+    transition:background .15s ease, transform .15s ease;
   }
+  nav .cta:hover{ background:#ef6a3c; transform:translateY(-1px); }
 
   /* HERO */
   header.hero{
     background:
-      repeating-linear-gradient(135deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 14px),
-      linear-gradient(180deg, var(--ink) 0%, var(--steel-dark) 100%);
+      repeating-linear-gradient(0deg, rgba(245,241,230,0.045) 0px, rgba(245,241,230,0.045) 1px, transparent 1px, transparent 42px),
+      repeating-linear-gradient(90deg, rgba(245,241,230,0.045) 0px, rgba(245,241,230,0.045) 1px, transparent 1px, transparent 42px),
+      linear-gradient(175deg, var(--ink-2) 0%, var(--steel-dark) 130%);
     color:var(--paper);
-    padding:88px 0 96px;
+    padding:96px 0 86px;
     position:relative;
     overflow:hidden;
+    color-scheme:dark;
   }
   header.hero::after{
     content:"";
-    position:absolute; right:-120px; top:-60px;
-    width:420px; height:420px;
-    border:2px dashed rgba(244,242,236,0.15);
+    position:absolute; right:-130px; top:-70px;
+    width:440px; height:440px;
+    border:1px dashed rgba(245,241,230,0.14);
     border-radius:50%;
   }
+  header.hero .crosshair{ color:rgba(245,241,230,0.35); }
+
   .eyebrow{
-    color:var(--signal); font-size:0.85rem; font-weight:600;
+    color:var(--signal); font-size:0.82rem; font-weight:600;
     margin-bottom:18px; display:flex; align-items:center; gap:10px;
   }
-  .eyebrow::before{ content:""; width:28px; height:2px; background:var(--signal); display:inline-block; }
+  .eyebrow::before{ content:""; width:26px; height:2px; background:var(--signal); display:inline-block; }
+  .eyebrow .mono{ text-transform:none; letter-spacing:0; opacity:.75; font-size:0.78rem; }
 
   header.hero h1{
-    font-size:clamp(2.1rem, 5vw, 3.4rem);
+    font-size:clamp(2.1rem, 5vw, 3.5rem);
     font-weight:700;
     line-height:1.08;
     max-width:800px;
@@ -94,42 +123,58 @@
     text-transform:none;
     letter-spacing:normal;
     font-size:1.1rem;
-    color:#D9D6CC;
+    color:#D9D6CA;
     max-width:560px;
     margin-bottom:34px;
   }
 
-  .hero-actions{ display:flex; gap:14px; flex-wrap:wrap; }
+  .hero-actions{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
   .btn-primary{
     background:var(--signal); color:#fff;
     padding:14px 26px; border-radius:2px;
     font-family:'Oswald', sans-serif; font-weight:600; letter-spacing:0.04em;
     text-transform:uppercase; text-decoration:none; font-size:0.95rem;
     transition:transform .15s ease, background .15s ease;
+    border:none; cursor:pointer;
   }
-  .btn-primary:hover{ background:#f07340; transform:translateY(-1px); }
+  .btn-primary:hover{ background:#ef6a3c; transform:translateY(-1px); }
   .btn-ghost{
-    border:1.5px solid rgba(244,242,236,0.4); color:var(--paper);
+    border:1.5px solid rgba(245,241,230,0.4); color:var(--paper);
     padding:13px 26px; border-radius:2px;
     font-family:'Oswald', sans-serif; font-weight:600; letter-spacing:0.04em;
     text-transform:uppercase; text-decoration:none; font-size:0.95rem;
+    transition:border-color .15s ease, background .15s ease;
   }
+  .btn-ghost:hover{ border-color:var(--signal); background:rgba(222,90,44,0.1); }
 
-  /* STRIP */
+  .hero-note{
+    display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono', monospace; font-size:0.78rem;
+    color:#B7B2A4; margin-top:36px;
+  }
+  .hero-note .dot{ width:6px; height:6px; border-radius:50%; background:var(--safety); flex-shrink:0; }
+
+  /* HAZARD STRIP — signature divider */
   .strip{
-    background:var(--signal); color:#fff;
-    font-family:'Oswald', sans-serif; font-weight:600; font-size:0.82rem;
-    letter-spacing:0.08em; text-transform:uppercase;
+    background-image:repeating-linear-gradient(135deg, var(--signal) 0px, var(--signal) 22px, var(--ink) 22px, var(--ink) 44px);
+    padding:3px 0;
+  }
+  .strip-inner{
+    background:var(--ink); color:#fff;
+    font-family:'JetBrains Mono', monospace; font-weight:600; font-size:0.78rem;
+    letter-spacing:0.06em; text-transform:uppercase;
     padding:11px 0; text-align:center;
   }
+  .strip-inner span{ opacity:.55; margin:0 10px; }
 
   /* PROBLEM */
-  section.problem{ padding:76px 0 20px; }
+  section.problem{ padding:80px 0 24px; }
   section.problem .grid{
     display:grid; grid-template-columns:1.1fr 1fr; gap:56px; align-items:start;
   }
   section.problem h2{
-    font-size:1.9rem; font-weight:700; line-height:1.15; margin-bottom:18px;
+    font-size:1.95rem; font-weight:700; line-height:1.15; margin-bottom:18px;
+    text-transform:none; letter-spacing:normal;
   }
   section.problem p{ color:#4A4E45; font-size:1.02rem; max-width:480px; }
   .stat-block{
@@ -138,26 +183,54 @@
     margin-top:6px;
   }
   .stat-block .num{
-    font-family:'Oswald', sans-serif; font-size:2.8rem; font-weight:700; color:var(--steel-dark);
+    font-family:'Oswald', sans-serif; font-size:2.9rem; font-weight:700; color:var(--steel-dark);
     line-height:1;
   }
-  .stat-block .label{ color:var(--concrete); font-size:0.9rem; margin-top:6px; }
+  .stat-block .label{ color:var(--concrete); font-size:0.88rem; margin-top:8px; font-family:'JetBrains Mono',monospace; letter-spacing:0.01em; }
 
   @media (max-width:760px){
     section.problem .grid{ grid-template-columns:1fr; gap:32px; }
   }
 
+  /* PROCESS — real 3-step sequence */
+  section.process{ padding:16px 0 78px; }
+  section.process .head{ text-align:center; max-width:600px; margin:0 auto 46px; }
+  section.process .head .eyebrow{ justify-content:center; color:var(--steel); }
+  section.process .head .eyebrow::before{ background:var(--steel); }
+  section.process h2{ font-size:1.7rem; font-weight:700; color:var(--ink); text-transform:none; letter-spacing:normal; }
+
+  .process-track{ display:grid; grid-template-columns:repeat(3,1fr); gap:0; position:relative; }
+  .process-track::before{
+    content:""; position:absolute; top:22px; left:calc(100%/6); right:calc(100%/6);
+    height:1px; background:repeating-linear-gradient(90deg, var(--line) 0 8px, transparent 8px 16px);
+    z-index:0;
+  }
+  .process-step{ text-align:center; padding:0 18px; z-index:1; }
+  .process-step .num{
+    width:44px; height:44px; border-radius:50%; background:var(--paper);
+    border:2px solid var(--steel-dark); color:var(--steel-dark);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:1.05rem;
+    margin:0 auto 18px;
+  }
+  .process-step h3{ font-size:1.02rem; font-weight:600; text-transform:none; letter-spacing:normal; margin-bottom:8px; }
+  .process-step p{ color:var(--concrete); font-size:0.88rem; max-width:230px; margin:0 auto; }
+  .process-step .dur{ display:block; margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--signal); letter-spacing:0.04em; }
+
+  @media (max-width:760px){
+    .process-track{ grid-template-columns:1fr; gap:34px; }
+    .process-track::before{ display:none; }
+  }
+
   /* PRICING */
-  section.pricing{ padding:70px 0 100px; }
+  section.pricing{ padding:20px 0 100px; }
   section.pricing .head{ text-align:center; max-width:640px; margin:0 auto 52px; }
   section.pricing .head .eyebrow{ justify-content:center; color:var(--steel); }
   section.pricing .head .eyebrow::before{ background:var(--steel); }
-  section.pricing h2{ font-size:2rem; font-weight:700; color:var(--ink); margin-bottom:12px; }
+  section.pricing h2{ font-size:2rem; font-weight:700; color:var(--ink); margin-bottom:12px; text-transform:none; letter-spacing:normal; }
   section.pricing .head p{ color:var(--concrete); text-transform:none; letter-spacing:normal; font-family:'Work Sans',sans-serif; }
 
-  .plans{
-    display:grid; grid-template-columns:repeat(3, 1fr); gap:24px;
-  }
+  .plans{ display:grid; grid-template-columns:repeat(3, 1fr); gap:24px; }
   @media (max-width:900px){ .plans{ grid-template-columns:1fr; max-width:420px; margin:0 auto; } }
 
   .plan{
@@ -165,12 +238,15 @@
     border:1px solid var(--line);
     border-radius:4px;
     padding:34px 28px;
-    position:relative;
     display:flex; flex-direction:column;
+    transition:transform .2s ease, box-shadow .2s ease;
   }
+  .plan:hover{ transform:translateY(-3px); box-shadow:0 14px 32px -18px rgba(20,24,26,0.28); }
+  .plan .crosshair{ color:var(--line); }
+
   .plan .tag{
-    font-family:'Oswald', sans-serif;
-    font-size:0.75rem; font-weight:600; letter-spacing:0.1em;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.72rem; font-weight:600; letter-spacing:0.06em;
     color:var(--concrete); text-transform:uppercase;
     border:1px dashed var(--line); border-radius:2px;
     padding:4px 10px; display:inline-block; width:fit-content;
@@ -178,23 +254,25 @@
   }
   .plan h3{
     font-size:1.15rem; font-weight:600; color:var(--ink);
-    margin-bottom:6px;
+    margin-bottom:6px; text-transform:none; letter-spacing:normal;
   }
-  .plan .price{
-    font-size:2.5rem; font-weight:700; color:var(--steel-dark);
-    margin:14px 0 4px;
-  }
+  .plan .price-row{ display:flex; align-items:baseline; gap:8px; margin:16px 0 2px; }
+  .plan .price-row::before{ content:"◤"; color:var(--line); font-size:0.7rem; transform:rotate(0deg); }
+  .plan .price{ font-size:2.5rem; font-weight:700; color:var(--steel-dark); }
   .plan .price sup{ font-size:1rem; font-weight:500; }
-  .plan .ht{ color:var(--concrete); font-size:0.82rem; text-transform:none; letter-spacing:normal; font-family:'Work Sans',sans-serif; margin-bottom:22px; }
+  .plan .ht{ color:var(--concrete); font-size:0.8rem; text-transform:none; letter-spacing:normal; font-family:'JetBrains Mono',monospace; margin-bottom:22px; }
+  .plan .addon-note{
+    font-size:0.8rem; color:var(--steel-dark); font-family:'Work Sans',sans-serif;
+    background:rgba(62,110,142,0.08); border-left:2px solid var(--steel);
+    padding:8px 10px; margin:-14px 0 20px; border-radius:0 2px 2px 0;
+  }
 
   .plan ul{ list-style:none; margin:0 0 28px; flex-grow:1; }
   .plan li{
     display:flex; gap:10px; align-items:flex-start;
     font-size:0.92rem; color:#3A3D38; margin-bottom:12px;
   }
-  .plan li::before{
-    content:"—"; color:var(--signal); font-weight:700; flex-shrink:0;
-  }
+  .plan li::before{ content:"—"; color:var(--signal); font-weight:700; flex-shrink:0; }
 
   .plan .example{
     display:block; text-align:center;
@@ -209,65 +287,83 @@
     font-family:'Oswald', sans-serif; font-weight:600; letter-spacing:0.03em;
     text-transform:uppercase; text-decoration:none; font-size:0.88rem;
     border:1.5px solid var(--steel-dark); color:var(--steel-dark);
+    transition:background .15s ease, color .15s ease;
   }
+  .plan .cta:hover{ background:var(--steel-dark); color:#fff; }
 
   .plan.featured{
     border-color:var(--signal);
-    box-shadow:0 18px 40px -18px rgba(232,98,44,0.35);
-    transform:translateY(-6px);
+    box-shadow:0 20px 44px -20px rgba(222,90,44,0.4);
+    transform:translateY(-8px);
   }
+  .plan.featured:hover{ transform:translateY(-11px); }
   .plan.featured .tag{ border-style:solid; border-color:var(--signal); color:var(--signal); }
   .plan.featured .cta{ background:var(--signal); border-color:var(--signal); color:#fff; }
+  .plan.featured .cta:hover{ background:#ef6a3c; }
+
   .plan.featured .badge{
-    position:absolute; top:-13px; right:24px;
+    position:absolute; top:-14px; left:50%; transform:translateX(-50%) rotate(-2deg);
     background:var(--signal); color:#fff;
-    font-family:'Oswald',sans-serif; font-size:0.72rem; font-weight:600;
-    letter-spacing:0.08em; text-transform:uppercase;
-    padding:5px 12px; border-radius:2px;
+    font-family:'JetBrains Mono',monospace; font-size:0.68rem; font-weight:600;
+    letter-spacing:0.06em; text-transform:uppercase;
+    padding:6px 14px; border-radius:2px;
+    box-shadow:0 4px 10px -4px rgba(0,0,0,0.4);
   }
 
   /* CONTACT */
   section.contact{
     background:var(--ink); color:var(--paper);
-    padding:70px 0; text-align:center;
+    padding:78px 0; text-align:center;
+    position:relative; overflow:hidden;
   }
-  section.contact h2{ font-size:1.7rem; font-weight:700; margin-bottom:14px; }
+  section.contact::before{
+    content:"";
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(135deg, rgba(245,241,230,0.02) 0px, rgba(245,241,230,0.02) 1px, transparent 1px, transparent 16px);
+    pointer-events:none;
+  }
+  section.contact .wrap{ position:relative; }
+  section.contact h2{ font-size:1.75rem; font-weight:700; margin-bottom:14px; text-transform:none; letter-spacing:normal; }
   section.contact p{ color:#C9C6BC; text-transform:none; letter-spacing:normal; font-family:'Work Sans',sans-serif; margin-bottom:30px; max-width:480px; margin-left:auto; margin-right:auto; }
 
   .formule-badge{
     display:inline-block; margin:0 auto 26px; max-width:520px;
-    background:rgba(232,98,44,0.12); border:1px solid var(--signal);
+    background:rgba(222,90,44,0.14); border:1px solid var(--signal);
     color:var(--paper); font-size:0.9rem; font-weight:500;
     padding:10px 18px; border-radius:2px;
   }
+  .rappel-souscat{ margin-top:16px; font-size:.82rem; color:#9A968C; text-transform:none; letter-spacing:normal; font-family:'JetBrains Mono',monospace; }
 
   footer{
     padding:22px 0;
     color:var(--concrete); font-size:0.82rem;
     border-top:1px solid var(--line);
   }
-  .footer-wrap{
-    display:flex; align-items:center; justify-content:space-between;
-    flex-wrap:wrap; gap:10px;
-  }
+  .footer-wrap{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
   footer a{ color:var(--steel); text-decoration:underline; }
 
-  section.legal{
-    background:var(--paper); padding:50px 0 70px;
-    border-top:1px solid var(--line);
-  }
-  section.legal h3{
-    font-size:1.15rem; font-weight:600; color:var(--ink); margin-bottom:18px;
-  }
+  section.legal{ background:var(--paper); padding:50px 0 70px; border-top:1px solid var(--line); }
+  section.legal h3{ font-size:1.15rem; font-weight:600; color:var(--ink); margin-bottom:18px; text-transform:none; letter-spacing:normal; }
   section.legal p{
     color:#4A4E45; font-size:0.9rem; text-transform:none; letter-spacing:normal;
     font-family:'Work Sans',sans-serif; margin-bottom:8px; max-width:560px;
   }
   section.legal .legal-note{ color:var(--concrete); margin-top:16px; }
-  section.legal .back-top{
-    display:inline-block; margin-top:20px; font-size:0.85rem;
-    color:var(--steel); text-decoration:underline;
-  }
+  section.legal .back-top{ display:inline-block; margin-top:20px; font-size:0.85rem; color:var(--steel); text-decoration:underline; }
+
+  /* MODAL */
+  .rappel-overlay{ position:fixed; inset:0; background:rgba(10,10,10,.74); display:flex; align-items:center; justify-content:center; z-index:999; padding:20px; }
+  .rappel-overlay[hidden]{ display:none; }
+  .rappel-modal{ background:var(--ink-2); border:1px solid #333; border-radius:6px; padding:32px 28px; max-width:380px; width:100%; position:relative; }
+  .rappel-modal h3{ font-family:'Oswald',sans-serif; color:var(--paper); font-size:1.3rem; margin-bottom:14px; text-transform:uppercase; }
+  .rappel-close{ position:absolute; top:14px; right:14px; background:none; border:none; color:#9A968C; font-size:1.1rem; cursor:pointer; }
+  .rappel-txt{ color:#C9C6BC; font-family:'Work Sans',sans-serif; font-size:.92rem; margin-bottom:16px; line-height:1.4; }
+  .rappel-modal input{ width:100%; padding:12px 14px; background:#0F0F0F; border:1px solid #3A3A3A; border-radius:4px; color:var(--paper); font-size:1rem; margin-bottom:12px; font-family:'Work Sans',sans-serif; }
+  .rappel-modal input:focus-visible, a:focus-visible, button:focus-visible{ outline:2px solid var(--signal); outline-offset:2px; }
+  .rappel-btn{ width:100%; text-align:center; border:none; cursor:pointer; }
+  .rappel-retry{ display:block; width:100%; background:none; border:none; color:#9A968C; font-size:.82rem; margin-top:10px; cursor:pointer; text-decoration:underline; }
+  .rappel-error{ color:#EF7A54; font-size:.82rem; margin-top:10px; }
+  .rappel-success{ color:#8FBF6E; font-weight:600; }
 </style>
 </head>
 <body>
@@ -281,22 +377,24 @@
 
 <header class="hero">
   <div class="wrap">
-    <div class="eyebrow">Site vitrine pour artisans &amp; entreprises du BTP</div>
+    <span class="crosshair tl"></span><span class="crosshair tr"></span>
+    <div class="eyebrow">Site vitrine pour artisans &amp; entreprises du BTP <span class="mono">— réf. skyeco/2026</span></div>
     <h1>Vos clients vous cherchent sur Google. <em>Donnez-leur une raison de vous trouver.</em></h1>
     <p class="lead">Skyeco Pro construit votre site vitrine professionnel, avec ou sans formulaire de devis, avec ou sans gestion de vos campagnes Google Ads. Mise en ligne rapide, prix fixes, sans surprise.</p>
     <div class="hero-actions">
       <a class="btn-primary" href="#pricing">Voir les formules</a>
       <a class="btn-ghost" href="#" data-open-rappel>Être rappelé immédiat</a>
     </div>
+    <div class="hero-note"><span class="dot"></span>3 formules à prix fixe · aucun abonnement obligatoire</div>
   </div>
 </header>
 
-<div class="strip">3 formules · prix fixe · sans engagement de durée</div>
+<div class="strip"><div class="strip-inner">3 formules <span>·</span> prix fixe <span>·</span> sans engagement de durée</div></div>
 
-<section class="problem">
+<section class="problem reveal">
   <div class="wrap grid">
     <div>
-      <div class="eyebrow" style="color:var(--steel)"><span style="width:28px;height:2px;background:var(--steel);display:inline-block;"></span>Le constat</div>
+      <div class="eyebrow" style="color:var(--steel)"><span style="width:26px;height:2px;background:var(--steel);display:inline-block;"></span>Le constat</div>
       <h2>Sans site, vous existez sur le terrain — pas sur Google.</h2>
       <p>Vos concurrents avec un site captent les demandes de devis pendant que les vôtres passent par le bouche-à-oreille. Un site vitrine, c'est votre chantier le plus rentable : il travaille pour vous 24h/24, sans lever une pelle.</p>
     </div>
@@ -307,7 +405,36 @@
   </div>
 </section>
 
-<section class="pricing" id="pricing">
+<section class="process reveal">
+  <div class="wrap">
+    <div class="head">
+      <div class="eyebrow">Comment ça marche</div>
+      <h2>De la prise de contact à la mise en ligne</h2>
+    </div>
+    <div class="process-track">
+      <div class="process-step">
+        <div class="num">1</div>
+        <h3>Cadrage</h3>
+        <p>On échange sur votre activité, vos services et ce que doit montrer votre site.</p>
+        <span class="dur">~ 1 appel</span>
+      </div>
+      <div class="process-step">
+        <div class="num">2</div>
+        <h3>Conception</h3>
+        <p>Votre site est construit avec vos contenus, votre formule et vos couleurs.</p>
+        <span class="dur">~ quelques jours</span>
+      </div>
+      <div class="process-step">
+        <div class="num">3</div>
+        <h3>Mise en ligne</h3>
+        <p>Validation, mise en ligne, et votre site commence à travailler pour vous.</p>
+        <span class="dur">prêt à l'emploi</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing reveal" id="pricing">
   <div class="wrap">
     <div class="head">
       <div class="eyebrow">Nos formules</div>
@@ -318,10 +445,11 @@
     <div class="plans">
 
       <div class="plan">
+        <span class="crosshair tl"></span><span class="crosshair br"></span>
         <span class="tag">Formule 01</span>
         <h3>Site vitrine</h3>
-        <div class="price">990€<sup>HT</sup></div>
-        <div class="ht">Paiement unique</div>
+        <div class="price-row"><div class="price">990€<sup>HT</sup></div></div>
+        <div class="ht">paiement unique</div>
         <ul>
           <li>Site vitrine professionnel (Accueil, Services, Contact)</li>
           <li>Design adapté à votre activité</li>
@@ -333,11 +461,12 @@
       </div>
 
       <div class="plan featured">
-        <span class="badge">La plus choisie</span>
+        <span class="crosshair tl"></span><span class="crosshair br"></span>
+        <span class="badge">★ La plus choisie</span>
         <span class="tag">Formule 02</span>
         <h3>Site vitrine + devis</h3>
-        <div class="price">1590€<sup>HT</sup></div>
-        <div class="ht">Paiement unique</div>
+        <div class="price-row"><div class="price">1590€<sup>HT</sup></div></div>
+        <div class="ht">paiement unique</div>
         <ul>
           <li>Tout le contenu de la Formule 01</li>
           <li>Formulaire de demande de devis en ligne</li>
@@ -349,10 +478,12 @@
       </div>
 
       <div class="plan">
+        <span class="crosshair tl"></span><span class="crosshair br"></span>
         <span class="tag">Formule 03</span>
         <h3>Site + devis + Google Ads</h3>
-        <div class="price">2590€<sup>HT</sup></div>
-        <div class="ht">Paiement unique</div>
+        <div class="price-row"><div class="price">2590€<sup>HT</sup></div></div>
+        <div class="ht">paiement unique</div>
+        <div class="addon-note">+ abonnement Google Ads à partir de 150€/mois</div>
         <ul>
           <li>Tout le contenu de la Formule 02</li>
           <li>Gestion de vos campagnes Google Ads</li>
@@ -367,7 +498,7 @@
   </div>
 </section>
 
-<section class="contact" id="contact">
+<section class="contact reveal" id="contact">
   <div class="wrap">
     <h2>Un site en ligne, sans y passer vos soirées.</h2>
     <p id="contact-lead">Laissez-nous vos coordonnées : on vous rappelle pour cadrer votre projet et démarrer.</p>
@@ -424,21 +555,6 @@
   </div>
 </div>
 
-<style>
-  .rappel-souscat{ margin-top:14px; font-size:.85rem; color:#9A968C; text-transform:none; letter-spacing:normal; font-family:'Work Sans',sans-serif; }
-  .rappel-overlay{ position:fixed; inset:0; background:rgba(10,10,10,.72); display:flex; align-items:center; justify-content:center; z-index:999; padding:20px; }
-  .rappel-overlay[hidden]{ display:none; }
-  .rappel-modal{ background:#1B1B1B; border:1px solid #333; border-radius:6px; padding:32px 28px; max-width:380px; width:100%; position:relative; }
-  .rappel-modal h3{ font-family:'Oswald',sans-serif; color:#F4F2ED; font-size:1.3rem; margin-bottom:14px; }
-  .rappel-close{ position:absolute; top:14px; right:14px; background:none; border:none; color:#9A968C; font-size:1.1rem; cursor:pointer; }
-  .rappel-txt{ color:#C9C6BC; font-family:'Work Sans',sans-serif; font-size:.92rem; margin-bottom:16px; line-height:1.4; }
-  .rappel-modal input{ width:100%; padding:12px 14px; background:#0F0F0F; border:1px solid #3A3A3A; border-radius:4px; color:#F4F2ED; font-size:1rem; margin-bottom:12px; font-family:'Work Sans',sans-serif; }
-  .rappel-btn{ width:100%; text-align:center; border:none; cursor:pointer; }
-  .rappel-retry{ display:block; width:100%; background:none; border:none; color:#9A968C; font-size:.82rem; margin-top:10px; cursor:pointer; text-decoration:underline; }
-  .rappel-error{ color:#E4572E; font-size:.82rem; margin-top:10px; }
-  .rappel-success{ color:#8FBF6E; font-weight:600; }
-</style>
-
 <script>
   document.querySelectorAll('.plan .cta[data-formule]').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -449,6 +565,18 @@
       lead.textContent = "On vous rappelle pour cadrer votre projet sur cette base et démarrer.";
     });
   });
+
+  // reveal on scroll
+  (function(){
+    var els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach(function(el){ el.classList.add('is-visible'); }); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.12 });
+    els.forEach(function(el){ io.observe(el); });
+  })();
 
   (function(){
     var overlay = document.getElementById('rappel-overlay');
