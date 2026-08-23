@@ -234,10 +234,39 @@
   section.contact h2{ font-size:1.7rem; font-weight:700; margin-bottom:14px; }
   section.contact p{ color:#C9C6BC; text-transform:none; letter-spacing:normal; font-family:'Work Sans',sans-serif; margin-bottom:30px; max-width:480px; margin-left:auto; margin-right:auto; }
 
+  .formule-badge{
+    display:inline-block; margin:0 auto 26px; max-width:520px;
+    background:rgba(232,98,44,0.12); border:1px solid var(--signal);
+    color:var(--paper); font-size:0.9rem; font-weight:500;
+    padding:10px 18px; border-radius:2px;
+  }
+
   footer{
-    padding:26px 0; text-align:center;
-    color:var(--concrete); font-size:0.8rem;
+    padding:22px 0;
+    color:var(--concrete); font-size:0.82rem;
     border-top:1px solid var(--line);
+  }
+  .footer-wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:10px;
+  }
+  footer a{ color:var(--steel); text-decoration:underline; }
+
+  section.legal{
+    background:var(--paper); padding:50px 0 70px;
+    border-top:1px solid var(--line);
+  }
+  section.legal h3{
+    font-size:1.15rem; font-weight:600; color:var(--ink); margin-bottom:18px;
+  }
+  section.legal p{
+    color:#4A4E45; font-size:0.9rem; text-transform:none; letter-spacing:normal;
+    font-family:'Work Sans',sans-serif; margin-bottom:8px; max-width:560px;
+  }
+  section.legal .legal-note{ color:var(--concrete); margin-top:16px; }
+  section.legal .back-top{
+    display:inline-block; margin-top:20px; font-size:0.85rem;
+    color:var(--steel); text-decoration:underline;
   }
 </style>
 </head>
@@ -257,7 +286,7 @@
     <p class="lead">Skyeco Pro construit votre site vitrine professionnel, avec ou sans formulaire de devis, avec ou sans gestion de vos campagnes Google Ads. Mise en ligne rapide, prix fixes, sans surprise.</p>
     <div class="hero-actions">
       <a class="btn-primary" href="#pricing">Voir les formules</a>
-      <a class="btn-ghost" href="#contact">Nous appeler</a>
+      <a class="btn-ghost" href="tel:+33645688394">Nous appeler — 06 45 68 83 94</a>
     </div>
   </div>
 </header>
@@ -300,7 +329,7 @@
           <li>Mise en ligne incluse</li>
         </ul>
         <a class="example" href="https://www.ecosky.fr" target="_blank" rel="noopener">Voir un exemple ↗</a>
-        <a class="cta" href="#contact">Choisir cette formule</a>
+        <a class="cta" href="#contact" data-formule="Formule 01 — Site vitrine — 990€HT">Choisir cette formule</a>
       </div>
 
       <div class="plan featured">
@@ -316,7 +345,7 @@
           <li>Page dédiée à vos réalisations</li>
         </ul>
         <a class="example" href="https://salesflow-ecosky.vercel.app/estimation.html" target="_blank" rel="noopener">Voir un exemple ↗</a>
-        <a class="cta" href="#contact">Choisir cette formule</a>
+        <a class="cta" href="#contact" data-formule="Formule 02 — Site vitrine + devis — 1590€HT">Choisir cette formule</a>
       </div>
 
       <div class="plan">
@@ -331,7 +360,7 @@
           <li>Notification SMS à chaque nouveau contact</li>
         </ul>
         <a class="example" href="https://salesflow-ecosky.vercel.app/estimation.html" target="_blank" rel="noopener">Voir un exemple ↗</a>
-        <a class="cta" href="#contact">Choisir cette formule</a>
+        <a class="cta" href="#contact" data-formule="Formule 03 — Site + devis + Google Ads — 2590€HT">Choisir cette formule</a>
       </div>
 
     </div>
@@ -341,14 +370,43 @@
 <section class="contact" id="contact">
   <div class="wrap">
     <h2>Un site en ligne, sans y passer vos soirées.</h2>
-    <p>Laissez-nous vos coordonnées ou appelez directement : on vous rappelle pour cadrer votre projet et démarrer.</p>
-    <a class="btn-primary" href="tel:+33600000000">Appeler maintenant</a>
+    <p id="contact-lead">Laissez-nous vos coordonnées ou appelez directement : on vous rappelle pour cadrer votre projet et démarrer.</p>
+    <div id="formule-selectionnee" class="formule-badge" hidden></div>
+    <a class="btn-primary" href="tel:+33645688394">Appeler maintenant — 06 45 68 83 94</a>
   </div>
 </section>
 
 <footer>
-  Skyeco Pro — un site professionnel, pensé pour les artisans et entreprises du BTP.
+  <div class="wrap footer-wrap">
+    <span>Skyeco Pro — un site professionnel, pensé pour les artisans et entreprises du BTP.</span>
+    <a href="#mentions-legales">Mentions légales</a>
+  </div>
 </footer>
+
+<section class="legal" id="mentions-legales">
+  <div class="wrap">
+    <h3>Mentions légales</h3>
+    <p><strong>Éditeur du site :</strong> RMS EcoSky — SIRET 939 997 870 00018 — APE 4399D</p>
+    <p><strong>Siège social :</strong> 23 route de Corn er Hoet, 56400 Brech, France</p>
+    <p><strong>Contact :</strong> infos@ecosky.fr — 06 45 68 83 94</p>
+    <p><strong>Directeur de la publication :</strong> Cyrille Bon</p>
+    <p><strong>Hébergement :</strong> Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA</p>
+    <p class="legal-note">Skyeco Pro est un service opéré par RMS EcoSky. Les tarifs affichés sont HT et valables à la date de consultation, sans engagement de durée.</p>
+    <a class="back-top" href="#pricing">↑ Retour aux formules</a>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('.plan .cta[data-formule]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var badge = document.getElementById('formule-selectionnee');
+      var lead = document.getElementById('contact-lead');
+      badge.textContent = 'Formule sélectionnée : ' + btn.getAttribute('data-formule');
+      badge.hidden = false;
+      lead.textContent = "On vous rappelle pour cadrer votre projet sur cette base et démarrer.";
+    });
+  });
+</script>
 
 </body>
 </html>
