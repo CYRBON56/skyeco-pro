@@ -41,11 +41,15 @@ export default async function handler(req, res) {
   try {
     const idsFilter = ids.map((id) => `"${id}"`).join(",");
     const resp = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/prospects_sms?id=in.(${idsFilter})&select=id,nom,telephone_e164`,
+      `${process.env.SUPABASE_URL}/rest/v1/prospects_sms?id=in.(${idsFilter})&select=id,nom,telephone_e164,opt_out`,
       { headers: supaHeaders }
     );
     if (!resp.ok) throw new Error("Lecture Supabase impossible.");
-    const prospects = await resp.json();
+    const tousLesProspects = await resp.json();
+
+    // Ne jamais envoyer aux prospects qui ont répondu STOP.
+    const prospects = tousLesProspects.filter((p) => !p.opt_out);
+    const ignoresOptOut = tousLesProspects.filter((p) => p.opt_out).map((p) => p.id);
 
     const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
@@ -77,6 +81,7 @@ export default async function handler(req, res) {
       success: true,
       envoyes: results.filter((r) => r.success).length,
       echoues: results.filter((r) => !r.success).length,
+      ignoresOptOut: ignoresOptOut.length,
       details: results,
     });
   } catch (err) {
