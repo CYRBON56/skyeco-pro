@@ -85,6 +85,13 @@
   }
   input:focus{ outline:2px solid var(--steel); outline-offset:1px; }
   input[readonly]{ background:#F0EFE9; color:#555; }
+  input.invalid{ border-color:var(--signal); }
+  input.valid{ border-color:var(--ok); }
+
+  .field-error{
+    color:var(--signal); font-size:0.8rem; margin-top:6px; display:none;
+  }
+  .field-error.show{ display:block; }
 
   .btn-search{
     background:var(--steel-dark); color:#fff; border:none; border-radius:2px;
@@ -175,13 +182,14 @@
       </div>
       <div class="field">
         <label for="tel-contact">Votre téléphone</label>
-        <input type="tel" id="tel-contact" placeholder="06 XX XX XX XX">
+        <input type="tel" id="tel-contact" placeholder="06 XX XX XX XX" required>
+        <div class="field-error" id="tel-error"></div>
       </div>
       <div class="field">
         <label for="email-contact">Votre email</label>
         <input type="email" id="email-contact" placeholder="vous@entreprise.fr">
       </div>
-      <button class="btn-primary" id="btn-continue">Continuer vers la prise de rendez-vous</button>
+      <button class="btn-primary" id="btn-continue" disabled>Continuer vers la prise de rendez-vous</button>
     </div>
   </div>
 
@@ -205,6 +213,38 @@
   var prix = params.get('prix') || '—';
   document.getElementById('formule-title').textContent = formule;
   document.getElementById('formule-prix').textContent = prix;
+
+  // Validation du téléphone (format français) — le bouton "Continuer" reste
+  // désactivé tant que le numéro n'est pas valide.
+  var telInput = document.getElementById('tel-contact');
+  var telError = document.getElementById('tel-error');
+  var btnContinue = document.getElementById('btn-continue');
+  var frenchPhoneRegex = /^(?:(?:\+33|0033)\s?|0)[1-9](?:[\s.-]?\d{2}){4}$/;
+
+  function validatePhone(){
+    var raw = telInput.value.trim();
+    var isValid = frenchPhoneRegex.test(raw);
+    telInput.classList.remove('valid', 'invalid');
+    if(raw === ''){
+      telError.classList.remove('show');
+      btnContinue.disabled = true;
+      return false;
+    }
+    if(isValid){
+      telInput.classList.add('valid');
+      telError.classList.remove('show');
+      btnContinue.disabled = false;
+      return true;
+    }else{
+      telInput.classList.add('invalid');
+      telError.textContent = "Numéro invalide. Format attendu : 06 12 34 56 78 (ou +33 6 12 34 56 78).";
+      telError.classList.add('show');
+      btnContinue.disabled = true;
+      return false;
+    }
+  }
+  telInput.addEventListener('input', validatePhone);
+  telInput.addEventListener('blur', validatePhone);
 
   // Recherche SIRET via l'API publique gratuite recherche-entreprises.api.gouv.fr
   document.getElementById('btn-siret').addEventListener('click', function(){
@@ -250,6 +290,7 @@
 
   // Passage à l'étape 2 : prise de RDV Calendly
   document.getElementById('btn-continue').addEventListener('click', function(){
+    if(!validatePhone()){ telInput.focus(); return; }
     document.getElementById('panel-siret').style.display = 'none';
     document.getElementById('panel-calendly').classList.add('show');
     document.getElementById('step-pill-1').classList.remove('active');
