@@ -12,10 +12,10 @@
 
 import twilio from "twilio";
 
-const LIEN = "https://skyeco-pro.vercel.app/tarifs.html";
-const MESSAGE = (nom) =>
+const BASE_URL = "https://skyeco-pro.vercel.app";
+const MESSAGE = (nom, id) =>
   `Bonjour${nom ? " " + nom : ""}, Skyeco Pro construit des sites vitrines pour les artisans du BTP, prix fixe dès 590€. ` +
-  `Voir les formules : ${LIEN} — Répondez STOP pour ne plus recevoir de message.`;
+  `Voir les formules : ${BASE_URL}/api/lien?p=${id} — Répondez STOP pour ne plus recevoir de message.`;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     for (const p of prospects) {
       try {
         await client.messages.create({
-          body: MESSAGE(p.nom),
+          body: MESSAGE(p.nom, p.id),
           from: process.env.TWILIO_FROM_NUMBER,
           to: p.telephone_e164,
         });
