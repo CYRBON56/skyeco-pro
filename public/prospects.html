@@ -49,6 +49,7 @@
   .statut { display:inline-block; padding:3px 9px; border-radius:20px; font-size:0.75rem; font-weight:700; }
   .statut-envoye { background:#eaf4ef; color:#1e6f4c; }
   .statut-attente { background:#f0e9da; color:#8a6b1f; }
+  .edit-field { width:100%; padding:6px 8px; border:1.5px solid #1e6f4c; border-radius:6px; font-size:0.85rem; font-family:inherit; }
 
   .toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:16px; }
   .toolbar .left { font-size:0.85rem; color:#5b6b64; }
@@ -146,6 +147,8 @@
     document.getElementById('login-err').textContent = 'Mot de passe incorrect.';
   }
 
+  var editingId = null;
+
   function renderTable(){
     var container = document.getElementById('table-container');
     if (prospects.length === 0) {
@@ -153,6 +156,19 @@
       return;
     }
     var rows = prospects.map(function(p){
+      if (p.id === editingId) {
+        return '<tr>' +
+          '<td></td>' +
+          '<td><input type="text" class="edit-field" data-f="nom" value="' + escapeAttr(p.nom) + '"></td>' +
+          '<td><input type="text" class="edit-field" data-f="ville" value="' + escapeAttr(p.ville) + '"></td>' +
+          '<td><input type="text" class="edit-field" data-f="telephone" value="' + escapeAttr(p.telephone || p.telephone_e164) + '"></td>' +
+          '<td></td>' +
+          '<td>' +
+            '<button class="btn row-save" data-id="' + p.id + '" style="padding:5px 12px;font-size:0.78rem;">Enregistrer</button> ' +
+            '<button class="btn outline row-cancel" style="padding:5px 12px;font-size:0.78rem;">Annuler</button>' +
+          '</td>' +
+          '</tr>';
+      }
       var statutHtml = p.sms_envoye
         ? '<span class="statut statut-envoye">Envoyé' + (p.date_envoi ? ' — ' + new Date(p.date_envoi).toLocaleDateString('fr-FR') : '') + '</span>'
         : '<span class="statut statut-attente">En attente</span>';
@@ -162,7 +178,10 @@
         '<td>' + escapeHtml(p.ville || '') + '</td>' +
         '<td>' + escapeHtml(p.telephone_e164 || '') + '</td>' +
         '<td>' + statutHtml + '</td>' +
-        '<td><button class="btn outline row-delete" data-id="' + p.id + '" style="padding:5px 12px;font-size:0.78rem;">Supprimer</button></td>' +
+        '<td>' +
+          '<button class="btn outline row-edit" data-id="' + p.id + '" style="padding:5px 12px;font-size:0.78rem;">Modifier</button> ' +
+          '<button class="btn outline row-delete" data-id="' + p.id + '" style="padding:5px 12px;font-size:0.78rem;">Supprimer</button>' +
+        '</td>' +
         '</tr>';
     }).join('');
     container.innerHTML = '<table><thead><tr><th></th><th>Nom</th><th>Ville</th><th>Téléphone</th><th>Statut</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
@@ -172,7 +191,48 @@
     container.querySelectorAll('.row-delete').forEach(function(btn){
       btn.addEventListener('click', function(){ supprimerProspects([this.dataset.id]); });
     });
+    container.querySelectorAll('.row-edit').forEach(function(btn){
+      btn.addEventListener('click', function(){ editingId = this.dataset.id; renderTable(); });
+    });
+    container.querySelectorAll('.row-cancel').forEach(function(btn){
+      btn.addEventListener('click', function(){ editingId = null; renderTable(); });
+    });
+    container.querySelectorAll('.row-save').forEach(function(btn){
+      btn.addEventListener('click', function(){ enregistrerModification(this.dataset.id); });
+    });
     updateSelectionCount();
+  }
+
+  function enregistrerModification(id){
+    var tr = document.querySelector('.row-save[data-id="' + id + '"]').closest('tr');
+    var nom = tr.querySelector('[data-f="nom"]').value.trim();
+    var ville = tr.querySelector('[data-f="ville"]').value.trim();
+    var telephone = tr.querySelector('[data-f="telephone"]').value.trim();
+    var status = document.getElementById('send-status');
+
+    fetch('/api/prospects-update', {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ id: id, nom: nom, ville: ville, telephone: telephone })
+    }).then(function(r){ if (r.status === 401) { badLogin(); throw new Error('unauthorized'); } return r.json(); })
+      .then(function(data){
+        if (data.success) {
+          editingId = null;
+          status.textContent = 'Contact modifié.';
+          status.className = 'send-status ok';
+          chargerProspects();
+        } else {
+          status.textContent = data.error || 'Modification impossible.';
+          status.className = 'send-status err';
+        }
+      }).catch(function(){
+        status.textContent = 'Erreur réseau.';
+        status.className = 'send-status err';
+      });
+  }
+
+  function escapeAttr(str){
+    return String(str || '').replace(/"/g, '&quot;');
   }
 
   function escapeHtml(str){
