@@ -49,6 +49,13 @@
   .statut { display:inline-block; padding:3px 9px; border-radius:20px; font-size:0.75rem; font-weight:700; }
   .statut-envoye { background:#eaf4ef; color:#1e6f4c; }
   .statut-attente { background:#f0e9da; color:#8a6b1f; }
+  .statut-optout { background:#fdeaea; color:#991b1b; }
+
+  .stats-bar { display:flex; gap:14px; flex-wrap:wrap; margin-top:8px; }
+  .stat-box { flex:1; min-width:120px; background:#fbfcfa; border:1px solid #eef1ee; border-radius:10px; padding:12px 14px; text-align:center; }
+  .stat-box .num { font-size:1.5rem; font-weight:800; color:#14312a; line-height:1.1; }
+  .stat-box .lbl { font-size:0.74rem; color:#5b6b64; text-transform:uppercase; letter-spacing:0.03em; margin-top:2px; }
+  .stat-box.optout .num { color:#991b1b; }
   .edit-field { width:100%; padding:6px 8px; border:1.5px solid #1e6f4c; border-radius:6px; font-size:0.85rem; font-family:inherit; }
 
   .toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:16px; }
@@ -105,6 +112,8 @@
       <h2>Prospects</h2>
       <p class="hint">Sélectionnez les prospects à contacter, puis envoyez le SMS avec le lien vers Skyeco Pro.</p>
 
+      <div class="stats-bar" id="stats-bar"></div>
+
       <div id="table-container"><p class="empty">Chargement…</p></div>
 
       <div class="toolbar">
@@ -149,7 +158,21 @@
 
   var editingId = null;
 
+  function renderStats(){
+    var bar = document.getElementById('stats-bar');
+    var total = prospects.length;
+    var optout = prospects.filter(function(p){ return p.opt_out; }).length;
+    var envoyes = prospects.filter(function(p){ return p.sms_envoye && !p.opt_out; }).length;
+    var attente = total - envoyes - optout;
+    bar.innerHTML =
+      '<div class="stat-box"><div class="num">' + total + '</div><div class="lbl">Total prospects</div></div>' +
+      '<div class="stat-box"><div class="num">' + envoyes + '</div><div class="lbl">SMS envoyés</div></div>' +
+      '<div class="stat-box"><div class="num">' + attente + '</div><div class="lbl">En attente</div></div>' +
+      '<div class="stat-box optout"><div class="num">' + optout + '</div><div class="lbl">Désabonnés (STOP)</div></div>';
+  }
+
   function renderTable(){
+    renderStats();
     var container = document.getElementById('table-container');
     if (prospects.length === 0) {
       container.innerHTML = '<p class="empty">Aucun prospect importé pour le moment.</p>';
@@ -169,7 +192,9 @@
           '</td>' +
           '</tr>';
       }
-      var statutHtml = p.sms_envoye
+      var statutHtml = p.opt_out
+        ? '<span class="statut statut-optout">Désabonné (STOP)' + (p.opt_out_date ? ' — ' + new Date(p.opt_out_date).toLocaleDateString('fr-FR') : '') + '</span>'
+        : p.sms_envoye
         ? '<span class="statut statut-envoye">Envoyé' + (p.date_envoi ? ' — ' + new Date(p.date_envoi).toLocaleDateString('fr-FR') : '') + '</span>'
         : '<span class="statut statut-attente">En attente</span>';
       return '<tr>' +
@@ -423,7 +448,9 @@
       .then(function(data){
         self.disabled = false;
         if (data.success) {
-          status.textContent = data.envoyes + ' SMS envoyé(s)' + (data.echoues ? ', ' + data.echoues + ' échoué(s)' : '') + '.';
+          status.textContent = data.envoyes + ' SMS envoyé(s)' +
+            (data.echoues ? ', ' + data.echoues + ' échoué(s)' : '') +
+            (data.ignoresOptOut ? ', ' + data.ignoresOptOut + ' ignoré(s) car désabonné(s)' : '') + '.';
           status.className = 'send-status ok';
           chargerProspects();
         } else {
