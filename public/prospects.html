@@ -90,8 +90,10 @@
       <div class="toolbar">
         <span class="left" id="selection-count">0 sélectionné(s)</span>
         <div>
-          <button class="btn outline" id="select-all-btn">Tout sélectionner (non envoyés)</button>
+          <button class="btn outline" id="select-all-btn">Tout sélectionner</button>
+          <button class="btn outline" id="deselect-all-btn">Tout désélectionner</button>
           <button class="btn" id="send-btn" style="margin-left:8px;">Envoyer le SMS</button>
+          <button class="btn" id="delete-selected-btn" style="margin-left:8px;background:#991b1b;">Supprimer la sélection</button>
         </div>
       </div>
       <p class="send-status" id="send-status"></p>
@@ -136,16 +138,20 @@
         ? '<span class="statut statut-envoye">Envoyé' + (p.date_envoi ? ' — ' + new Date(p.date_envoi).toLocaleDateString('fr-FR') : '') + '</span>'
         : '<span class="statut statut-attente">En attente</span>';
       return '<tr>' +
-        '<td><input type="checkbox" class="row-check" data-id="' + p.id + '" ' + (p.sms_envoye ? 'disabled' : '') + '></td>' +
+        '<td><input type="checkbox" class="row-check" data-id="' + p.id + '"></td>' +
         '<td>' + escapeHtml(p.nom || '') + '</td>' +
         '<td>' + escapeHtml(p.ville || '') + '</td>' +
         '<td>' + escapeHtml(p.telephone_e164 || '') + '</td>' +
         '<td>' + statutHtml + '</td>' +
+        '<td><button class="btn outline row-delete" data-id="' + p.id + '" style="padding:5px 12px;font-size:0.78rem;">Supprimer</button></td>' +
         '</tr>';
     }).join('');
-    container.innerHTML = '<table><thead><tr><th></th><th>Nom</th><th>Ville</th><th>Téléphone</th><th>Statut</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    container.innerHTML = '<table><thead><tr><th></th><th>Nom</th><th>Ville</th><th>Téléphone</th><th>Statut</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
     container.querySelectorAll('.row-check').forEach(function(cb){
       cb.addEventListener('change', updateSelectionCount);
+    });
+    container.querySelectorAll('.row-delete').forEach(function(btn){
+      btn.addEventListener('click', function(){ supprimerProspects([this.dataset.id]); });
     });
     updateSelectionCount();
   }
@@ -171,8 +177,43 @@
   }
 
   document.getElementById('select-all-btn').addEventListener('click', function(){
-    document.querySelectorAll('.row-check:not(:disabled)').forEach(function(cb){ cb.checked = true; });
+    document.querySelectorAll('.row-check').forEach(function(cb){ cb.checked = true; });
     updateSelectionCount();
+  });
+
+  document.getElementById('deselect-all-btn').addEventListener('click', function(){
+    document.querySelectorAll('.row-check').forEach(function(cb){ cb.checked = false; });
+    updateSelectionCount();
+  });
+
+  function supprimerProspects(ids){
+    if (ids.length === 0) return;
+    if (!confirm('Supprimer ' + ids.length + ' prospect(s) ? Cette action est définitive.')) return;
+    var status = document.getElementById('send-status');
+    fetch('/api/prospects-delete', {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ ids: ids })
+    }).then(function(r){ if (r.status === 401) { badLogin(); throw new Error('unauthorized'); } return r.json(); })
+      .then(function(data){
+        if (data.success) {
+          status.textContent = data.deleted + ' prospect(s) supprimé(s).';
+          status.className = 'send-status ok';
+          chargerProspects();
+        } else {
+          status.textContent = data.error || 'Suppression impossible.';
+          status.className = 'send-status err';
+        }
+      }).catch(function(){
+        status.textContent = 'Erreur réseau.';
+        status.className = 'send-status err';
+      });
+  }
+
+  document.getElementById('delete-selected-btn').addEventListener('click', function(){
+    var ids = Array.from(document.querySelectorAll('.row-check:checked')).map(function(cb){ return cb.dataset.id; });
+    if (ids.length === 0) { alert('Sélectionnez au moins un prospect à supprimer.'); return; }
+    supprimerProspects(ids);
   });
 
   document.getElementById('import-btn').addEventListener('click', function(){
