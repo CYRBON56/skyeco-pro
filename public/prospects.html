@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prospection SMS — Skyeco Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #14312a;
+    background: #f5f8f6;
+  }
+  header {
+    background: #14312a; color: white; padding: 18px 28px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  header .brand { font-weight: 800; font-size: 1.1rem; }
+  header .brand span { opacity: .65; font-weight: 500; font-size: .85rem; margin-left: 8px; }
+  .wrap { max-width: 980px; margin: 40px auto; padding: 0 20px 80px; }
+  .card { background: white; border-radius: 14px; padding: 26px 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+  .card h2 { margin: 0 0 6px; font-size: 1.1rem; }
+  .card .hint { color: #5b6b64; font-size: 0.88rem; margin: 4px 0 16px; }
+
+  /* login */
+  #login-screen { min-height: 70vh; display:flex; align-items:center; justify-content:center; }
+  .login-box { background:white; border-radius:14px; padding:38px 34px; max-width:340px; width:100%; text-align:center; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+  .login-box input { width:100%; padding:12px 14px; border:1.5px solid #d8e3de; border-radius:10px; font-size:1rem; margin:16px 0 10px; }
+  .login-err { color:#991b1b; font-size:0.85rem; min-height:1.2em; }
+
+  .btn { background:#1e6f4c; color:white; border:none; border-radius:10px; padding:11px 20px; font-size:0.9rem; font-weight:700; cursor:pointer; }
+  .btn:hover { background:#175c3e; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .btn.outline { background:none; border:1.5px solid #1e6f4c; color:#1e6f4c; }
+
+  input[type=file] { font-size: 0.88rem; }
+
+  table { width:100%; border-collapse:collapse; font-size:0.88rem; margin-top:14px; }
+  th, td { text-align:left; padding:9px 10px; border-bottom:1px solid #eef1ee; }
+  th { color:#5b6b64; font-size:0.76rem; text-transform:uppercase; letter-spacing:0.03em; }
+  tr:hover td { background:#fafbfa; }
+  .statut { display:inline-block; padding:3px 9px; border-radius:20px; font-size:0.75rem; font-weight:700; }
+  .statut-envoye { background:#eaf4ef; color:#1e6f4c; }
+  .statut-attente { background:#f0e9da; color:#8a6b1f; }
+
+  .toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:16px; }
+  .toolbar .left { font-size:0.85rem; color:#5b6b64; }
+  .send-status { font-size:0.85rem; margin-top:10px; }
+  .send-status.ok { color:#1e6f4c; }
+  .send-status.err { color:#991b1b; }
+  .empty { color:#8a9490; font-size:0.88rem; padding:20px 0; text-align:center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Skyeco Pro <span>· Prospection SMS</span></div>
+</header>
+
+<div class="wrap">
+
+  <div id="login-screen">
+    <div class="login-box">
+      <h2 style="margin:0;">Accès réservé</h2>
+      <p style="color:#5b6b64;font-size:0.88rem;">Page interne — mot de passe requis.</p>
+      <input type="password" id="login-pass" placeholder="Mot de passe">
+      <button class="btn" id="login-btn" style="width:100%;">Entrer</button>
+      <p class="login-err" id="login-err"></p>
+    </div>
+  </div>
+
+  <div id="dashboard" style="display:none;">
+
+    <div class="card">
+      <h2>Importer une liste</h2>
+      <p class="hint">Fichier .xlsx avec les colonnes : Nom entreprise, Ville, Département, Téléphone, Adresse. Les numéros déjà importés sont automatiquement mis à jour, pas dupliqués.</p>
+      <input type="file" id="file-input" accept=".xlsx,.xls">
+      <button class="btn outline" id="import-btn" style="margin-left:10px;">Importer</button>
+      <p class="send-status" id="import-status"></p>
+    </div>
+
+    <div class="card">
+      <h2>Prospects</h2>
+      <p class="hint">Sélectionnez les prospects à contacter, puis envoyez le SMS avec le lien vers Skyeco Pro.</p>
+
+      <div id="table-container"><p class="empty">Chargement…</p></div>
+
+      <div class="toolbar">
+        <span class="left" id="selection-count">0 sélectionné(s)</span>
+        <div>
+          <button class="btn outline" id="select-all-btn">Tout sélectionner (non envoyés)</button>
+          <button class="btn" id="send-btn" style="margin-left:8px;">Envoyer le SMS</button>
+        </div>
+      </div>
+      <p class="send-status" id="send-status"></p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  var ADMIN_TOKEN = null;
+  var prospects = [];
+
+  document.getElementById('login-btn').addEventListener('click', function(){
+    var pass = document.getElementById('login-pass').value.trim();
+    if (!pass) return;
+    ADMIN_TOKEN = pass;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    chargerProspects();
+  });
+
+  function authHeaders(extra){
+    var h = { Authorization: 'Bearer ' + ADMIN_TOKEN };
+    if (extra) Object.assign(h, extra);
+    return h;
+  }
+
+  function badLogin(){
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-err').textContent = 'Mot de passe incorrect.';
+  }
+
+  function renderTable(){
+    var container = document.getElementById('table-container');
+    if (prospects.length === 0) {
+      container.innerHTML = '<p class="empty">Aucun prospect importé pour le moment.</p>';
+      return;
+    }
+    var rows = prospects.map(function(p){
+      var statutHtml = p.sms_envoye
+        ? '<span class="statut statut-envoye">Envoyé' + (p.date_envoi ? ' — ' + new Date(p.date_envoi).toLocaleDateString('fr-FR') : '') + '</span>'
+        : '<span class="statut statut-attente">En attente</span>';
+      return '<tr>' +
+        '<td><input type="checkbox" class="row-check" data-id="' + p.id + '" ' + (p.sms_envoye ? 'disabled' : '') + '></td>' +
+        '<td>' + escapeHtml(p.nom || '') + '</td>' +
+        '<td>' + escapeHtml(p.ville || '') + '</td>' +
+        '<td>' + escapeHtml(p.telephone_e164 || '') + '</td>' +
+        '<td>' + statutHtml + '</td>' +
+        '</tr>';
+    }).join('');
+    container.innerHTML = '<table><thead><tr><th></th><th>Nom</th><th>Ville</th><th>Téléphone</th><th>Statut</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    container.querySelectorAll('.row-check').forEach(function(cb){
+      cb.addEventListener('change', updateSelectionCount);
+    });
+    updateSelectionCount();
+  }
+
+  function escapeHtml(str){
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function updateSelectionCount(){
+    var n = document.querySelectorAll('.row-check:checked').length;
+    document.getElementById('selection-count').textContent = n + ' sélectionné(s)';
+  }
+
+  function chargerProspects(){
+    fetch('/api/prospects-list', { headers: authHeaders() })
+      .then(function(r){ if (r.status === 401) { badLogin(); throw new Error('unauthorized'); } return r.json(); })
+      .then(function(data){
+        if (data.success) { prospects = data.prospects; renderTable(); }
+      })
+      .catch(function(){});
+  }
+
+  document.getElementById('select-all-btn').addEventListener('click', function(){
+    document.querySelectorAll('.row-check:not(:disabled)').forEach(function(cb){ cb.checked = true; });
+    updateSelectionCount();
+  });
+
+  document.getElementById('import-btn').addEventListener('click', function(){
+    var fileInput = document.getElementById('file-input');
+    var status = document.getElementById('import-status');
+    if (!fileInput.files.length) { status.textContent = 'Choisissez un fichier .xlsx.'; status.className = 'send-status err'; return; }
+
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try {
+        var wb = XLSX.read(e.target.result, { type: 'array' });
+        var sheet = wb.Sheets[wb.SheetNames[0]];
+        var rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+        var toImport = rows.map(function(r){
+          var tel = String(r['Téléphone'] || r['Telephone'] || '').trim();
+          var digits = tel.replace(/[\s.-]/g, '');
+          var e164 = null;
+          if (/^0[1-9]\d{8}$/.test(digits)) e164 = '+33' + digits.slice(1);
+          else if (/^\+33[1-9]\d{8}$/.test(digits)) e164 = digits;
+          return {
+            nom: r['Nom entreprise'] || r['Nom'] || '',
+            ville: r['Ville'] || '',
+            departement: String(r['Département'] || r['Departement'] || ''),
+            telephone: tel,
+            telephone_e164: e164,
+            adresse: r['Adresse'] || '',
+          };
+        }).filter(function(p){ return p.telephone_e164; });
+
+        if (toImport.length === 0) {
+          status.textContent = 'Aucun numéro de mobile valide trouvé dans le fichier.';
+          status.className = 'send-status err';
+          return;
+        }
+
+        status.textContent = 'Import en cours…';
+        status.className = 'send-status';
+
+        fetch('/api/prospects-import', {
+          method: 'POST',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ prospects: toImport })
+        }).then(function(r){ if (r.status === 401) { badLogin(); throw new Error('unauthorized'); } return r.json(); })
+          .then(function(data){
+            if (data.success) {
+              status.textContent = data.imported + ' prospect(s) importé(s).';
+              status.className = 'send-status ok';
+              fileInput.value = '';
+              chargerProspects();
+            } else {
+              status.textContent = data.error || 'Import impossible.';
+              status.className = 'send-status err';
+            }
+          }).catch(function(){
+            status.textContent = 'Erreur réseau.';
+            status.className = 'send-status err';
+          });
+      } catch (err) {
+        status.textContent = 'Fichier illisible : ' + err.message;
+        status.className = 'send-status err';
+      }
+    };
+    reader.readAsArrayBuffer(fileInput.files[0]);
+  });
+
+  document.getElementById('send-btn').addEventListener('click', function(){
+    var ids = Array.from(document.querySelectorAll('.row-check:checked')).map(function(cb){ return cb.dataset.id; });
+    var status = document.getElementById('send-status');
+    if (ids.length === 0) { status.textContent = 'Sélectionnez au moins un prospect.'; status.className = 'send-status err'; return; }
+    if (!confirm('Envoyer le SMS à ' + ids.length + ' prospect(s) ?')) return;
+
+    this.disabled = true;
+    status.textContent = 'Envoi en cours…';
+    status.className = 'send-status';
+    var self = this;
+
+    fetch('/api/prospects-send-sms', {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ ids: ids })
+    }).then(function(r){ if (r.status === 401) { badLogin(); throw new Error('unauthorized'); } return r.json(); })
+      .then(function(data){
+        self.disabled = false;
+        if (data.success) {
+          status.textContent = data.envoyes + ' SMS envoyé(s)' + (data.echoues ? ', ' + data.echoues + ' échoué(s)' : '') + '.';
+          status.className = 'send-status ok';
+          chargerProspects();
+        } else {
+          status.textContent = data.error || 'Envoi impossible.';
+          status.className = 'send-status err';
+        }
+      }).catch(function(){
+        self.disabled = false;
+        status.textContent = 'Erreur réseau.';
+        status.className = 'send-status err';
+      });
+  });
+</script>
+
+</body>
+</html>
