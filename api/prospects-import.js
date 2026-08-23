@@ -26,16 +26,22 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, error: "Liste de prospects manquante." });
   }
 
-  const rows = prospects
+  // On déduplique par numéro (dernière occurrence gagne) : Supabase refuse
+  // qu'un même envoi mette à jour deux fois la même ligne (erreur 21000).
+  const parPhone = new Map();
+  prospects
     .filter((p) => p && p.telephone_e164)
-    .map((p) => ({
-      nom: p.nom || "",
-      ville: p.ville || "",
-      departement: p.departement || "",
-      telephone: p.telephone || "",
-      telephone_e164: p.telephone_e164,
-      adresse: p.adresse || "",
-    }));
+    .forEach((p) => {
+      parPhone.set(p.telephone_e164, {
+        nom: p.nom || "",
+        ville: p.ville || "",
+        departement: p.departement || "",
+        telephone: p.telephone || "",
+        telephone_e164: p.telephone_e164,
+        adresse: p.adresse || "",
+      });
+    });
+  const rows = Array.from(parPhone.values());
 
   if (rows.length === 0) {
     return res.status(400).json({ success: false, error: "Aucun numéro valide dans le fichier." });
