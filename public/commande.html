@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Skyeco Pro — Finaliser votre demande</title>
-<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap');
 
@@ -120,9 +119,42 @@
   }
   .btn-primary:disabled{ background:var(--concrete); cursor:not-allowed; }
 
-  .calendly-block{ display:none; }
-  .calendly-block.show{ display:block; }
-  .calendly-inline-widget{ min-width:280px; height:640px; }
+  .slots-block{ display:none; }
+  .slots-block.show{ display:block; }
+
+  .day-tabs{
+    display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:18px;
+  }
+  .day-tab{
+    flex:0 0 auto; padding:10px 14px; border:1px solid var(--line); border-radius:2px;
+    background:#fff; cursor:pointer; text-align:center; font-size:0.82rem;
+    font-family:'Work Sans', sans-serif;
+  }
+  .day-tab .d{ display:block; font-family:'Oswald', sans-serif; font-weight:600; font-size:0.75rem; text-transform:uppercase; color:var(--concrete); }
+  .day-tab .n{ display:block; font-weight:600; color:var(--ink); margin-top:2px; }
+  .day-tab.active{ border-color:var(--steel); background:var(--steel); }
+  .day-tab.active .d, .day-tab.active .n{ color:#fff; }
+
+  .time-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(84px, 1fr)); gap:10px;
+    margin-bottom:22px;
+  }
+  .time-slot{
+    padding:11px 6px; border:1px solid var(--line); border-radius:2px;
+    background:#fff; cursor:pointer; text-align:center; font-size:0.9rem;
+    font-family:'Work Sans', sans-serif;
+  }
+  .time-slot.selected{ border-color:var(--signal); background:rgba(232,98,44,0.1); color:var(--signal); font-weight:600; }
+
+  .slot-summary{
+    font-size:0.9rem; color:var(--concrete); margin-bottom:16px; display:none;
+  }
+  .slot-summary.show{ display:block; }
+  .slot-summary strong{ color:var(--ink); }
+
+  .confirm-status{ font-size:0.85rem; margin-top:12px; display:none; }
+  .confirm-status.ok{ color:var(--ok); display:block; }
+  .confirm-status.err{ color:var(--signal); display:block; }
 
   footer{
     padding:22px 0; text-align:center; color:var(--concrete); font-size:0.8rem;
@@ -184,7 +216,18 @@
         <label for="tel-contact">Votre téléphone</label>
         <input type="tel" id="tel-contact" placeholder="06 XX XX XX XX" required>
         <div class="field-error" id="tel-error"></div>
+        <button type="button" class="btn-search" id="btn-send-code" style="display:none; margin-top:10px;">Envoyer le code par SMS</button>
       </div>
+
+      <div class="field" id="code-field" style="display:none;">
+        <label for="sms-code">Code reçu par SMS</label>
+        <div class="siret-row">
+          <input type="text" id="sms-code" inputmode="numeric" maxlength="6" placeholder="123456">
+          <button type="button" class="btn-search" id="btn-check-code">Vérifier</button>
+        </div>
+        <div class="lookup-status" id="code-status"></div>
+      </div>
+
       <div class="field">
         <label for="email-contact">Votre email</label>
         <input type="email" id="email-contact" placeholder="vous@entreprise.fr">
@@ -193,11 +236,16 @@
     </div>
   </div>
 
-  <div class="panel calendly-block" id="panel-calendly">
+  <div class="panel slots-block" id="panel-calendly">
     <h2>Choisissez un créneau</h2>
     <p class="hint">15 minutes suffisent pour cadrer votre projet et démarrer.</p>
-    <!-- Remplacer l'URL ci-dessous par le lien Calendly réel de RMS EcoSky -->
-    <div class="calendly-inline-widget" data-url="https://calendly.com/rms-ecosky/rdv-skyeco-pro"></div>
+
+    <div class="day-tabs" id="day-tabs"></div>
+    <div class="time-grid" id="time-grid"></div>
+
+    <div class="slot-summary" id="slot-summary"></div>
+    <button class="btn-primary" id="btn-confirm-slot" disabled>Confirmer le rendez-vous</button>
+    <div class="confirm-status" id="confirm-status"></div>
   </div>
 
 </main>
@@ -214,37 +262,123 @@
   document.getElementById('formule-title').textContent = formule;
   document.getElementById('formule-prix').textContent = prix;
 
-  // Validation du téléphone (format français) — le bouton "Continuer" reste
-  // désactivé tant que le numéro n'est pas valide.
+  // Validation du téléphone (format français) + vérification par SMS (Twilio Verify),
+  // à l'image du formulaire estimation.html de SalesFlow.
   var telInput = document.getElementById('tel-contact');
   var telError = document.getElementById('tel-error');
   var btnContinue = document.getElementById('btn-continue');
+  var btnSendCode = document.getElementById('btn-send-code');
+  var codeField = document.getElementById('code-field');
+  var codeInput = document.getElementById('sms-code');
+  var codeStatus = document.getElementById('code-status');
+  var btnCheckCode = document.getElementById('btn-check-code');
   var frenchPhoneRegex = /^(?:(?:\+33|0033)\s?|0)[1-9](?:[\s.-]?\d{2}){4}$/;
+  var phoneVerified = false;
+
+  function resetVerification(){
+    phoneVerified = false;
+    btnContinue.disabled = true;
+    codeField.style.display = 'none';
+    codeStatus.className = 'lookup-status';
+    codeStatus.textContent = '';
+    codeInput.value = '';
+  }
 
   function validatePhone(){
     var raw = telInput.value.trim();
     var isValid = frenchPhoneRegex.test(raw);
     telInput.classList.remove('valid', 'invalid');
+    resetVerification();
     if(raw === ''){
       telError.classList.remove('show');
-      btnContinue.disabled = true;
+      btnSendCode.style.display = 'none';
       return false;
     }
     if(isValid){
       telInput.classList.add('valid');
       telError.classList.remove('show');
-      btnContinue.disabled = false;
+      btnSendCode.style.display = 'inline-block';
       return true;
     }else{
       telInput.classList.add('invalid');
       telError.textContent = "Numéro invalide. Format attendu : 06 12 34 56 78 (ou +33 6 12 34 56 78).";
       telError.classList.add('show');
-      btnContinue.disabled = true;
+      btnSendCode.style.display = 'none';
       return false;
     }
   }
   telInput.addEventListener('input', validatePhone);
   telInput.addEventListener('blur', validatePhone);
+
+  btnSendCode.addEventListener('click', function(){
+    if(!validatePhone()) return;
+    btnSendCode.disabled = true;
+    btnSendCode.textContent = 'Envoi en cours…';
+
+    fetch('/api/verify-send-code', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ phone: telInput.value.trim() })
+    })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        btnSendCode.disabled = false;
+        if(data.success){
+          btnSendCode.textContent = 'Renvoyer le code';
+          codeField.style.display = 'block';
+          codeStatus.className = 'lookup-status ok';
+          codeStatus.textContent = "Code envoyé par SMS. Saisissez-le ci-dessous.";
+        }else{
+          btnSendCode.textContent = 'Envoyer le code par SMS';
+          codeStatus.className = 'lookup-status err';
+          codeStatus.textContent = data.error || "Envoi impossible. Vérifiez le numéro.";
+          codeField.style.display = 'block';
+        }
+      })
+      .catch(function(){
+        btnSendCode.disabled = false;
+        btnSendCode.textContent = 'Envoyer le code par SMS';
+        codeField.style.display = 'block';
+        codeStatus.className = 'lookup-status err';
+        codeStatus.textContent = "Service de vérification indisponible pour le moment.";
+      });
+  });
+
+  btnCheckCode.addEventListener('click', function(){
+    var code = codeInput.value.trim();
+    if(code.length !== 6){
+      codeStatus.className = 'lookup-status err';
+      codeStatus.textContent = "Le code comporte 6 chiffres.";
+      return;
+    }
+    btnCheckCode.disabled = true;
+
+    fetch('/api/verify-check-code', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ phone: telInput.value.trim(), code: code })
+    })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        btnCheckCode.disabled = false;
+        if(data.success && data.valid){
+          phoneVerified = true;
+          codeStatus.className = 'lookup-status ok';
+          codeStatus.textContent = "Numéro vérifié ✓";
+          btnContinue.disabled = false;
+        }else{
+          phoneVerified = false;
+          codeStatus.className = 'lookup-status err';
+          codeStatus.textContent = "Code incorrect. Réessayez.";
+          btnContinue.disabled = true;
+        }
+      })
+      .catch(function(){
+        btnCheckCode.disabled = false;
+        codeStatus.className = 'lookup-status err';
+        codeStatus.textContent = "Vérification impossible pour le moment.";
+      });
+  });
 
   // Recherche SIRET via l'API publique gratuite recherche-entreprises.api.gouv.fr
   document.getElementById('btn-siret').addEventListener('click', function(){
@@ -288,15 +422,124 @@
       });
   });
 
-  // Passage à l'étape 2 : prise de RDV Calendly
+  // Passage à l'étape 2 : sélection de créneau intégrée (pas de Calendly)
   document.getElementById('btn-continue').addEventListener('click', function(){
-    if(!validatePhone()){ telInput.focus(); return; }
+    if(!phoneVerified){ codeInput.focus(); return; }
     document.getElementById('panel-siret').style.display = 'none';
     document.getElementById('panel-calendly').classList.add('show');
     document.getElementById('step-pill-1').classList.remove('active');
     document.getElementById('step-pill-1').classList.add('done');
     document.getElementById('step-pill-2').classList.add('active');
     document.getElementById('panel-calendly').scrollIntoView({behavior:'smooth'});
+  });
+
+  // Génère les 7 prochains jours ouvrés (lun-ven) et des créneaux horaires fixes.
+  var JOURS = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  var MOIS = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  var HEURES = ['9h00','10h00','11h00','14h00','15h00','16h00','17h00'];
+
+  var joursDisponibles = [];
+  var d = new Date();
+  while(joursDisponibles.length < 6){
+    d.setDate(d.getDate() + 1);
+    if(d.getDay() !== 0 && d.getDay() !== 6){
+      joursDisponibles.push(new Date(d));
+    }
+  }
+
+  var dayTabs = document.getElementById('day-tabs');
+  var timeGrid = document.getElementById('time-grid');
+  var slotSummary = document.getElementById('slot-summary');
+  var btnConfirmSlot = document.getElementById('btn-confirm-slot');
+  var confirmStatus = document.getElementById('confirm-status');
+  var selectedDay = null;
+  var selectedTime = null;
+
+  function formatJour(date){
+    return { d: JOURS[date.getDay()], n: date.getDate() + ' ' + MOIS[date.getMonth()] };
+  }
+
+  function renderDayTabs(){
+    dayTabs.innerHTML = '';
+    joursDisponibles.forEach(function(date, idx){
+      var f = formatJour(date);
+      var tab = document.createElement('div');
+      tab.className = 'day-tab' + (idx === 0 ? ' active' : '');
+      tab.innerHTML = '<span class="d">' + f.d + '</span><span class="n">' + f.n + '</span>';
+      tab.addEventListener('click', function(){
+        document.querySelectorAll('.day-tab').forEach(function(t){ t.classList.remove('active'); });
+        tab.classList.add('active');
+        selectedDay = date;
+        selectedTime = null;
+        renderTimeGrid();
+        updateSummary();
+      });
+      dayTabs.appendChild(tab);
+    });
+    selectedDay = joursDisponibles[0];
+  }
+
+  function renderTimeGrid(){
+    timeGrid.innerHTML = '';
+    HEURES.forEach(function(h){
+      var slot = document.createElement('div');
+      slot.className = 'time-slot';
+      slot.textContent = h;
+      slot.addEventListener('click', function(){
+        document.querySelectorAll('.time-slot').forEach(function(s){ s.classList.remove('selected'); });
+        slot.classList.add('selected');
+        selectedTime = h;
+        updateSummary();
+      });
+      timeGrid.appendChild(slot);
+    });
+  }
+
+  function updateSummary(){
+    if(selectedDay && selectedTime){
+      var f = formatJour(selectedDay);
+      slotSummary.innerHTML = 'Créneau choisi : <strong>' + f.d + ' ' + f.n + ' à ' + selectedTime + '</strong>';
+      slotSummary.classList.add('show');
+      btnConfirmSlot.disabled = false;
+    }else{
+      slotSummary.classList.remove('show');
+      btnConfirmSlot.disabled = true;
+    }
+  }
+
+  renderDayTabs();
+  renderTimeGrid();
+
+  btnConfirmSlot.addEventListener('click', function(){
+    btnConfirmSlot.disabled = true;
+    btnConfirmSlot.textContent = 'Envoi en cours…';
+    var f = formatJour(selectedDay);
+
+    fetch('/api/book-appointment', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        formule: formule,
+        prix: prix,
+        raisonSociale: document.getElementById('raison-sociale').value,
+        siret: document.getElementById('siret').value,
+        telephone: telInput.value.trim(),
+        email: document.getElementById('email-contact').value,
+        creneau: f.d + ' ' + f.n + ' à ' + selectedTime
+      })
+    })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        confirmStatus.className = 'confirm-status ok';
+        confirmStatus.textContent = "Rendez-vous confirmé ! On vous appelle à ce créneau.";
+        btnConfirmSlot.textContent = 'Rendez-vous confirmé ✓';
+      })
+      .catch(function(){
+        btnConfirmSlot.disabled = false;
+        btnConfirmSlot.textContent = 'Confirmer le rendez-vous';
+        confirmStatus.className = 'confirm-status err';
+        confirmStatus.textContent = "Envoi impossible pour le moment, réessayez.";
+      });
   });
 </script>
 
