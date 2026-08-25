@@ -135,7 +135,10 @@ export default async function handler(req, res) {
       `${process.env.SUPABASE_URL}/rest/v1/prospects_sms?id=in.(${idsFilter})&select=id,nom,email,opt_out,clic_token`,
       { headers: supaHeaders }
     );
-    if (!resp.ok) throw new Error("Lecture Supabase impossible.");
+    if (!resp.ok) {
+      const detail = await resp.text();
+      throw new Error("Lecture Supabase impossible : " + detail);
+    }
     const tousLesProspects = await resp.json();
 
     const sansEmail = tousLesProspects.filter((p) => !p.email).map((p) => p.id);
@@ -179,6 +182,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error("prospects-send-email error:", err);
-    return res.status(500).json({ success: false, error: "Envoi impossible pour le moment." });
+    return res.status(500).json({ success: false, error: "Envoi impossible : " + err.message });
   }
 }
