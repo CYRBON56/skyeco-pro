@@ -100,6 +100,16 @@
     border:1px dashed rgba(245,241,230,0.14);
     border-radius:50%;
   }
+  header.hero .wrap{ position:relative; display:grid; grid-template-columns:1.15fr 0.85fr; gap:48px; align-items:center; }
+  @media (max-width:860px){ header.hero .wrap{ grid-template-columns:1fr; } }
+
+  .hero-visual{ position:relative; }
+  .hero-visual img{
+    width:100%; height:auto; display:block; border-radius:6px;
+    border:1px solid rgba(245,241,230,0.18);
+    box-shadow:0 24px 60px -20px rgba(0,0,0,0.55);
+  }
+  .hero-visual .btn-primary{ display:block; text-align:center; margin-top:16px; width:100%; }
   header.hero .crosshair{ color:rgba(245,241,230,0.35); }
 
   .eyebrow{
@@ -282,6 +292,15 @@
   }
   .plan li::before{ content:"—"; color:var(--signal); font-weight:700; flex-shrink:0; }
 
+  .plan .option-catalogue{
+    display:flex; align-items:center; gap:10px;
+    background:#F5F1E6; border:1px solid var(--line); border-radius:4px;
+    padding:11px 14px; margin:4px 0 18px;
+    font-family:'Work Sans',sans-serif; font-size:0.85rem; color:var(--ink);
+    text-transform:none; letter-spacing:normal; cursor:pointer;
+  }
+  .plan .option-catalogue input{ width:16px; height:16px; flex-shrink:0; accent-color:var(--signal); cursor:pointer; }
+
   .plan .example{
     display:block; text-align:center;
     font-family:'Work Sans', sans-serif; text-transform:none; letter-spacing:normal;
@@ -392,14 +411,20 @@
 <header class="hero">
   <div class="wrap">
     <span class="crosshair tl"></span><span class="crosshair tr"></span>
-    <div class="eyebrow">Site vitrine pour artisans &amp; entreprises du BTP <span class="mono">— réf. skyeco/2026</span></div>
-    <h1>Sans formulaire de devis direct, <em>vous n'existez pas.</em></h1>
-    <p class="lead">Skyeco Pro construit votre site vitrine professionnel, avec formulaire de devis et gestion de vos campagnes Google Ads. Mise en ligne rapide, prix fixe, sans surprise.</p>
-    <div class="hero-actions">
-      <a class="btn-primary" href="#pricing">Voir l'offre</a>
-      <a class="btn-ghost" href="#" data-open-rappel>Demandez à être rappelé</a>
+    <div>
+      <div class="eyebrow">Site vitrine pour artisans &amp; entreprises du BTP <span class="mono">— réf. skyeco/2026</span></div>
+      <h1>Sans formulaire de devis direct, <em>vous n'existez pas.</em></h1>
+      <p class="lead">Skyeco Pro ajoute un formulaire de devis à votre site existant et gère vos campagnes Google Ads. Mise en place rapide, prix fixe, sans surprise.</p>
+      <div class="hero-actions">
+        <a class="btn-primary" href="#pricing">Voir l'offre</a>
+        <a class="btn-ghost" href="#" data-open-rappel>Demandez à être rappelé</a>
+      </div>
+      <div class="hero-note"><span class="dot"></span>Prix fixe · remise de 460€ jusqu'au 30 septembre</div>
     </div>
-    <div class="hero-note"><span class="dot"></span>Prix fixe · remise de 460€ jusqu'au 30 septembre</div>
+    <div class="hero-visual">
+      <img src="img/exemple-vitrine.jpg" alt="Exemple de site vitrine avec formulaire réalisé par Skyeco Pro">
+      <a class="btn-primary" href="https://salesflow-ecosky.vercel.app/estimation.html" target="_blank" rel="noopener">Voir cet exemple</a>
+    </div>
   </div>
 </header>
 
@@ -429,19 +454,19 @@
       <div class="process-step">
         <div class="num">1</div>
         <h3>Cadrage</h3>
-        <p>On échange sur votre activité, vos services et ce que doit montrer votre site.</p>
+        <p>On échange sur votre activité, votre site actuel et vos objectifs de demandes de devis.</p>
         <span class="dur">~ 1 appel</span>
       </div>
       <div class="process-step">
         <div class="num">2</div>
-        <h3>Conception</h3>
-        <p>Votre site est construit avec vos contenus, vos services et vos couleurs.</p>
+        <h3>Intégration</h3>
+        <p>On ajoute le formulaire de devis à votre site existant et on configure vos campagnes Google Ads.</p>
         <span class="dur">~ quelques jours</span>
       </div>
       <div class="process-step">
         <div class="num">3</div>
         <h3>Mise en ligne</h3>
-        <p>Validation, mise en ligne, et votre site commence à travailler pour vous.</p>
+        <p>Validation, mise en ligne, et vos demandes de devis commencent à arriver.</p>
         <span class="dur">prêt à l'emploi</span>
       </div>
     </div>
@@ -453,7 +478,7 @@
     <div class="head">
       <div class="eyebrow">Notre offre</div>
       <h2>Une offre complète, un seul objectif : des clients qui vous trouvent</h2>
-      <p>Site vitrine, formulaire de devis et gestion de vos campagnes Google Ads inclus. Pas d'abonnement caché.</p>
+      <p>Formulaire de devis et gestion de vos campagnes Google Ads, sur votre site existant. Pas d'abonnement caché.</p>
     </div>
 
     <div class="plans">
@@ -462,21 +487,29 @@
         <span class="crosshair tl"></span><span class="crosshair br"></span>
         <span class="badge">★ Offre jusqu'au 30 septembre</span>
         <span class="tag">Offre compl&egrave;te</span>
-        <h3>Site + formulaire, carrousel &amp; vidéo + Google Ads</h3>
+        <h3>Formulaire de devis, carrousel &amp; vidéo + Google Ads</h3>
         <div class="price-row"><span class="price-barre">1990€</span> <div class="price">1530€<sup>HT</sup></div></div>
         <div class="remise-badge">-460€ jusqu'au 30 septembre</div>
         <div class="ht">paiement unique</div>
         <div class="addon-note">+ abonnement Google Ads à partir de 150€HT/mois</div>
         <ul>
-          <li>Site vitrine professionnel (Accueil, Services, Contact)</li>
           <li>Formulaire de demande de devis en ligne</li>
           <li>Carrousel d'images et catalogue de vos réalisations</li>
           <li>Gestion de vos campagnes Google Ads</li>
           <li>Dashboard de suivi de vos demandes</li>
           <li>Notification SMS à chaque nouveau contact</li>
         </ul>
+        <label class="option-catalogue">
+          <input type="checkbox" id="option-site">
+          <span>Pas encore de site ? Ajoutez un site vitrine complet — <strong>590€HT</strong></span>
+        </label>
+        <a class="example" href="https://www.ecosky.fr" target="_blank" rel="noopener" style="font-size:0.95rem;margin-bottom:10px;">Exemple de site vitrine ↗</a>
+        <label class="option-catalogue">
+          <input type="checkbox" id="option-catalogue">
+          <span>+ Catalogue 8 pages de vos réalisations — <strong>290€HT</strong></span>
+        </label>
         <a class="example" href="https://salesflow-ecosky.vercel.app/estimation.html" target="_blank" rel="noopener">Voir un aperçu ↗</a>
-        <a class="cta" href="commande.html?formule=Site%20%2B%20formulaire%2C%20carrousel%20%26%20vid%C3%A9o%20%2B%20Google%20Ads&prix=1530%E2%82%ACHT">Tester votre éligibilité</a>
+        <a class="cta" id="cta-principal" href="commande.html?formule=Formulaire%20de%20devis%2C%20carrousel%20%26%20vid%C3%A9o%20%2B%20Google%20Ads&prix=1530%E2%82%ACHT">Tester votre éligibilité</a>
       </div>
 
     </div>
@@ -541,6 +574,29 @@
 </div>
 
 <script>
+  (function(){
+    var PRIX_BASE = 1530;
+    var PRIX_CATALOGUE = 290;
+    var PRIX_SITE = 590;
+    var checkCatalogue = document.getElementById('option-catalogue');
+    var checkSite = document.getElementById('option-site');
+    var cta = document.getElementById('cta-principal');
+    var urlBase = new URL(cta.getAttribute('href'), window.location.href);
+    var formuleBase = urlBase.searchParams.get('formule');
+
+    function maj(){
+      var total = PRIX_BASE;
+      var extras = [];
+      if (checkSite.checked) { total += PRIX_SITE; extras.push('Site vitrine complet'); }
+      if (checkCatalogue.checked) { total += PRIX_CATALOGUE; extras.push('Catalogue 8 pages'); }
+      var formule = formuleBase + (extras.length ? ' + ' + extras.join(' + ') : '');
+      cta.setAttribute('href', 'commande.html?formule=' + encodeURIComponent(formule) + '&prix=' + total + '%E2%82%ACHT');
+    }
+    checkCatalogue.addEventListener('change', maj);
+    checkSite.addEventListener('change', maj);
+    maj();
+  })();
+
   document.querySelectorAll('.plan .cta[data-formule]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var badge = document.getElementById('formule-selectionnee');
