@@ -167,14 +167,14 @@
 <nav>
   <div class="inner">
     <div class="brand">SKY<span>ECO</span> PRO</div>
-    <a class="back" href="tarifs.html">← Retour aux formules</a>
+    <a class="back" href="tarifs.html">← Retour aux tarifs</a>
   </div>
 </nav>
 
 <header class="summary">
   <div class="wrap">
     <div class="eyebrow">Votre demande</div>
-    <h1 id="formule-title">Formule sélectionnée</h1>
+    <h1 id="formule-title">Votre commande</h1>
     <p class="price-line">Prix : <strong id="formule-prix">—</strong> — étape suivante : identifier votre entreprise puis choisir un créneau de rendez-vous.</p>
   </div>
 </header>
@@ -258,7 +258,7 @@
 <script>
   // Récupère la formule choisie depuis l'URL (?formule=... et &prix=...)
   var params = new URLSearchParams(window.location.search);
-  var formule = params.get('formule') || 'Formule non précisée';
+  var formule = params.get('formule') || 'Site + formulaire + Google Ads';
   var prix = params.get('prix') || '—';
   document.getElementById('formule-title').textContent = formule;
   document.getElementById('formule-prix').textContent = prix;
