@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/l", "destination": "/api/lien" }
+    { "source": "/l", "destination": "/api/lien" },
+    { "source": "/o", "destination": "/api/ouverture" }
   ]
 }
