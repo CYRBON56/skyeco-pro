@@ -277,8 +277,13 @@
   .plan .example{
     display:block; text-align:center;
     font-family:'Work Sans', sans-serif; text-transform:none; letter-spacing:normal;
-    font-size:0.82rem; color:var(--steel); text-decoration:underline;
-    margin-bottom:10px;
+    font-size:1.15rem; font-weight:700; color:var(--signal); text-decoration:underline;
+    margin-bottom:14px;
+    animation: clignote 1.1s ease-in-out infinite;
+  }
+  @keyframes clignote{
+    0%, 100% { opacity:1; }
+    50% { opacity:0.25; }
   }
 
   .plan .cta{
