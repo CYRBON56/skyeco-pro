@@ -89,7 +89,7 @@
 
     <div class="card">
       <h2>Importer une liste</h2>
-      <p class="hint">Fichier .xlsx avec les colonnes : Nom entreprise, Ville, Département, Téléphone, Adresse. Les numéros déjà importés sont automatiquement mis à jour, pas dupliqués.</p>
+      <p class="hint">Fichier .xlsx avec les colonnes : Nom entreprise, Ville, Département, Téléphone, Adresse, Email (optionnel). Les numéros déjà importés sont automatiquement mis à jour, pas dupliqués.</p>
       <input type="file" id="file-input" accept=".xlsx,.xls">
       <button class="btn outline" id="import-btn" style="margin-left:10px;">Importer</button>
       <p class="send-status" id="import-status"></p>
@@ -103,6 +103,7 @@
         <div><label>Ville</label><input type="text" id="m-ville" placeholder="Ex : Vannes"></div>
         <div><label>Département</label><input type="text" id="m-dept" placeholder="Ex : 56"></div>
         <div><label>Téléphone</label><input type="text" id="m-tel" placeholder="Ex : 06 12 34 56 78"></div>
+        <div><label>Email</label><input type="email" id="m-email" placeholder="Ex : contact@entreprise.fr"></div>
         <div style="grid-column:1/-1;"><label>Adresse</label><input type="text" id="m-adresse" placeholder="Ex : 12 rue de la Paix, 56000 Vannes"></div>
       </div>
       <button class="btn" id="manual-add-btn" style="margin-top:14px;">Ajouter le contact</button>
@@ -123,6 +124,7 @@
           <button class="btn outline" id="select-all-btn">Tout sélectionner</button>
           <button class="btn outline" id="deselect-all-btn">Tout désélectionner</button>
           <button class="btn" id="send-btn" style="margin-left:8px;">Envoyer le SMS</button>
+          <button class="btn" id="send-email-btn" style="margin-left:8px;background:#1a56db;">Envoyer par email</button>
           <button class="btn" id="delete-selected-btn" style="margin-left:8px;background:#991b1b;">Supprimer la sélection</button>
         </div>
       </div>
@@ -166,9 +168,13 @@
     var envoyes = prospects.filter(function(p){ return p.sms_envoye && !p.opt_out; }).length;
     var attente = total - envoyes - optout;
     var cliques = prospects.filter(function(p){ return p.lien_clique; }).length;
+    var emailsEnvoyes = prospects.filter(function(p){ return p.email_envoye; }).length;
+    var avecEmail = prospects.filter(function(p){ return p.email; }).length;
     bar.innerHTML =
       '<div class="stat-box"><div class="num">' + total + '</div><div class="lbl">Total prospects</div></div>' +
       '<div class="stat-box"><div class="num">' + envoyes + '</div><div class="lbl">SMS envoyés</div></div>' +
+      '<div class="stat-box"><div class="num">' + emailsEnvoyes + '</div><div class="lbl">Emails envoyés</div></div>' +
+      '<div class="stat-box"><div class="num">' + avecEmail + '</div><div class="lbl">Avec email connu</div></div>' +
       '<div class="stat-box"><div class="num">' + attente + '</div><div class="lbl">En attente</div></div>' +
       '<div class="stat-box"><div class="num">' + cliques + '</div><div class="lbl">Liens cliqués</div></div>' +
       '<div class="stat-box optout"><div class="num">' + optout + '</div><div class="lbl">Désabonnés (STOP)</div></div>';
@@ -188,6 +194,7 @@
           '<td><input type="text" class="edit-field" data-f="nom" value="' + escapeAttr(p.nom) + '"></td>' +
           '<td><input type="text" class="edit-field" data-f="ville" value="' + escapeAttr(p.ville) + '"></td>' +
           '<td><input type="text" class="edit-field" data-f="telephone" value="' + escapeAttr(p.telephone || p.telephone_e164) + '"></td>' +
+          '<td><input type="email" class="edit-field" data-f="email" value="' + escapeAttr(p.email || '') + '"></td>' +
           '<td></td>' +
           '<td>' +
             '<button class="btn row-save" data-id="' + p.id + '" style="padding:5px 12px;font-size:0.78rem;">Enregistrer</button> ' +
@@ -198,8 +205,11 @@
       var statutHtml = p.opt_out
         ? '<span class="statut statut-optout">Désabonné (STOP)' + (p.opt_out_date ? ' — ' + new Date(p.opt_out_date).toLocaleDateString('fr-FR') : '') + '</span>'
         : p.sms_envoye
-        ? '<span class="statut statut-envoye">Envoyé' + (p.date_envoi ? ' — ' + new Date(p.date_envoi).toLocaleDateString('fr-FR') : '') + '</span>'
+        ? '<span class="statut statut-envoye">SMS envoyé' + (p.date_envoi ? ' — ' + new Date(p.date_envoi).toLocaleDateString('fr-FR') : '') + '</span>'
         : '<span class="statut statut-attente">En attente</span>';
+      if (p.email_envoye) {
+        statutHtml += '<span class="statut statut-envoye">Email envoyé' + (p.date_envoi_email ? ' — ' + new Date(p.date_envoi_email).toLocaleDateString('fr-FR') : '') + '</span>';
+      }
       if (p.lien_clique) {
         statutHtml += '<span class="statut statut-clique">🔗 Cliqué' + (p.clic_date ? ' — ' + new Date(p.clic_date).toLocaleDateString('fr-FR') : '') + '</span>';
       }
@@ -208,6 +218,7 @@
         '<td>' + escapeHtml(p.nom || '') + '</td>' +
         '<td>' + escapeHtml(p.ville || '') + '</td>' +
         '<td>' + escapeHtml(p.telephone_e164 || '') + '</td>' +
+        '<td>' + escapeHtml(p.email || '—') + '</td>' +
         '<td>' + statutHtml + '</td>' +
         '<td>' +
           '<button class="btn outline row-edit" data-id="' + p.id + '" style="padding:5px 12px;font-size:0.78rem;">Modifier</button> ' +
@@ -215,7 +226,7 @@
         '</td>' +
         '</tr>';
     }).join('');
-    container.innerHTML = '<table><thead><tr><th></th><th>Nom</th><th>Ville</th><th>Téléphone</th><th>Statut</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+    container.innerHTML = '<table><thead><tr><th></th><th>Nom</th><th>Ville</th><th>Téléphone</th><th>Email</th><th>Statut</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
     container.querySelectorAll('.row-check').forEach(function(cb){
       cb.addEventListener('change', updateSelectionCount);
     });
@@ -239,12 +250,13 @@
     var nom = tr.querySelector('[data-f="nom"]').value.trim();
     var ville = tr.querySelector('[data-f="ville"]').value.trim();
     var telephone = tr.querySelector('[data-f="telephone"]').value.trim();
+    var email = tr.querySelector('[data-f="email"]').value.trim();
     var status = document.getElementById('send-status');
 
     fetch('/api/prospects-update', {
       method: 'POST',
       headers: authHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ id: id, nom: nom, ville: ville, telephone: telephone })
+      body: JSON.stringify({ id: id, nom: nom, ville: ville, telephone: telephone, email: email })
     }).then(function(r){ if (r.status === 401) { badLogin(); throw new Error('unauthorized'); } return r.json(); })
       .then(function(data){
         if (data.success) {
@@ -345,6 +357,7 @@
       telephone: tel,
       telephone_e164: e164,
       adresse: document.getElementById('m-adresse').value.trim(),
+      email: document.getElementById('m-email').value.trim(),
     };
 
     status.textContent = 'Ajout en cours…';
@@ -396,6 +409,7 @@
             telephone: tel,
             telephone_e164: e164,
             adresse: r['Adresse'] || '',
+            email: String(r['Email'] || r['E-mail'] || '').trim(),
           };
         }).filter(function(p){ return p.telephone_e164; });
 
@@ -456,6 +470,42 @@
         if (data.success) {
           status.textContent = data.envoyes + ' SMS envoyé(s)' +
             (data.echoues ? ', ' + data.echoues + ' échoué(s)' : '') +
+            (data.ignoresOptOut ? ', ' + data.ignoresOptOut + ' ignoré(s) car désabonné(s)' : '') + '.';
+          status.className = 'send-status ok';
+          chargerProspects();
+        } else {
+          status.textContent = data.error || 'Envoi impossible.';
+          status.className = 'send-status err';
+        }
+      }).catch(function(){
+        self.disabled = false;
+        status.textContent = 'Erreur réseau.';
+        status.className = 'send-status err';
+      });
+  });
+
+  document.getElementById('send-email-btn').addEventListener('click', function(){
+    var ids = Array.from(document.querySelectorAll('.row-check:checked')).map(function(cb){ return cb.dataset.id; });
+    var status = document.getElementById('send-status');
+    if (ids.length === 0) { status.textContent = 'Sélectionnez au moins un prospect.'; status.className = 'send-status err'; return; }
+    if (!confirm('Envoyer un email à ' + ids.length + ' prospect(s) sélectionné(s) (ceux sans adresse email seront ignorés) ?')) return;
+
+    this.disabled = true;
+    status.textContent = 'Envoi en cours…';
+    status.className = 'send-status';
+    var self = this;
+
+    fetch('/api/prospects-send-email', {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ ids: ids })
+    }).then(function(r){ if (r.status === 401) { badLogin(); throw new Error('unauthorized'); } return r.json(); })
+      .then(function(data){
+        self.disabled = false;
+        if (data.success) {
+          status.textContent = data.envoyes + ' email(s) envoyé(s)' +
+            (data.echoues ? ', ' + data.echoues + ' échoué(s)' : '') +
+            (data.ignoresSansEmail ? ', ' + data.ignoresSansEmail + ' ignoré(s) (pas d\'email connu)' : '') +
             (data.ignoresOptOut ? ', ' + data.ignoresOptOut + ' ignoré(s) car désabonné(s)' : '') + '.';
           status.className = 'send-status ok';
           chargerProspects();
