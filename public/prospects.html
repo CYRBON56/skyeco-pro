@@ -51,6 +51,7 @@
   .statut-attente { background:#f0e9da; color:#8a6b1f; }
   .statut-optout { background:#fdeaea; color:#991b1b; }
   .statut-clique { background:#e8f0fe; color:#1a56db; margin-left:4px; }
+  .statut-ouvert { background:#f3e8fd; color:#7c3aed; margin-left:4px; }
 
   .stats-bar { display:flex; gap:14px; flex-wrap:wrap; margin-top:8px; }
   .stat-box { flex:1; min-width:120px; background:#fbfcfa; border:1px solid #eef1ee; border-radius:10px; padding:12px 14px; text-align:center; }
@@ -170,10 +171,12 @@
     var cliques = prospects.filter(function(p){ return p.lien_clique; }).length;
     var emailsEnvoyes = prospects.filter(function(p){ return p.email_envoye; }).length;
     var avecEmail = prospects.filter(function(p){ return p.email; }).length;
+    var emailsOuverts = prospects.filter(function(p){ return p.email_ouvert; }).length;
     bar.innerHTML =
       '<div class="stat-box"><div class="num">' + total + '</div><div class="lbl">Total prospects</div></div>' +
       '<div class="stat-box"><div class="num">' + envoyes + '</div><div class="lbl">SMS envoyés</div></div>' +
       '<div class="stat-box"><div class="num">' + emailsEnvoyes + '</div><div class="lbl">Emails envoyés</div></div>' +
+      '<div class="stat-box"><div class="num">' + emailsOuverts + '</div><div class="lbl">Emails ouverts</div></div>' +
       '<div class="stat-box"><div class="num">' + avecEmail + '</div><div class="lbl">Avec email connu</div></div>' +
       '<div class="stat-box"><div class="num">' + attente + '</div><div class="lbl">En attente</div></div>' +
       '<div class="stat-box"><div class="num">' + cliques + '</div><div class="lbl">Liens cliqués</div></div>' +
@@ -209,6 +212,9 @@
         : '<span class="statut statut-attente">En attente</span>';
       if (p.email_envoye) {
         statutHtml += '<span class="statut statut-envoye">Email envoyé' + (p.date_envoi_email ? ' — ' + new Date(p.date_envoi_email).toLocaleDateString('fr-FR') : '') + '</span>';
+      }
+      if (p.email_ouvert) {
+        statutHtml += '<span class="statut statut-ouvert">📧 Ouvert' + (p.date_ouverture ? ' — ' + new Date(p.date_ouverture).toLocaleDateString('fr-FR') : '') + '</span>';
       }
       if (p.lien_clique) {
         statutHtml += '<span class="statut statut-clique">🔗 Cliqué' + (p.clic_date ? ' — ' + new Date(p.clic_date).toLocaleDateString('fr-FR') : '') + '</span>';
