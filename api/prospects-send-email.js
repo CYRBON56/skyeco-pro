@@ -27,41 +27,82 @@ function emailHtml(nom, token) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
 </head>
-<body style="margin:0;padding:0;background-color:#f5f7f5;">
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f5f7f5">
+<body style="margin:0;padding:0;background-color:#f0ece2;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f0ece2">
     <tr>
-      <td align="center" style="padding:32px 16px;">
-        <table width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="max-width:600px;">
+      <td align="center" style="padding:24px 16px;">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#0f1a2b" style="max-width:600px;">
+
+          <!-- Bandeau logo -->
           <tr>
-            <td style="padding:32px;font-family:Arial,Helvetica,sans-serif;">
-              <p style="font-size:16px;line-height:24px;color:#14312a;margin:0 0 16px 0;">
-                Bonjour${nom ? " " + nom : ""},
+            <td style="padding:22px 32px;border-bottom:3px solid #DE5A2C;font-family:Arial,Helvetica,sans-serif;">
+              <span style="font-size:18px;font-weight:800;letter-spacing:1px;color:#ffffff;">SKY<span style="color:#DE5A2C;">ECO</span>&nbsp;PRO</span>
+            </td>
+          </tr>
+
+          <!-- Hero -->
+          <tr>
+            <td style="padding:40px 32px 28px 32px;font-family:Arial,Helvetica,sans-serif;">
+              <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#DE5A2C;font-weight:bold;margin:0 0 14px 0;">
+                Site vitrine pour artisans &amp; entreprises du BTP
               </p>
-              <p style="font-size:15px;line-height:23px;color:#333333;margin:0 0 16px 0;">
-                Skyeco Pro cr&eacute;e des sites vitrines professionnels pour les artisans et entreprises du BTP,
-                pr&ecirc;ts &agrave; l'emploi rapidement, &agrave; prix fixe d&egrave;s <strong>590&nbsp;euros</strong> (sans abonnement obligatoire).
+              <p style="font-size:26px;line-height:32px;font-weight:800;color:#ffffff;margin:0 0 22px 0;">
+                Vos clients vous cherchent sur Google.<br>
+                <span style="color:#DE5A2C;">Donnez-leur une raison de vous trouver.</span>
               </p>
-              <p style="font-size:15px;line-height:23px;color:#333333;margin:0 0 24px 0;">
-                Vos clients vous cherchent d&eacute;j&agrave; sur Google &mdash; un site vitrine leur donne une raison de vous trouver.
+              <p style="font-size:14px;line-height:21px;color:#c3ccd6;margin:0;">
+                Bonjour${nom ? " " + nom : ""}, Skyeco Pro cr&eacute;e votre site vitrine professionnel,
+                mise en ligne rapide, prix fixe, sans surprise.
               </p>
+            </td>
+          </tr>
+
+          <!-- Bloc tarif -->
+          <tr>
+            <td style="padding:0 32px 28px 32px;font-family:Arial,Helvetica,sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#182742" style="border:1px solid #2a3a54;">
+                <tr>
+                  <td align="center" style="padding:26px 20px;">
+                    <p style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8fa0b8;margin:0 0 8px 0;">Prix de d&eacute;part</p>
+                    <p style="font-size:44px;line-height:44px;font-weight:800;color:#ffffff;margin:0;">
+                      590&euro;<span style="font-size:16px;font-weight:600;color:#8fa0b8;">&nbsp;HT</span>
+                    </p>
+                    <p style="font-size:12px;color:#8fa0b8;margin:8px 0 0 0;">paiement unique &middot; aucun abonnement obligatoire</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td align="center" style="padding:0 32px 40px 32px;">
               <table cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td bgcolor="#1e6f4c" style="border-radius:8px;">
-                    <a href="${BASE_URL}/l?p=${token}" style="display:block;padding:12px 24px;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#ffffff;text-decoration:none;font-weight:bold;">
+                  <td bgcolor="#DE5A2C" style="border-radius:4px;">
+                    <a href="${BASE_URL}/l?p=${token}" style="display:block;padding:15px 36px;font-family:Arial,Helvetica,sans-serif;font-size:14px;letter-spacing:0.5px;text-transform:uppercase;color:#ffffff;text-decoration:none;font-weight:bold;">
                       Voir les formules
                     </a>
                   </td>
                 </tr>
               </table>
-              <p style="font-size:12px;line-height:18px;color:#8a8a8a;margin:32px 0 0 0;">
-                Vous recevez cet email car votre entreprise a &eacute;t&eacute; identifi&eacute;e via des donn&eacute;es publiques (annuaire professionnel).
-                Pour ne plus recevoir nos communications, r&eacute;pondez &agrave; cet email avec le mot STOP.
-              </p>
-              <img src="${BASE_URL}/o?p=${token}" width="1" height="1" alt="" style="display:block;border:0;" />
             </td>
           </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:20px 32px 28px 32px;border-top:1px solid #223252;font-family:Arial,Helvetica,sans-serif;">
+              <p style="font-size:11px;line-height:16px;color:#6b7c93;margin:0;">
+                Vous recevez cet email car votre entreprise a &eacute;t&eacute; identifi&eacute;e via des donn&eacute;es publiques (annuaire professionnel).
+                <a href="${BASE_URL}/d?p=${token}" style="color:#8fa0b8;text-decoration:underline;">Se d&eacute;sabonner en un clic</a>.
+              </p>
+            </td>
+          </tr>
+
         </table>
+        <img src="${BASE_URL}/o?p=${token}" width="1" height="1" alt="" style="display:block;border:0;" />
       </td>
     </tr>
   </table>
@@ -71,11 +112,12 @@ function emailHtml(nom, token) {
 
 function emailText(nom, token) {
   return (
-    `Bonjour${nom ? " " + nom : ""},\n\n` +
-    `Skyeco Pro cree des sites vitrines professionnels pour les artisans et entreprises du BTP, ` +
-    `prets a l'emploi rapidement, a prix fixe des 590 euros (sans abonnement obligatoire).\n\n` +
+    `SKYECO PRO — Site vitrine pour artisans et entreprises du BTP\n\n` +
+    `Vos clients vous cherchent sur Google. Donnez-leur une raison de vous trouver.\n\n` +
+    `Bonjour${nom ? " " + nom : ""}, Skyeco Pro cree votre site vitrine professionnel, mise en ligne rapide, prix fixe, sans surprise.\n\n` +
+    `PRIX DE DEPART : 590 EUR HT (paiement unique, aucun abonnement obligatoire)\n\n` +
     `Voir les formules : ${BASE_URL}/l?p=${token}\n\n` +
-    `Pour ne plus recevoir nos communications, repondez avec le mot STOP.`
+    `Se desabonner en un clic : ${BASE_URL}/d?p=${token}`
   );
 }
 
@@ -93,7 +135,8 @@ async function envoyerViaResend(to, nom, token) {
       html: emailHtml(nom, token),
       text: emailText(nom, token),
       headers: {
-        "List-Unsubscribe": `<mailto:contact@ecoskybyrms.fr?subject=STOP>`,
+        "List-Unsubscribe": `<${BASE_URL}/d?p=${token}>, <mailto:contact@ecoskybyrms.fr?subject=STOP>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
     }),
   });
