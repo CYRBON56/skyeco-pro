@@ -396,14 +396,14 @@
     <h1>Sans formulaire de devis direct, <em>vous n'existez pas.</em></h1>
     <p class="lead">Skyeco Pro construit votre site vitrine professionnel, avec formulaire de devis et gestion de vos campagnes Google Ads. Mise en ligne rapide, prix fixe, sans surprise.</p>
     <div class="hero-actions">
-      <a class="btn-primary" href="#pricing">Voir la formule</a>
+      <a class="btn-primary" href="#pricing">Voir l'offre</a>
       <a class="btn-ghost" href="#" data-open-rappel>Demandez à être rappelé</a>
     </div>
     <div class="hero-note"><span class="dot"></span>Prix fixe · remise de 460€ jusqu'au 30 septembre</div>
   </div>
 </header>
 
-<div class="strip"><div class="strip-inner">Formule complète <span>·</span> prix fixe <span>·</span> remise -460€ jusqu'au 30 septembre</div></div>
+<div class="strip"><div class="strip-inner">Offre complète <span>·</span> prix fixe <span>·</span> remise -460€ jusqu'au 30 septembre</div></div>
 
 <section class="problem reveal">
   <div class="wrap grid">
@@ -435,7 +435,7 @@
       <div class="process-step">
         <div class="num">2</div>
         <h3>Conception</h3>
-        <p>Votre site est construit avec vos contenus, votre formule et vos couleurs.</p>
+        <p>Votre site est construit avec vos contenus, vos services et vos couleurs.</p>
         <span class="dur">~ quelques jours</span>
       </div>
       <div class="process-step">
@@ -451,8 +451,8 @@
 <section class="pricing reveal" id="pricing">
   <div class="wrap">
     <div class="head">
-      <div class="eyebrow">Notre formule</div>
-      <h2>Une formule complète, un seul objectif : des clients qui vous trouvent</h2>
+      <div class="eyebrow">Notre offre</div>
+      <h2>Une offre complète, un seul objectif : des clients qui vous trouvent</h2>
       <p>Site vitrine, formulaire de devis et gestion de vos campagnes Google Ads inclus. Pas d'abonnement caché.</p>
     </div>
 
@@ -461,12 +461,12 @@
       <div class="plan featured">
         <span class="crosshair tl"></span><span class="crosshair br"></span>
         <span class="badge">★ Offre jusqu'au 30 septembre</span>
-        <span class="tag">Formule 03</span>
+        <span class="tag">Offre compl&egrave;te</span>
         <h3>Site + formulaire, carrousel &amp; vidéo + Google Ads</h3>
         <div class="price-row"><span class="price-barre">1990€</span> <div class="price">1530€<sup>HT</sup></div></div>
         <div class="remise-badge">-460€ jusqu'au 30 septembre</div>
         <div class="ht">paiement unique</div>
-        <div class="addon-note">+ abonnement Google Ads à partir de 150€/mois</div>
+        <div class="addon-note">+ abonnement Google Ads à partir de 150€HT/mois</div>
         <ul>
           <li>Site vitrine professionnel (Accueil, Services, Contact)</li>
           <li>Formulaire de demande de devis en ligne</li>
@@ -476,7 +476,7 @@
           <li>Notification SMS à chaque nouveau contact</li>
         </ul>
         <a class="example" href="https://salesflow-ecosky.vercel.app/estimation.html" target="_blank" rel="noopener">Voir un aperçu ↗</a>
-        <a class="cta" href="commande.html?formule=Formule%2003%20%E2%80%94%20Site%20%2B%20formulaire%2C%20carrousel%20%26%20vid%C3%A9o%20%2B%20Google%20Ads&prix=1530%E2%82%ACHT">Choisir cette formule</a>
+        <a class="cta" href="commande.html?formule=Site%20%2B%20formulaire%2C%20carrousel%20%26%20vid%C3%A9o%20%2B%20Google%20Ads&prix=1530%E2%82%ACHT">Commander</a>
       </div>
 
     </div>
@@ -509,7 +509,7 @@
     <p><strong>Directeur de la publication :</strong> Cyrille Bon</p>
     <p><strong>Hébergement :</strong> Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA</p>
     <p class="legal-note">Skyeco Pro est un service opéré par RMS EcoSky. Les tarifs affichés sont HT et valables à la date de consultation, sans engagement de durée.</p>
-    <a class="back-top" href="#pricing">↑ Retour aux formules</a>
+    <a class="back-top" href="#pricing">↑ Retour en haut</a>
   </div>
 </section>
 
@@ -545,7 +545,7 @@
     btn.addEventListener('click', function(){
       var badge = document.getElementById('formule-selectionnee');
       var lead = document.getElementById('contact-lead');
-      badge.textContent = 'Formule sélectionnée : ' + btn.getAttribute('data-formule');
+      badge.textContent = 'Offre sélectionnée : ' + btn.getAttribute('data-formule');
       badge.hidden = false;
       lead.textContent = "On vous rappelle pour cadrer votre projet sur cette base et démarrer.";
     });
@@ -577,7 +577,7 @@
 
     function openModal(){
       var badge = document.getElementById('formule-selectionnee');
-      formuleActuelle = (!badge.hidden && badge.textContent) ? badge.textContent.replace('Formule sélectionnée : ', '') : '';
+      formuleActuelle = (!badge.hidden && badge.textContent) ? badge.textContent.replace('Offre sélectionnée : ', '') : '';
       overlay.hidden = false;
       stepPhone.hidden = false;
       stepCode.hidden = true;
