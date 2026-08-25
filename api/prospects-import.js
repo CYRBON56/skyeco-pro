@@ -9,7 +9,7 @@
 //
 // Requête attendue : POST
 //   Headers: Authorization: Bearer <ADMIN_TOKEN>
-//   Body: { prospects: [{ nom, ville, departement, telephone, telephone_e164, adresse }, ...] }
+//   Body: { prospects: [{ nom, ville, departement, telephone, telephone_e164, adresse, email }, ...] }
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -39,6 +39,7 @@ export default async function handler(req, res) {
         telephone: p.telephone || "",
         telephone_e164: p.telephone_e164,
         adresse: p.adresse || "",
+        email: p.email || null,
       });
     });
   const rows = Array.from(parPhone.values());
