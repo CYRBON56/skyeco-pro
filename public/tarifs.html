@@ -230,7 +230,7 @@
   section.pricing h2{ font-size:2rem; font-weight:700; color:var(--ink); margin-bottom:12px; text-transform:none; letter-spacing:normal; }
   section.pricing .head p{ color:var(--concrete); text-transform:none; letter-spacing:normal; font-family:'Work Sans',sans-serif; }
 
-  .plans{ display:grid; grid-template-columns:repeat(3, 1fr); gap:24px; }
+  .plans{ display:grid; grid-template-columns:1fr; max-width:420px; margin:0 auto; gap:24px; }
   @media (max-width:900px){ .plans{ grid-template-columns:1fr; max-width:420px; margin:0 auto; } }
 
   .plan{
@@ -260,6 +260,14 @@
   .plan .price-row::before{ content:"◤"; color:var(--line); font-size:0.7rem; transform:rotate(0deg); }
   .plan .price{ font-size:2.5rem; font-weight:700; color:var(--steel-dark); }
   .plan .price sup{ font-size:1rem; font-weight:500; }
+  .plan .price-barre{ font-size:1.3rem; font-weight:500; color:var(--concrete); text-decoration:line-through; text-transform:none; }
+  .plan .remise-badge{
+    display:inline-block; margin-top:6px; margin-bottom:4px;
+    background:var(--signal); color:#fff;
+    font-family:'JetBrains Mono',monospace; font-size:0.72rem; font-weight:600;
+    letter-spacing:0.04em; text-transform:uppercase;
+    padding:5px 10px; border-radius:2px;
+  }
   .plan .ht{ color:var(--concrete); font-size:0.8rem; text-transform:none; letter-spacing:normal; font-family:'JetBrains Mono',monospace; margin-bottom:22px; }
   .plan .addon-note{
     font-size:0.8rem; color:var(--steel-dark); font-family:'Work Sans',sans-serif;
@@ -386,16 +394,16 @@
     <span class="crosshair tl"></span><span class="crosshair tr"></span>
     <div class="eyebrow">Site vitrine pour artisans &amp; entreprises du BTP <span class="mono">— réf. skyeco/2026</span></div>
     <h1>Vos clients vous cherchent sur Google. <em>Donnez-leur une raison de vous trouver.</em></h1>
-    <p class="lead">Skyeco Pro construit votre site vitrine professionnel, avec ou sans formulaire de devis, avec ou sans gestion de vos campagnes Google Ads. Mise en ligne rapide, prix fixes, sans surprise.</p>
+    <p class="lead">Skyeco Pro construit votre site vitrine professionnel, avec formulaire de devis et gestion de vos campagnes Google Ads. Mise en ligne rapide, prix fixe, sans surprise.</p>
     <div class="hero-actions">
-      <a class="btn-primary" href="#pricing">Voir les formules</a>
+      <a class="btn-primary" href="#pricing">Voir la formule</a>
       <a class="btn-ghost" href="#" data-open-rappel>Demandez à être rappelé</a>
     </div>
-    <div class="hero-note"><span class="dot"></span>3 formules à prix fixe · aucun abonnement obligatoire</div>
+    <div class="hero-note"><span class="dot"></span>Prix fixe · remise de 400€ jusqu'au 30 septembre</div>
   </div>
 </header>
 
-<div class="strip"><div class="strip-inner">3 formules <span>·</span> prix fixe <span>·</span> sans engagement de durée</div></div>
+<div class="strip"><div class="strip-inner">Formule complète <span>·</span> prix fixe <span>·</span> remise -400€ jusqu'au 30 septembre</div></div>
 
 <section class="problem reveal">
   <div class="wrap grid">
@@ -405,8 +413,8 @@
       <p>Vos concurrents avec un site captent les demandes de devis pendant que les vôtres passent par le bouche-à-oreille. Un site vitrine, c'est votre chantier le plus rentable : il travaille pour vous 24h/24, sans lever une pelle.</p>
     </div>
     <div class="stat-block">
-      <div class="num">590€</div>
-      <div class="label">HT — prix de départ pour un site vitrine professionnel, en ligne rapidement</div>
+      <div class="num">1590€</div>
+      <div class="label">HT — prix remisé jusqu'au 30 septembre (au lieu de 1990€), site complet avec formulaire &amp; Google Ads</div>
     </div>
   </div>
 </section>
@@ -443,56 +451,26 @@
 <section class="pricing reveal" id="pricing">
   <div class="wrap">
     <div class="head">
-      <div class="eyebrow">Nos formules</div>
-      <h2>Trois formules, un seul objectif : des clients qui vous trouvent</h2>
-      <p>Chaque formule inclut la conception, la mise en ligne et un site adapté mobile. Pas d'abonnement caché.</p>
+      <div class="eyebrow">Notre formule</div>
+      <h2>Une formule complète, un seul objectif : des clients qui vous trouvent</h2>
+      <p>Site vitrine, formulaire de devis et gestion de vos campagnes Google Ads inclus. Pas d'abonnement caché.</p>
     </div>
 
     <div class="plans">
 
-      <div class="plan">
-        <span class="crosshair tl"></span><span class="crosshair br"></span>
-        <span class="tag">Formule 01</span>
-        <h3>Site vitrine</h3>
-        <div class="price-row"><div class="price">590€<sup>HT</sup></div></div>
-        <div class="ht">paiement unique</div>
-        <ul>
-          <li>Site vitrine professionnel (Accueil, Services, Contact)</li>
-          <li>Design adapté à votre activité</li>
-          <li>Compatible mobile &amp; tablette</li>
-          <li>Mise en ligne incluse</li>
-        </ul>
-        <a class="example" href="https://www.ecosky.fr" target="_blank" rel="noopener">Voir un aperçu ↗</a>
-        <a class="cta" href="commande.html?formule=Formule%2001%20%E2%80%94%20Site%20vitrine&prix=590%E2%82%ACHT">Choisir cette formule</a>
-      </div>
-
       <div class="plan featured">
         <span class="crosshair tl"></span><span class="crosshair br"></span>
-        <span class="badge">★ La plus choisie</span>
-        <span class="tag">Formule 02</span>
-        <h3>Site vitrine + formulaire avec carrousel d'image</h3>
-        <div class="price-row"><div class="price">990€<sup>HT</sup></div></div>
-        <div class="ht">paiement unique</div>
-        <ul>
-          <li>Tout le contenu de la Formule 01</li>
-          <li>Formulaire de demande de devis en ligne</li>
-          <li>Notification immédiate de chaque demande</li>
-          <li>Page dédiée à vos réalisations</li>
-        </ul>
-        <a class="example" href="https://salesflow-ecosky.vercel.app/estimation.html" target="_blank" rel="noopener">Voir un aperçu ↗</a>
-        <a class="cta" href="commande.html?formule=Formule%2002%20%E2%80%94%20Site%20vitrine%20%2B%20formulaire%20avec%20carrousel%20d%27image&prix=990%E2%82%ACHT">Choisir cette formule</a>
-      </div>
-
-      <div class="plan">
-        <span class="crosshair tl"></span><span class="crosshair br"></span>
+        <span class="badge">★ Offre jusqu'au 30 septembre</span>
         <span class="tag">Formule 03</span>
         <h3>Site + formulaire, carrousel &amp; vidéo + Google Ads</h3>
-        <div class="price-row"><div class="price">1590€<sup>HT</sup></div></div>
+        <div class="price-row"><span class="price-barre">1990€</span> <div class="price">1590€<sup>HT</sup></div></div>
+        <div class="remise-badge">-400€ jusqu'au 30 septembre</div>
         <div class="ht">paiement unique</div>
         <div class="addon-note">+ abonnement Google Ads à partir de 150€/mois</div>
         <ul>
-          <li>Tout le contenu de la Formule 02</li>
-          <li>Catalogue de vos réalisations téléchargeable</li>
+          <li>Site vitrine professionnel (Accueil, Services, Contact)</li>
+          <li>Formulaire de demande de devis en ligne</li>
+          <li>Carrousel d'images et catalogue de vos réalisations</li>
           <li>Gestion de vos campagnes Google Ads</li>
           <li>Dashboard de suivi de vos demandes</li>
           <li>Notification SMS à chaque nouveau contact</li>
