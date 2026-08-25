@@ -14,6 +14,9 @@
 //   alter table prospects_sms add column if not exists email text;
 //   alter table prospects_sms add column if not exists email_envoye boolean default false;
 //   alter table prospects_sms add column if not exists date_envoi_email timestamptz;
+//   alter table prospects_sms add column if not exists email_ouvert boolean default false;
+//   alter table prospects_sms add column if not exists date_ouverture timestamptz;
+//   alter table prospects_sms add column if not exists nb_ouvertures integer default 0;
 
 const FROM = "Skyeco Pro <contact@ecoskybyrms.fr>";
 const BASE_URL = "https://skyeco-pro.vercel.app";
@@ -55,6 +58,7 @@ function emailHtml(nom, token) {
                 Vous recevez cet email car votre entreprise a &eacute;t&eacute; identifi&eacute;e via des donn&eacute;es publiques (annuaire professionnel).
                 Pour ne plus recevoir nos communications, r&eacute;pondez &agrave; cet email avec le mot STOP.
               </p>
+              <img src="${BASE_URL}/o?p=${token}" width="1" height="1" alt="" style="display:block;border:0;" />
             </td>
           </tr>
         </table>
