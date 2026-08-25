@@ -53,8 +53,8 @@ function emailHtml(nom, token) {
                 Formulaire de devis &amp; Google Ads pour le BTP
               </p>
               <p style="font-size:26px;line-height:32px;font-weight:800;color:#ffffff;margin:0 0 22px 0;">
-                Votre site existe.<br>
-                <span style="color:#DE5A2C;">Mais g&eacute;n&egrave;re-t-il vraiment des demandes de devis ?</span>
+                Sans formulaire de devis direct,<br>
+                <span style="color:#DE5A2C;">vous n'existez pas.</span>
               </p>
               <p style="font-size:14px;line-height:21px;color:#c3ccd6;margin:0;">
                 Bonjour${nom ? " " + nom : ""}, un site vitrine seul ne suffit pas &mdash; sans formulaire de devis ni campagne Google Ads,
@@ -70,12 +70,14 @@ function emailHtml(nom, token) {
               <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#182742" style="border:1px solid #2a3a54;">
                 <tr>
                   <td align="center" style="padding:22px 20px 10px 20px;">
-                    <p style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#DE5A2C;font-weight:bold;margin:0 0 8px 0;">Formule 03 &mdash; La plus compl&egrave;te</p>
+                    <p style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#DE5A2C;font-weight:bold;margin:0 0 8px 0;">Offre jusqu'au 30 septembre</p>
                     <p style="font-size:15px;font-weight:700;color:#ffffff;margin:0 0 14px 0;">Site + formulaire, carrousel &amp; vid&eacute;o + Google Ads</p>
+                    <p style="font-size:15px;font-weight:600;color:#6b7c93;text-decoration:line-through;margin:0 0 2px 0;">1990&euro;</p>
                     <p style="font-size:40px;line-height:40px;font-weight:800;color:#ffffff;margin:0;">
-                      1590&euro;<span style="font-size:14px;font-weight:600;color:#8fa0b8;">&nbsp;HT</span>
+                      1530&euro;<span style="font-size:14px;font-weight:600;color:#8fa0b8;">&nbsp;HT</span>
                     </p>
-                    <p style="font-size:11px;color:#8fa0b8;margin:8px 0 0 0;">paiement unique + abonnement Google Ads d&egrave;s 150&euro;/mois</p>
+                    <p style="font-size:11px;color:#DE5A2C;font-weight:bold;margin:8px 0 0 0;">-460&euro; jusqu'au 30 septembre</p>
+                    <p style="font-size:11px;color:#8fa0b8;margin:6px 0 0 0;">paiement unique + abonnement Google Ads d&egrave;s 150&euro;/mois</p>
                   </td>
                 </tr>
                 <tr>
@@ -138,11 +140,12 @@ function emailHtml(nom, token) {
 function emailText(nom, token) {
   return (
     `SKYECO PRO — Formulaire de devis et Google Ads pour le BTP\n\n` +
-    `Votre site existe. Mais genere-t-il vraiment des demandes de devis ?\n\n` +
+    `Sans formulaire de devis direct, vous n'existez pas.\n\n` +
     `Bonjour${nom ? " " + nom : ""}, un site vitrine seul ne suffit pas — sans formulaire de devis ni campagne Google Ads, ` +
     `vos clients potentiels vous trouvent difficilement et repartent sans laisser leurs coordonnees. ` +
     `Skyeco Pro ajoute les deux : un formulaire qui convertit vos visiteurs en demandes, et des campagnes Google Ads gerees pour vous.\n\n` +
-    `FORMULE 03 — Site + formulaire, carrousel & video + Google Ads : 1590 EUR HT\n` +
+    `FORMULE 03 — Site + formulaire, carrousel & video + Google Ads\n` +
+    `1990 EUR (barre) -> 1530 EUR HT (-460 EUR jusqu'au 30 septembre)\n` +
     `(paiement unique + abonnement Google Ads des 150 EUR/mois)\n` +
     `- Formulaire de demande de devis en ligne\n` +
     `- Notification SMS a chaque nouveau contact\n` +
@@ -164,7 +167,7 @@ async function envoyerViaResend(to, nom, token) {
     body: JSON.stringify({
       from: FROM,
       to: [to],
-      subject: "Votre site vous rapporte-t-il des devis ?",
+      subject: "Sans formulaire de devis, vous n'existez pas",
       html: emailHtml(nom, token),
       text: emailText(nom, token),
       headers: {
