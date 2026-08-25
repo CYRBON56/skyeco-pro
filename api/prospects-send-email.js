@@ -46,15 +46,16 @@ function emailHtml(nom, token) {
           <tr>
             <td style="padding:40px 32px 28px 32px;font-family:Arial,Helvetica,sans-serif;">
               <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#DE5A2C;font-weight:bold;margin:0 0 14px 0;">
-                Site vitrine pour artisans &amp; entreprises du BTP
+                Formulaire de devis &amp; Google Ads pour le BTP
               </p>
               <p style="font-size:26px;line-height:32px;font-weight:800;color:#ffffff;margin:0 0 22px 0;">
-                Vos clients vous cherchent sur Google.<br>
-                <span style="color:#DE5A2C;">Donnez-leur une raison de vous trouver.</span>
+                Votre site existe.<br>
+                <span style="color:#DE5A2C;">Mais g&eacute;n&egrave;re-t-il vraiment des demandes de devis ?</span>
               </p>
               <p style="font-size:14px;line-height:21px;color:#c3ccd6;margin:0;">
-                Bonjour${nom ? " " + nom : ""}, Skyeco Pro cr&eacute;e votre site vitrine professionnel,
-                mise en ligne rapide, prix fixe, sans surprise.
+                Bonjour${nom ? " " + nom : ""}, un site vitrine seul ne suffit pas &mdash; sans formulaire de devis ni campagne Google Ads,
+                vos clients potentiels vous trouvent difficilement et repartent sans laisser leurs coordonn&eacute;es.
+                Skyeco Pro ajoute les deux : un formulaire qui convertit vos visiteurs en demandes, et des campagnes Google Ads g&eacute;r&eacute;es pour vous.
               </p>
             </td>
           </tr>
@@ -64,12 +65,23 @@ function emailHtml(nom, token) {
             <td style="padding:0 32px 28px 32px;font-family:Arial,Helvetica,sans-serif;">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#182742" style="border:1px solid #2a3a54;">
                 <tr>
-                  <td align="center" style="padding:26px 20px;">
-                    <p style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8fa0b8;margin:0 0 8px 0;">Prix de d&eacute;part</p>
-                    <p style="font-size:44px;line-height:44px;font-weight:800;color:#ffffff;margin:0;">
-                      590&euro;<span style="font-size:16px;font-weight:600;color:#8fa0b8;">&nbsp;HT</span>
+                  <td align="center" style="padding:22px 20px 10px 20px;">
+                    <p style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#DE5A2C;font-weight:bold;margin:0 0 8px 0;">Formule 03 &mdash; La plus compl&egrave;te</p>
+                    <p style="font-size:15px;font-weight:700;color:#ffffff;margin:0 0 14px 0;">Site + formulaire, carrousel &amp; vid&eacute;o + Google Ads</p>
+                    <p style="font-size:40px;line-height:40px;font-weight:800;color:#ffffff;margin:0;">
+                      1590&euro;<span style="font-size:14px;font-weight:600;color:#8fa0b8;">&nbsp;HT</span>
                     </p>
-                    <p style="font-size:12px;color:#8fa0b8;margin:8px 0 0 0;">paiement unique &middot; aucun abonnement obligatoire</p>
+                    <p style="font-size:11px;color:#8fa0b8;margin:8px 0 0 0;">paiement unique + abonnement Google Ads d&egrave;s 150&euro;/mois</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 20px 20px 20px;border-top:1px solid #223252;">
+                    <p style="font-size:12px;line-height:20px;color:#c3ccd6;margin:0;">
+                      &#10003;&nbsp;Formulaire de demande de devis en ligne<br>
+                      &#10003;&nbsp;Notification SMS &agrave; chaque nouveau contact<br>
+                      &#10003;&nbsp;Gestion de vos campagnes Google Ads<br>
+                      &#10003;&nbsp;Dashboard de suivi de vos demandes
+                    </p>
                   </td>
                 </tr>
               </table>
@@ -83,7 +95,7 @@ function emailHtml(nom, token) {
                 <tr>
                   <td bgcolor="#DE5A2C" style="border-radius:4px;">
                     <a href="${BASE_URL}/l?p=${token}" style="display:block;padding:15px 36px;font-family:Arial,Helvetica,sans-serif;font-size:14px;letter-spacing:0.5px;text-transform:uppercase;color:#ffffff;text-decoration:none;font-weight:bold;">
-                      Voir les formules
+                      Voir la formule compl&egrave;te
                     </a>
                   </td>
                 </tr>
@@ -112,11 +124,18 @@ function emailHtml(nom, token) {
 
 function emailText(nom, token) {
   return (
-    `SKYECO PRO — Site vitrine pour artisans et entreprises du BTP\n\n` +
-    `Vos clients vous cherchent sur Google. Donnez-leur une raison de vous trouver.\n\n` +
-    `Bonjour${nom ? " " + nom : ""}, Skyeco Pro cree votre site vitrine professionnel, mise en ligne rapide, prix fixe, sans surprise.\n\n` +
-    `PRIX DE DEPART : 590 EUR HT (paiement unique, aucun abonnement obligatoire)\n\n` +
-    `Voir les formules : ${BASE_URL}/l?p=${token}\n\n` +
+    `SKYECO PRO — Formulaire de devis et Google Ads pour le BTP\n\n` +
+    `Votre site existe. Mais genere-t-il vraiment des demandes de devis ?\n\n` +
+    `Bonjour${nom ? " " + nom : ""}, un site vitrine seul ne suffit pas — sans formulaire de devis ni campagne Google Ads, ` +
+    `vos clients potentiels vous trouvent difficilement et repartent sans laisser leurs coordonnees. ` +
+    `Skyeco Pro ajoute les deux : un formulaire qui convertit vos visiteurs en demandes, et des campagnes Google Ads gerees pour vous.\n\n` +
+    `FORMULE 03 — Site + formulaire, carrousel & video + Google Ads : 1590 EUR HT\n` +
+    `(paiement unique + abonnement Google Ads des 150 EUR/mois)\n` +
+    `- Formulaire de demande de devis en ligne\n` +
+    `- Notification SMS a chaque nouveau contact\n` +
+    `- Gestion de vos campagnes Google Ads\n` +
+    `- Dashboard de suivi de vos demandes\n\n` +
+    `Voir la formule complete : ${BASE_URL}/l?p=${token}\n\n` +
     `Se desabonner en un clic : ${BASE_URL}/d?p=${token}`
   );
 }
@@ -131,7 +150,7 @@ async function envoyerViaResend(to, nom, token) {
     body: JSON.stringify({
       from: FROM,
       to: [to],
-      subject: "Votre entreprise, enfin visible sur Google",
+      subject: "Votre site vous rapporte-t-il des devis ?",
       html: emailHtml(nom, token),
       text: emailText(nom, token),
       headers: {
