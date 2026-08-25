@@ -5,7 +5,7 @@
 //
 // Requête attendue : POST
 //   Headers: Authorization: Bearer <ADMIN_TOKEN>
-//   Body: { id, nom, ville, departement, telephone, adresse }
+//   Body: { id, nom, ville, departement, telephone, adresse, email }
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ success: false, error: "Non autorisé." });
   }
 
-  const { id, nom, ville, departement, telephone, adresse } = req.body || {};
+  const { id, nom, ville, departement, telephone, adresse, email } = req.body || {};
   if (!id) {
     return res.status(400).json({ success: false, error: "Identifiant manquant." });
   }
@@ -36,6 +36,7 @@ export default async function handler(req, res) {
     ville: ville || "",
     departement: departement || "",
     adresse: adresse || "",
+    email: email || null,
   };
   if (telephone) {
     patch.telephone = telephone;
