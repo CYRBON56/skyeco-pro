@@ -28,6 +28,10 @@ function emailHtml(nom, token) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <style>
+    @keyframes clignote { 0%, 100% { opacity:1; } 50% { opacity:0.25; } }
+    .exemple-clignote { animation: clignote 1.1s ease-in-out infinite; }
+  </style>
 </head>
 <body style="margin:0;padding:0;background-color:#f0ece2;">
   <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f0ece2">
@@ -90,7 +94,7 @@ function emailHtml(nom, token) {
 
           <!-- CTA -->
           <tr>
-            <td align="center" style="padding:0 32px 40px 32px;">
+            <td align="center" style="padding:0 32px 24px 32px;">
               <table cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td bgcolor="#DE5A2C" style="border-radius:4px;">
@@ -100,6 +104,15 @@ function emailHtml(nom, token) {
                   </td>
                 </tr>
               </table>
+            </td>
+          </tr>
+
+          <!-- Voir un exemple (gros, clignotant) -->
+          <tr>
+            <td align="center" style="padding:0 32px 40px 32px;">
+              <a href="https://salesflow-ecosky.vercel.app/estimation.html" class="exemple-clignote" style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:800;color:#DE5A2C;text-decoration:underline;">
+                Voir un exemple &rarr;
+              </a>
             </td>
           </tr>
 
@@ -135,7 +148,8 @@ function emailText(nom, token) {
     `- Notification SMS a chaque nouveau contact\n` +
     `- Gestion de vos campagnes Google Ads\n` +
     `- Dashboard de suivi de vos demandes\n\n` +
-    `Voir la formule complete : ${BASE_URL}/l?p=${token}\n\n` +
+    `Voir la formule complete : ${BASE_URL}/l?p=${token}\n` +
+    `Voir un exemple : https://salesflow-ecosky.vercel.app/estimation.html\n\n` +
     `Se desabonner en un clic : ${BASE_URL}/d?p=${token}`
   );
 }
