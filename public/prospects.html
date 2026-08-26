@@ -117,9 +117,11 @@
 
       <div class="stats-bar" id="stats-bar"></div>
 
-      <div class="filtre-tabs" style="display:flex;gap:8px;margin:14px 0 10px 0;">
+      <div class="filtre-tabs" style="display:flex;gap:8px;margin:14px 0 10px 0;flex-wrap:wrap;">
         <button type="button" class="btn outline filtre-tab" data-filtre="attente" style="padding:8px 16px;font-size:0.85rem;">En attente d'envoi</button>
         <button type="button" class="btn outline filtre-tab" data-filtre="envoyes" style="padding:8px 16px;font-size:0.85rem;">Déjà envoyés (email)</button>
+        <button type="button" class="btn outline filtre-tab" data-filtre="cliqueActif" style="padding:8px 16px;font-size:0.85rem;">Cliqué, resté actif</button>
+        <button type="button" class="btn outline filtre-tab" data-filtre="cliqueStop" style="padding:8px 16px;font-size:0.85rem;">Cliqué puis Stop</button>
         <button type="button" class="btn outline filtre-tab" data-filtre="tous" style="padding:8px 16px;font-size:0.85rem;">Tous</button>
       </div>
 
@@ -178,6 +180,8 @@
     var envoyes = prospects.filter(function(p){ return p.sms_envoye && !p.opt_out; }).length;
     var attente = total - envoyes - optout;
     var cliques = prospects.filter(function(p){ return p.lien_clique; }).length;
+    var cliquesActifs = prospects.filter(function(p){ return p.lien_clique && !p.opt_out; }).length;
+    var cliquesStop = prospects.filter(function(p){ return p.lien_clique && p.opt_out; }).length;
     var emailsEnvoyes = prospects.filter(function(p){ return p.email_envoye; }).length;
     var avecEmail = prospects.filter(function(p){ return p.email; }).length;
     var emailsOuverts = prospects.filter(function(p){ return p.email_ouvert; }).length;
@@ -188,7 +192,9 @@
       '<div class="stat-box"><div class="num">' + emailsOuverts + '</div><div class="lbl">Emails ouverts</div></div>' +
       '<div class="stat-box"><div class="num">' + avecEmail + '</div><div class="lbl">Avec email connu</div></div>' +
       '<div class="stat-box"><div class="num">' + attente + '</div><div class="lbl">En attente</div></div>' +
-      '<div class="stat-box"><div class="num">' + cliques + '</div><div class="lbl">Liens cliqués</div></div>' +
+      '<div class="stat-box"><div class="num">' + cliques + '</div><div class="lbl">Liens cliqués</div>' +
+        '<div style="font-size:0.68rem;color:#5a6b82;margin-top:4px;">' + cliquesActifs + ' actifs · ' + cliquesStop + ' désabonnés ensuite</div>' +
+      '</div>' +
       '<div class="stat-box optout"><div class="num">' + optout + '</div><div class="lbl">Désabonnés (STOP)</div></div>';
   }
 
@@ -201,17 +207,21 @@
     var labels = {
       attente: 'En attente d\'envoi',
       envoyes: 'Déjà envoyés (email)',
+      cliqueActif: 'Cliqué, resté actif',
+      cliqueStop: 'Cliqué puis Stop',
       tous: 'Tous'
     };
     var enAttenteN = prospects.filter(function(p){ return !p.email_envoye; }).length;
     var envoyesN = prospects.filter(function(p){ return !!p.email_envoye; }).length;
-    var compteurs = { attente: enAttenteN, envoyes: envoyesN, tous: prospects.length };
+    var cliqueActifN = prospects.filter(function(p){ return p.lien_clique && !p.opt_out; }).length;
+    var cliqueStopN = prospects.filter(function(p){ return p.lien_clique && p.opt_out; }).length;
+    var compteurs = { attente: enAttenteN, envoyes: envoyesN, cliqueActif: cliqueActifN, cliqueStop: cliqueStopN, tous: prospects.length };
     document.querySelectorAll('.filtre-tab').forEach(function(btn){
       var f = btn.dataset.filtre;
       btn.textContent = labels[f] + ' (' + compteurs[f] + ')';
       if (f === filtreVue) {
         btn.classList.remove('outline');
-        btn.style.background = '#1a56db';
+        btn.style.background = (f === 'cliqueStop') ? '#991b1b' : '#1a56db';
         btn.style.color = '#fff';
       } else {
         btn.classList.add('outline');
@@ -238,12 +248,17 @@
       if (estContactTest(p)) return true; // le contact test reste visible dans tous les onglets
       if (filtreVue === 'attente') return !p.email_envoye;
       if (filtreVue === 'envoyes') return !!p.email_envoye;
+      if (filtreVue === 'cliqueActif') return !!p.lien_clique && !p.opt_out;
+      if (filtreVue === 'cliqueStop') return !!p.lien_clique && !!p.opt_out;
       return true; // 'tous'
     });
 
     if (prospectsVue.length === 0) {
       container.innerHTML = '<p class="empty">' +
-        (filtreVue === 'envoyes' ? 'Aucun email envoyé pour le moment.' : 'Aucun prospect dans cette vue.') +
+        (filtreVue === 'envoyes' ? 'Aucun email envoyé pour le moment.' :
+         filtreVue === 'cliqueActif' ? 'Aucun prospect ayant cliqué sans se désabonner pour le moment.' :
+         filtreVue === 'cliqueStop' ? 'Aucun prospect ayant cliqué puis stoppé pour le moment.' :
+         'Aucun prospect dans cette vue.') +
         '</p>';
       return;
     }
@@ -287,11 +302,11 @@
         nomAffiche = '<span style="display:inline-block;background:#DE5A2C;color:#fff;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:3px;margin-right:8px;vertical-align:middle;">🧪 TEST</span>' + nomAffiche;
       }
       var dejaEnvoye = !!p.email_envoye;
-      var caseDesactivee = dejaEnvoye && filtreVue !== 'attente';
-      return '<tr' + (estTest ? ' style="background:#fff7e6;"' : (dejaEnvoye ? ' style="opacity:0.65;"' : '')) + '>' +
+      var caseDesactivee = (dejaEnvoye && filtreVue !== 'attente') || !!p.opt_out;
+      return '<tr' + (estTest ? ' style="background:#fff7e6;"' : (p.opt_out ? ' style="opacity:0.5;"' : (dejaEnvoye ? ' style="opacity:0.65;"' : ''))) + '>' +
         '<td><input type="checkbox" class="row-check" data-id="' + p.id + '"' +
           (estTest ? ' data-test="1"' : '') +
-          (caseDesactivee ? ' disabled title="Email déjà envoyé — repassez sur l\'onglet En attente pour resélectionner volontairement."' : '') +
+          (caseDesactivee ? ' disabled title="' + (p.opt_out ? 'Prospect désabonné (STOP) — jamais recontacté.' : 'Email déjà envoyé — repassez sur l\'onglet En attente pour resélectionner volontairement.') + '"' : '') +
           '></td>' +
         '<td>' + nomAffiche + '</td>' +
         '<td>' + escapeHtml(p.ville || '') + '</td>' +
