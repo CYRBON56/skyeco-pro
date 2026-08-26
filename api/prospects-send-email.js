@@ -198,9 +198,39 @@ async function envoyerViaResend(to, nom, token) {
   });
   if (!resp.ok) {
     const detail = await resp.text();
-    throw new Error(detail);
+    const err = new Error(detail);
+    err.status = resp.status;
+    throw err;
   }
   return resp.json();
+}
+
+function dormir(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Resend limite le compte à quelques requêtes par seconde (429 "rate_limit_exceeded"
+// si on envoie trop vite en boucle serrée) — ça, on retente avec un délai croissant.
+// Le quota journalier (429 "daily_quota_exceeded") en revanche ne se résout jamais en
+// retentant : c'est une limite de compte pour la journée, il faut arrêter l'envoi.
+class QuotaJournalierAtteint extends Error {}
+
+async function envoyerAvecRetry(to, nom, token, tentativesMax = 4) {
+  for (let tentative = 1; tentative <= tentativesMax; tentative++) {
+    try {
+      return await envoyerViaResend(to, nom, token);
+    } catch (err) {
+      if (/daily_quota_exceeded/i.test(err.message || "")) {
+        throw new QuotaJournalierAtteint(err.message);
+      }
+      const estRateLimit = err.status === 429 || /rate.?limit/i.test(err.message || "");
+      if (estRateLimit && tentative < tentativesMax) {
+        await dormir(800 * tentative); // 800ms, puis 1.6s, puis 2.4s...
+        continue;
+      }
+      throw err;
+    }
+  }
 }
 
 function genererToken() {
@@ -278,9 +308,14 @@ export default async function handler(req, res) {
     }
 
     const results = [];
+    let quotaAtteint = false;
     for (const p of prospects) {
+      if (quotaAtteint) {
+        results.push({ id: p.id, success: false, error: "Non tenté : quota journalier Resend atteint." });
+        continue;
+      }
       try {
-        await envoyerViaResend(p.email, p.nom, p.clic_token);
+        await envoyerAvecRetry(p.email, p.nom, p.clic_token);
         await fetch(`${process.env.SUPABASE_URL}/rest/v1/prospects_sms?id=eq.${encodeURIComponent(p.id)}`, {
           method: "PATCH",
           headers: { ...supaHeaders, Prefer: "return=minimal" },
@@ -288,9 +323,16 @@ export default async function handler(req, res) {
         });
         results.push({ id: p.id, success: true });
       } catch (err) {
+        if (err instanceof QuotaJournalierAtteint) {
+          quotaAtteint = true;
+          console.error("Quota journalier Resend atteint — arrêt de l'envoi.");
+          results.push({ id: p.id, success: false, error: "Quota journalier Resend atteint." });
+          continue;
+        }
         console.error("Email échoué pour", p.email, err.message);
         results.push({ id: p.id, success: false, error: err.message });
       }
+      await dormir(350); // throttle ~2,8 envois/seconde, sous la limite Resend par défaut
     }
 
     return res.status(200).json({
@@ -299,6 +341,7 @@ export default async function handler(req, res) {
       echoues: results.filter((r) => !r.success).length,
       ignoresOptOut: ignoresOptOut.length,
       ignoresSansEmail: sansEmail.length,
+      quotaAtteint: quotaAtteint,
       details: results,
     });
   } catch (err) {
