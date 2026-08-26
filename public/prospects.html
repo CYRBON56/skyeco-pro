@@ -117,9 +117,7 @@
 
       <div class="stats-bar" id="stats-bar"></div>
 
-      <div id="table-container"><p class="empty">Chargement…</p></div>
-
-      <div class="toolbar">
+      <div class="toolbar" style="position:sticky;top:0;z-index:10;background:#fff;padding:10px 0;">
         <span class="left" id="selection-count">0 sélectionné(s)</span>
         <div>
           <input type="number" id="select-n-input" min="1" step="1" placeholder="Ex: 1000" style="width:90px;padding:9px 10px;border:1px solid var(--line, #ccc);border-radius:4px;font-family:inherit;margin-right:4px;">
@@ -132,6 +130,8 @@
         </div>
       </div>
       <p class="send-status" id="send-status"></p>
+
+      <div id="table-container"><p class="empty">Chargement…</p></div>
     </div>
 
   </div>
