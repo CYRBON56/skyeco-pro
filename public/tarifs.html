@@ -412,7 +412,8 @@
   <div class="wrap">
     <span class="crosshair tl"></span><span class="crosshair tr"></span>
     <div>
-      <div class="eyebrow">Site vitrine pour artisans &amp; entreprises du BTP <span class="mono">— réf. skyeco/2026</span></div>
+      <div class="eyebrow">Formulaire vitrine pour artisans &amp; entreprises du BTP <span class="mono">— réf. skyeco/2026</span></div>
+      <p style="font-family:'Work Sans', sans-serif; font-size:2rem; font-weight:900; color:var(--signal); letter-spacing:1px; text-transform:uppercase; margin:0 0 12px;">Formulaire vitrine</p>
       <h1>Sans formulaire vitrine de devis direct, <em>vous n'existez pas.</em></h1>
       <p class="lead">Skyeco Pro ajoute un formulaire vitrine de devis à votre site existant et gère vos campagnes Google Ads. Mise en place rapide, prix fixe, sans surprise.</p>
       <p style="font-family:'Work Sans', sans-serif; font-size:0.9rem;line-height:1.5;color:#a8b0c0;border-left:2px solid var(--signal);padding-left:14px;margin:0 0 28px;max-width:560px;">
@@ -425,7 +426,7 @@
       <div class="hero-note"><span class="dot"></span>Prix fixe · remise de 540€ jusqu'au 30 septembre</div>
     </div>
     <div class="hero-visual">
-      <img src="https://heviivnlswohnrzcguxv.supabase.co/storage/v1/object/public/ecosky.fr/21.png" alt="Exemple de site vitrine avec formulaire vitrine réalisé par Skyeco Pro">
+      <img src="https://heviivnlswohnrzcguxv.supabase.co/storage/v1/object/public/ecosky.fr/21.png" alt="Exemple de formulaire vitrine réalisé par Skyeco Pro">
       <a class="btn-primary" href="https://salesflow-ecosky.vercel.app/estimation.html" target="_blank" rel="noopener">Voir cet exemple de formulaire vitrine</a>
     </div>
   </div>
@@ -442,7 +443,7 @@
     </div>
     <div class="stat-block">
       <div class="num">990€</div>
-      <div class="label">HT — prix remisé jusqu'au 30 septembre (au lieu de 1530€), site complet avec formulaire vitrine &amp; Google Ads</div>
+      <div class="label">HT — prix remisé jusqu'au 30 septembre (au lieu de 1530€), formulaire vitrine complet avec Google Ads</div>
     </div>
   </div>
 </section>
@@ -504,9 +505,9 @@
         </ul>
         <label class="option-catalogue">
           <input type="checkbox" id="option-site">
-          <span>Pas encore de site ? Ajoutez un site vitrine complet — <strong>590€HT</strong></span>
+          <span>Pas encore de site ? Ajoutez un formulaire vitrine complet — <strong>590€HT</strong></span>
         </label>
-        <a class="example" href="https://www.ecosky.fr" target="_blank" rel="noopener" style="font-size:0.95rem;margin-bottom:10px;">Exemple de site vitrine ↗</a>
+        <a class="example" href="https://www.ecosky.fr" target="_blank" rel="noopener" style="font-size:0.95rem;margin-bottom:10px;">Exemple de formulaire vitrine ↗</a>
         <label class="option-catalogue">
           <input type="checkbox" id="option-catalogue">
           <span>+ Catalogue 8 pages de vos réalisations — <strong>190€HT</strong></span>
@@ -522,7 +523,7 @@
 
 <section class="contact reveal" id="contact">
   <div class="wrap">
-    <h2>Un site en ligne, sans y passer vos soirées.</h2>
+    <h2>Un formulaire vitrine en ligne, sans y passer vos soirées.</h2>
     <p id="contact-lead">Laissez-nous vos coordonnées : on vous rappelle pour cadrer votre projet et démarrer.</p>
     <div id="formule-selectionnee" class="formule-badge" hidden></div>
     <a class="btn-primary" href="#" data-open-rappel>Demandez à être rappelé</a>
@@ -532,7 +533,7 @@
 
 <footer>
   <div class="wrap footer-wrap">
-    <span>Skyeco Pro — un site professionnel, pensé pour les artisans et entreprises du BTP.</span>
+    <span>Skyeco Pro — un formulaire vitrine professionnel, pensé pour les artisans et entreprises du BTP.</span>
     <a href="#mentions-legales">Mentions légales</a>
   </div>
 </footer>
@@ -591,7 +592,7 @@
     function maj(){
       var total = PRIX_BASE;
       var extras = [];
-      if (checkSite.checked) { total += PRIX_SITE; extras.push('Site vitrine complet'); }
+      if (checkSite.checked) { total += PRIX_SITE; extras.push('Formulaire vitrine complet'); }
       if (checkCatalogue.checked) { total += PRIX_CATALOGUE; extras.push('Catalogue 8 pages'); }
       var formule = formuleBase + (extras.length ? ' + ' + extras.join(' + ') : '');
       cta.setAttribute('href', 'commande.html?formule=' + encodeURIComponent(formule) + '&prix=' + total + '%E2%82%ACHT');
