@@ -53,19 +53,21 @@ function emailHtml(nom, token) {
                 Offre limit&eacute;e &mdash; jusqu'au 30 septembre
               </p>
               <p style="font-size:32px;line-height:36px;font-weight:900;color:#DE5A2C;letter-spacing:0.5px;text-transform:uppercase;margin:0 0 18px 0;">
-                &Ccedil;a sonne faux ?
+                Formulaire vitrine
               </p>
               <p style="font-size:24px;line-height:30px;font-weight:800;color:#ffffff;margin:0 0 18px 0;">
-                Bonjour${nom ? " " + nom : ""}, on sait ce que vous pensez.<br>
-                <span style="color:#DE5A2C;">&laquo;&nbsp;990&euro;, formulaire, SMS automatique... c'est louche&nbsp;&raquo;.</span>
+                Bonjour${nom ? " " + nom : ""}, 990&euro; pour trouver vos clients ?<br>
+                <span style="color:#DE5A2C;">On sait, &ccedil;a sonne faux.</span>
               </p>
               <p style="font-size:14px;line-height:21px;color:#c3ccd6;margin:0 0 16px 0;">
-                Normal. Sur le papier, &ccedil;a ressemble &agrave; toutes les promesses qu'on vous a d&eacute;j&agrave; vendues.
+                Normal. &laquo;&nbsp;Formulaire, SMS automatique, Google Ads inclus&nbsp;&raquo;, &ccedil;a ressemble &agrave; toutes les
+                promesses qu'on vous a d&eacute;j&agrave; vendues.
               </p>
-              <p style="font-size:13px;line-height:20px;color:#8fa0b8;margin:0;border-left:2px solid #DE5A2C;padding-left:12px;">
-                Sauf qu'ici il n'y a rien &agrave; croire sur parole. Un client tape votre m&eacute;tier sur Google, tombe sur votre page, laisse ses
-                coordonn&eacute;es, vous recevez un SMS dans la minute. C'est tout. Pas de blabla marketing &mdash; juste le contact qui arrive
-                avant que le client n'appelle quelqu'un d'autre.
+              <p style="font-size:13px;line-height:20px;color:#8fa0b8;margin:0 0 16px 0;border-left:2px solid #DE5A2C;padding-left:12px;">
+                Sauf qu'ici il n'y a rien &agrave; croire sur parole. Un client tape votre m&eacute;tier sur Google, tombe sur votre
+                <strong style="color:#c3ccd6;">formulaire vitrine</strong> &mdash; une mini-page d&eacute;di&eacute;e &agrave; votre m&eacute;tier
+                &mdash; laisse ses coordonn&eacute;es, et vous recevez un <strong style="color:#c3ccd6;">SMS</strong> dans la minute. C'est tout.
+                Pas de blabla marketing, juste le contact qui arrive avant que le client n'appelle quelqu'un d'autre.
               </p>
             </td>
           </tr>
@@ -89,8 +91,8 @@ function emailHtml(nom, token) {
                 <tr>
                   <td style="padding:14px 20px 20px 20px;border-top:1px solid #223252;">
                     <p style="font-size:12px;line-height:20px;color:#c3ccd6;margin:0;">
-                      &#10003;&nbsp;Formulaire de demande de devis en ligne<br>
-                      &#10003;&nbsp;Notification SMS &agrave; chaque nouveau contact<br>
+                      &#10003;&nbsp;<strong>Formulaire vitrine</strong> de demande de devis en ligne<br>
+                      &#10003;&nbsp;<strong>Notification SMS</strong> imm&eacute;diate &agrave; chaque nouveau contact<br>
                       &#10003;&nbsp;Gestion de vos campagnes Google Ads<br>
                       &#10003;&nbsp;Dashboard de suivi de vos demandes
                     </p>
@@ -156,16 +158,17 @@ function emailHtml(nom, token) {
 function emailText(nom, token) {
   return (
     `SKYECO PRO — Offre limitée jusqu'au 30 septembre\n\n` +
-    `ÇA SONNE FAUX ?\n\n` +
-    `Bonjour${nom ? " " + nom : ""}, on sait ce que vous pensez : "990 EUR, formulaire, SMS automatique... c'est louche".\n\n` +
-    `Normal. Sur le papier, ca ressemble a toutes les promesses qu'on vous a deja vendues.\n\n` +
-    `Sauf qu'ici il n'y a rien a croire sur parole. Un client tape votre metier sur Google, tombe sur votre page, laisse ses coordonnees, ` +
-    `vous recevez un SMS dans la minute. C'est tout. Pas de blabla marketing - juste le contact qui arrive avant que le client n'appelle quelqu'un d'autre.\n\n` +
+    `FORMULAIRE VITRINE\n\n` +
+    `Bonjour${nom ? " " + nom : ""}, 990 EUR pour trouver vos clients ? On sait, ca sonne faux.\n\n` +
+    `Normal. "Formulaire, SMS automatique, Google Ads inclus", ca ressemble a toutes les promesses qu'on vous a deja vendues.\n\n` +
+    `Sauf qu'ici il n'y a rien a croire sur parole. Un client tape votre metier sur Google, tombe sur votre formulaire vitrine ` +
+    `(une mini-page dediee a votre metier), laisse ses coordonnees, et vous recevez un SMS dans la minute. C'est tout. ` +
+    `Pas de blabla marketing, juste le contact qui arrive avant que le client n'appelle quelqu'un d'autre.\n\n` +
     `FORMULE 03 — Formulaire vitrine, carrousel & video + Google Ads\n` +
     `1530 EUR (barre) -> 990 EUR HT (-540 EUR jusqu'au 30 septembre)\n` +
     `(paiement unique + abonnement Google Ads des 150 EUR HT/mois)\n` +
-    `- Formulaire de demande de devis en ligne\n` +
-    `- Notification SMS a chaque nouveau contact\n` +
+    `- Formulaire vitrine de demande de devis en ligne\n` +
+    `- Notification SMS immediate a chaque nouveau contact\n` +
     `- Gestion de vos campagnes Google Ads\n` +
     `- Dashboard de suivi de vos demandes\n\n` +
     `Je veux voir mon offre : ${BASE_URL}/l?p=${token}\n` +
