@@ -77,7 +77,7 @@ function emailHtml(nom, token) {
                       1530&euro;<span style="font-size:14px;font-weight:600;color:#8fa0b8;">&nbsp;HT</span>
                     </p>
                     <p style="font-size:11px;color:#DE5A2C;font-weight:bold;margin:8px 0 0 0;">-460&euro; jusqu'au 30 septembre</p>
-                    <p style="font-size:11px;color:#8fa0b8;margin:6px 0 0 0;">paiement unique + abonnement Google Ads d&egrave;s 150&euro;/mois</p>
+                    <p style="font-size:11px;color:#8fa0b8;margin:6px 0 0 0;">paiement unique + abonnement Google Ads d&egrave;s 150&euro;HT/mois</p>
                   </td>
                 </tr>
                 <tr>
@@ -146,7 +146,7 @@ function emailText(nom, token) {
     `Skyeco Pro ajoute les deux : un formulaire qui convertit vos visiteurs en demandes, et des campagnes Google Ads gerees pour vous.\n\n` +
     `FORMULE 03 — Site + formulaire, carrousel & video + Google Ads\n` +
     `1990 EUR (barre) -> 1530 EUR HT (-460 EUR jusqu'au 30 septembre)\n` +
-    `(paiement unique + abonnement Google Ads des 150 EUR/mois)\n` +
+    `(paiement unique + abonnement Google Ads des 150 EUR HT/mois)\n` +
     `- Formulaire de demande de devis en ligne\n` +
     `- Notification SMS a chaque nouveau contact\n` +
     `- Gestion de vos campagnes Google Ads\n` +
@@ -167,7 +167,7 @@ async function envoyerViaResend(to, nom, token) {
     body: JSON.stringify({
       from: FROM,
       to: [to],
-      subject: "Sans formulaire de devis, vous n'existez pas",
+      subject: "Un site, oui. Mais qui vous trouve vraiment ?",
       html: emailHtml(nom, token),
       text: emailText(nom, token),
       headers: {
