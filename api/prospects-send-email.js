@@ -71,11 +71,11 @@ function emailHtml(nom, token) {
                   <td align="center" style="padding:22px 20px 10px 20px;">
                     <p style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#DE5A2C;font-weight:bold;margin:0 0 8px 0;">Offre jusqu'au 30 septembre</p>
                     <p style="font-size:15px;font-weight:700;color:#ffffff;margin:0 0 14px 0;">Site + formulaire, carrousel &amp; vid&eacute;o + Google Ads</p>
-                    <p style="font-size:15px;font-weight:600;color:#6b7c93;text-decoration:line-through;margin:0 0 2px 0;">1990&euro;</p>
+                    <p style="font-size:15px;font-weight:600;color:#6b7c93;text-decoration:line-through;margin:0 0 2px 0;">1530&euro;</p>
                     <p style="font-size:40px;line-height:40px;font-weight:800;color:#ffffff;margin:0;">
-                      1530&euro;<span style="font-size:14px;font-weight:600;color:#8fa0b8;">&nbsp;HT</span>
+                      990&euro;<span style="font-size:14px;font-weight:600;color:#8fa0b8;">&nbsp;HT</span>
                     </p>
-                    <p style="font-size:11px;color:#DE5A2C;font-weight:bold;margin:8px 0 0 0;">-460&euro; jusqu'au 30 septembre</p>
+                    <p style="font-size:11px;color:#DE5A2C;font-weight:bold;margin:8px 0 0 0;">-540&euro; jusqu'au 30 septembre</p>
                     <p style="font-size:11px;color:#8fa0b8;margin:6px 0 0 0;">paiement unique + abonnement Google Ads d&egrave;s 150&euro;HT/mois</p>
                   </td>
                 </tr>
@@ -153,7 +153,7 @@ function emailText(nom, token) {
     `Bonjour${nom ? " " + nom : ""}, un formulaire de devis directement sur votre site change tout : ` +
     `vos visiteurs laissent leurs coordonnees en 30 secondes, vous recevez un SMS, vous rappelez. Simple.\n\n` +
     `FORMULE 03 — Site + formulaire, carrousel & video + Google Ads\n` +
-    `1990 EUR (barre) -> 1530 EUR HT (-460 EUR jusqu'au 30 septembre)\n` +
+    `1530 EUR (barre) -> 990 EUR HT (-540 EUR jusqu'au 30 septembre)\n` +
     `(paiement unique + abonnement Google Ads des 150 EUR HT/mois)\n` +
     `- Formulaire de demande de devis en ligne\n` +
     `- Notification SMS a chaque nouveau contact\n` +
