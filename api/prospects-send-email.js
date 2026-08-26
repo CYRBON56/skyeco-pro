@@ -52,6 +52,9 @@ function emailHtml(nom, token) {
               <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#DE5A2C;font-weight:bold;margin:0 0 14px 0;">
                 Offre limit&eacute;e &mdash; jusqu'au 30 septembre
               </p>
+              <p style="font-size:32px;line-height:36px;font-weight:900;color:#DE5A2C;letter-spacing:0.5px;text-transform:uppercase;margin:0 0 18px 0;">
+                Formulaire vitrine
+              </p>
               <p style="font-size:24px;line-height:30px;font-weight:800;color:#ffffff;margin:0 0 18px 0;">
                 Chaque semaine, des clients vous cherchent<br>
                 <span style="color:#DE5A2C;">et repartent sans vous contacter.</span>
@@ -75,7 +78,7 @@ function emailHtml(nom, token) {
                 <tr>
                   <td align="center" style="padding:22px 20px 10px 20px;">
                     <p style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#DE5A2C;font-weight:bold;margin:0 0 8px 0;">Offre jusqu'au 30 septembre</p>
-                    <p style="font-size:15px;font-weight:700;color:#ffffff;margin:0 0 14px 0;">Site + formulaire, carrousel &amp; vid&eacute;o + Google Ads</p>
+                    <p style="font-size:15px;font-weight:700;color:#ffffff;margin:0 0 14px 0;">Formulaire vitrine, carrousel &amp; vid&eacute;o + Google Ads</p>
                     <p style="font-size:15px;font-weight:600;color:#6b7c93;text-decoration:line-through;margin:0 0 2px 0;">1530&euro;</p>
                     <p style="font-size:40px;line-height:40px;font-weight:800;color:#ffffff;margin:0;">
                       990&euro;<span style="font-size:14px;font-weight:600;color:#8fa0b8;">&nbsp;HT</span>
@@ -124,7 +127,7 @@ function emailHtml(nom, token) {
           <tr>
             <td align="center" style="padding:0 32px 40px 32px;">
               <a href="${BASE_URL}/l?p=${token}&dest=exemple" style="display:block;margin-bottom:14px;">
-                <img src="https://heviivnlswohnrzcguxv.supabase.co/storage/v1/object/public/ecosky.fr/21.png" alt="Exemple de site vitrine avec formulaire vitrine r&eacute;alis&eacute; par Skyeco Pro" width="536" style="width:100%;max-width:536px;height:auto;display:block;border:1px solid #2a3a54;border-radius:4px;">
+                <img src="https://heviivnlswohnrzcguxv.supabase.co/storage/v1/object/public/ecosky.fr/21.png" alt="Exemple de formulaire vitrine r&eacute;alis&eacute; par Skyeco Pro" width="536" style="width:100%;max-width:536px;height:auto;display:block;border:1px solid #2a3a54;border-radius:4px;">
               </a>
               <a href="${BASE_URL}/l?p=${token}&dest=exemple" class="exemple-clignote" style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:800;color:#DE5A2C;text-decoration:underline;">
                 Voir un exemple &rarr;
@@ -154,12 +157,13 @@ function emailHtml(nom, token) {
 function emailText(nom, token) {
   return (
     `SKYECO PRO — Offre limitée jusqu'au 30 septembre\n\n` +
+    `FORMULAIRE VITRINE\n\n` +
     `Chaque semaine, des clients vous cherchent et repartent sans vous contacter.\n\n` +
     `Bonjour${nom ? " " + nom : ""}, un formulaire de devis directement sur votre site change tout : ` +
     `vos visiteurs laissent leurs coordonnees en 30 secondes, vous recevez un SMS, vous rappelez. Simple.\n\n` +
     `Concretement, votre formulaire vitrine est une mini-page dediee a votre metier : quand un client tape votre activite sur Google, ` +
     `il tombe directement sur une page qui presente votre savoir-faire - et demande un rendez-vous en un clic.\n\n` +
-    `FORMULE 03 — Site + formulaire, carrousel & video + Google Ads\n` +
+    `FORMULE 03 — Formulaire vitrine, carrousel & video + Google Ads\n` +
     `1530 EUR (barre) -> 990 EUR HT (-540 EUR jusqu'au 30 septembre)\n` +
     `(paiement unique + abonnement Google Ads des 150 EUR HT/mois)\n` +
     `- Formulaire de demande de devis en ligne\n` +
