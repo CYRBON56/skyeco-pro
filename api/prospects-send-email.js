@@ -21,7 +21,7 @@
 const FROM = "Skyeco Pro <contact@ecoskybyrms.fr>";
 const BASE_URL = "https://skyeco-pro.vercel.app";
 
-function emailHtml(nom, token) {
+export function emailHtml(nom, token) {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -156,7 +156,7 @@ function emailHtml(nom, token) {
 </html>`;
 }
 
-function emailText(nom, token) {
+export function emailText(nom, token) {
   return (
     `SKYECO PRO — Offre limitée jusqu'au 30 septembre\n\n` +
     `FORMULAIRE VITRINE\n\n` +
@@ -179,7 +179,7 @@ function emailText(nom, token) {
   );
 }
 
-async function envoyerViaResend(to, nom, token) {
+export async function envoyerViaResend(to, nom, token) {
   const resp = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -207,7 +207,7 @@ async function envoyerViaResend(to, nom, token) {
   return resp.json();
 }
 
-function dormir(ms) {
+export function dormir(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -215,9 +215,9 @@ function dormir(ms) {
 // si on envoie trop vite en boucle serrée) — ça, on retente avec un délai croissant.
 // Le quota journalier (429 "daily_quota_exceeded") en revanche ne se résout jamais en
 // retentant : c'est une limite de compte pour la journée, il faut arrêter l'envoi.
-class QuotaJournalierAtteint extends Error {}
+export class QuotaJournalierAtteint extends Error {}
 
-async function envoyerAvecRetry(to, nom, token, tentativesMax = 4) {
+export async function envoyerAvecRetry(to, nom, token, tentativesMax = 4) {
   for (let tentative = 1; tentative <= tentativesMax; tentative++) {
     try {
       return await envoyerViaResend(to, nom, token);
@@ -235,7 +235,7 @@ async function envoyerAvecRetry(to, nom, token, tentativesMax = 4) {
   }
 }
 
-function genererToken() {
+export function genererToken() {
   const bytes = Array.from({ length: 6 }, () => Math.floor(Math.random() * 256));
   return Buffer.from(bytes).toString("base64url").slice(0, 8);
 }
