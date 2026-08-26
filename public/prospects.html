@@ -388,12 +388,31 @@
   }
 
   function chargerProspects(){
+    var container = document.getElementById('table-container');
     fetch('/api/prospects-list', { headers: authHeaders() })
-      .then(function(r){ if (r.status === 401) { badLogin(); throw new Error('unauthorized'); } return r.json(); })
-      .then(function(data){
-        if (data.success) { prospects = data.prospects; renderTable(); }
+      .then(function(r){
+        if (r.status === 401) { badLogin(); throw new Error('unauthorized'); }
+        return r.json().then(function(data){ return { ok: r.ok, data: data }; });
       })
-      .catch(function(){});
+      .then(function(res){
+        if (res.data && res.data.success) {
+          prospects = res.data.prospects;
+          renderTable();
+        } else {
+          var msg = (res.data && res.data.error) || 'Erreur inconnue du serveur.';
+          container.innerHTML = '<p class="empty" style="color:#991b1b;">Échec du chargement : ' + escapeHtml(msg) +
+            '<br><button type="button" class="btn outline" id="retry-charger" style="margin-top:10px;">Réessayer</button></p>';
+          var retryBtn = document.getElementById('retry-charger');
+          if (retryBtn) retryBtn.addEventListener('click', chargerProspects);
+        }
+      })
+      .catch(function(err){
+        if (err && err.message === 'unauthorized') return;
+        container.innerHTML = '<p class="empty" style="color:#991b1b;">Échec du chargement (réseau ou serveur indisponible).' +
+          '<br><button type="button" class="btn outline" id="retry-charger" style="margin-top:10px;">Réessayer</button></p>';
+        var retryBtn = document.getElementById('retry-charger');
+        if (retryBtn) retryBtn.addEventListener('click', chargerProspects);
+      });
   }
 
   document.getElementById('select-n-btn').addEventListener('click', function(){
