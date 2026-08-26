@@ -90,7 +90,7 @@
 
     <div class="card">
       <h2>Importer une liste</h2>
-      <p class="hint">Fichier .xlsx avec les colonnes : Nom entreprise, Ville, Département, Téléphone, Adresse, Email (optionnel). Les numéros déjà importés sont automatiquement mis à jour, pas dupliqués.</p>
+      <p class="hint">Fichier .xlsx avec les colonnes : Nom entreprise, Ville, Département, Téléphone, Adresse, Email. Chaque ligne doit avoir au moins un mobile OU un email. Les numéros/emails déjà importés sont automatiquement mis à jour, pas dupliqués.</p>
       <input type="file" id="file-input" accept=".xlsx,.xls">
       <button class="btn outline" id="import-btn" style="margin-left:10px;">Importer</button>
       <p class="send-status" id="import-status"></p>
@@ -183,6 +183,11 @@
       '<div class="stat-box optout"><div class="num">' + optout + '</div><div class="lbl">Désabonnés (STOP)</div></div>';
   }
 
+  var EMAIL_TEST = 'infos@ecosky.fr';
+  function estContactTest(p){
+    return (p.email || '').toLowerCase() === EMAIL_TEST;
+  }
+
   function renderTable(){
     renderStats();
     var container = document.getElementById('table-container');
@@ -190,9 +195,15 @@
       container.innerHTML = '<p class="empty">Aucun prospect importé pour le moment.</p>';
       return;
     }
-    var rows = prospects.map(function(p){
+    var prospectsTries = prospects.slice().sort(function(a, b){
+      var aTest = estContactTest(a) ? 0 : 1;
+      var bTest = estContactTest(b) ? 0 : 1;
+      return aTest - bTest;
+    });
+    var rows = prospectsTries.map(function(p){
+      var estTest = estContactTest(p);
       if (p.id === editingId) {
-        return '<tr>' +
+        return '<tr' + (estTest ? ' style="background:#fff7e6;"' : '') + '>' +
           '<td></td>' +
           '<td><input type="text" class="edit-field" data-f="nom" value="' + escapeAttr(p.nom) + '"></td>' +
           '<td><input type="text" class="edit-field" data-f="ville" value="' + escapeAttr(p.ville) + '"></td>' +
@@ -219,9 +230,13 @@
       if (p.lien_clique) {
         statutHtml += '<span class="statut statut-clique">🔗 Cliqué' + (p.clic_date ? ' — ' + new Date(p.clic_date).toLocaleDateString('fr-FR') : '') + '</span>';
       }
-      return '<tr>' +
-        '<td><input type="checkbox" class="row-check" data-id="' + p.id + '"></td>' +
-        '<td>' + escapeHtml(p.nom || '') + '</td>' +
+      var nomAffiche = escapeHtml(p.nom || '');
+      if (estTest) {
+        nomAffiche = '<span style="display:inline-block;background:#DE5A2C;color:#fff;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:3px;margin-right:8px;vertical-align:middle;">🧪 TEST</span>' + nomAffiche;
+      }
+      return '<tr' + (estTest ? ' style="background:#fff7e6;"' : '') + '>' +
+        '<td><input type="checkbox" class="row-check" data-id="' + p.id + '"' + (estTest ? ' data-test="1"' : '') + '></td>' +
+        '<td>' + nomAffiche + '</td>' +
         '<td>' + escapeHtml(p.ville || '') + '</td>' +
         '<td>' + escapeHtml(p.telephone_e164 || '') + '</td>' +
         '<td>' + escapeHtml(p.email || '—') + '</td>' +
@@ -305,7 +320,9 @@
   }
 
   document.getElementById('select-all-btn').addEventListener('click', function(){
-    document.querySelectorAll('.row-check').forEach(function(cb){ cb.checked = true; });
+    document.querySelectorAll('.row-check').forEach(function(cb){
+      if (cb.dataset.test !== '1') cb.checked = true;
+    });
     updateSelectionCount();
   });
 
@@ -417,10 +434,10 @@
             adresse: r['Adresse'] || '',
             email: String(r['Email'] || r['E-mail'] || '').trim(),
           };
-        }).filter(function(p){ return p.telephone_e164; });
+        }).filter(function(p){ return p.telephone_e164 || p.email; });
 
         if (toImport.length === 0) {
-          status.textContent = 'Aucun numéro de mobile valide trouvé dans le fichier.';
+          status.textContent = 'Aucun mobile ni email valide trouvé dans le fichier.';
           status.className = 'send-status err';
           return;
         }
