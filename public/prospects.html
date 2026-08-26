@@ -117,6 +117,12 @@
 
       <div class="stats-bar" id="stats-bar"></div>
 
+      <div class="filtre-tabs" style="display:flex;gap:8px;margin:14px 0 10px 0;">
+        <button type="button" class="btn outline filtre-tab" data-filtre="attente" style="padding:8px 16px;font-size:0.85rem;">En attente d'envoi</button>
+        <button type="button" class="btn outline filtre-tab" data-filtre="envoyes" style="padding:8px 16px;font-size:0.85rem;">Déjà envoyés (email)</button>
+        <button type="button" class="btn outline filtre-tab" data-filtre="tous" style="padding:8px 16px;font-size:0.85rem;">Tous</button>
+      </div>
+
       <div class="toolbar" style="position:sticky;top:0;z-index:10;background:#fff;padding:10px 0;">
         <span class="left" id="selection-count">0 sélectionné(s)</span>
         <div>
@@ -140,6 +146,7 @@
 <script>
   var ADMIN_TOKEN = null;
   var prospects = [];
+  var filtreVue = 'attente'; // 'attente' | 'envoyes' | 'tous' — protège contre la re-sélection accidentelle
 
   document.getElementById('login-btn').addEventListener('click', function(){
     var pass = document.getElementById('login-pass').value.trim();
@@ -190,14 +197,57 @@
     return (p.email || '').toLowerCase() === EMAIL_TEST;
   }
 
+  function renderFiltreTabs(){
+    var labels = {
+      attente: 'En attente d\'envoi',
+      envoyes: 'Déjà envoyés (email)',
+      tous: 'Tous'
+    };
+    var enAttenteN = prospects.filter(function(p){ return !p.email_envoye; }).length;
+    var envoyesN = prospects.filter(function(p){ return !!p.email_envoye; }).length;
+    var compteurs = { attente: enAttenteN, envoyes: envoyesN, tous: prospects.length };
+    document.querySelectorAll('.filtre-tab').forEach(function(btn){
+      var f = btn.dataset.filtre;
+      btn.textContent = labels[f] + ' (' + compteurs[f] + ')';
+      if (f === filtreVue) {
+        btn.classList.remove('outline');
+        btn.style.background = '#1a56db';
+        btn.style.color = '#fff';
+      } else {
+        btn.classList.add('outline');
+        btn.style.background = '';
+        btn.style.color = '';
+      }
+    });
+  }
+
+  document.querySelectorAll('.filtre-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      filtreVue = this.dataset.filtre;
+      renderTable();
+      updateSelectionCount();
+    });
+  });
+
   function renderTable(){
     renderStats();
+    renderFiltreTabs();
     var container = document.getElementById('table-container');
-    if (prospects.length === 0) {
-      container.innerHTML = '<p class="empty">Aucun prospect importé pour le moment.</p>';
+
+    var prospectsVue = prospects.filter(function(p){
+      if (estContactTest(p)) return true; // le contact test reste visible dans tous les onglets
+      if (filtreVue === 'attente') return !p.email_envoye;
+      if (filtreVue === 'envoyes') return !!p.email_envoye;
+      return true; // 'tous'
+    });
+
+    if (prospectsVue.length === 0) {
+      container.innerHTML = '<p class="empty">' +
+        (filtreVue === 'envoyes' ? 'Aucun email envoyé pour le moment.' : 'Aucun prospect dans cette vue.') +
+        '</p>';
       return;
     }
-    var prospectsTries = prospects.slice().sort(function(a, b){
+    var prospectsTries = prospectsVue.slice().sort(function(a, b){
       var aTest = estContactTest(a) ? 0 : 1;
       var bTest = estContactTest(b) ? 0 : 1;
       return aTest - bTest;
@@ -236,8 +286,13 @@
       if (estTest) {
         nomAffiche = '<span style="display:inline-block;background:#DE5A2C;color:#fff;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:3px;margin-right:8px;vertical-align:middle;">🧪 TEST</span>' + nomAffiche;
       }
-      return '<tr' + (estTest ? ' style="background:#fff7e6;"' : '') + '>' +
-        '<td><input type="checkbox" class="row-check" data-id="' + p.id + '"' + (estTest ? ' data-test="1"' : '') + '></td>' +
+      var dejaEnvoye = !!p.email_envoye;
+      var caseDesactivee = dejaEnvoye && filtreVue !== 'attente';
+      return '<tr' + (estTest ? ' style="background:#fff7e6;"' : (dejaEnvoye ? ' style="opacity:0.65;"' : '')) + '>' +
+        '<td><input type="checkbox" class="row-check" data-id="' + p.id + '"' +
+          (estTest ? ' data-test="1"' : '') +
+          (caseDesactivee ? ' disabled title="Email déjà envoyé — repassez sur l\'onglet En attente pour resélectionner volontairement."' : '') +
+          '></td>' +
         '<td>' + nomAffiche + '</td>' +
         '<td>' + escapeHtml(p.ville || '') + '</td>' +
         '<td>' + escapeHtml(p.telephone_e164 || '') + '</td>' +
@@ -328,7 +383,7 @@
       document.getElementById('send-status').className = 'send-status err';
       return;
     }
-    var cases = Array.from(document.querySelectorAll('.row-check')).filter(function(cb){ return cb.dataset.test !== '1'; });
+    var cases = Array.from(document.querySelectorAll('.row-check')).filter(function(cb){ return cb.dataset.test !== '1' && !cb.disabled; });
     cases.forEach(function(cb){ cb.checked = false; });
     cases.slice(0, n).forEach(function(cb){ cb.checked = true; });
     updateSelectionCount();
@@ -336,7 +391,7 @@
 
   document.getElementById('select-all-btn').addEventListener('click', function(){
     document.querySelectorAll('.row-check').forEach(function(cb){
-      if (cb.dataset.test !== '1') cb.checked = true;
+      if (cb.dataset.test !== '1' && !cb.disabled) cb.checked = true;
     });
     updateSelectionCount();
   });
@@ -546,6 +601,30 @@
             (data.ignoresSansEmail ? ', ' + data.ignoresSansEmail + ' ignoré(s) (pas d\'email connu)' : '') +
             (data.ignoresOptOut ? ', ' + data.ignoresOptOut + ' ignoré(s) car désabonné(s)' : '') + '.';
           status.className = 'send-status ok';
+
+          // Détail des raisons d'échec, regroupées par message d'erreur
+          if (data.echoues && Array.isArray(data.details)) {
+            var compteurs = {};
+            data.details.filter(function(d){ return !d.success; }).forEach(function(d){
+              var msg = (d.error || 'Erreur inconnue').slice(0, 200);
+              compteurs[msg] = (compteurs[msg] || 0) + 1;
+            });
+            var lignes = Object.keys(compteurs)
+              .sort(function(a, b){ return compteurs[b] - compteurs[a]; })
+              .map(function(msg){ return (compteurs[msg] + '× — ' + msg); });
+            var detailEl = document.getElementById('send-echecs-detail');
+            if (!detailEl) {
+              detailEl = document.createElement('div');
+              detailEl.id = 'send-echecs-detail';
+              detailEl.style.cssText = 'font-size:0.8rem;color:#991b1b;margin-top:6px;white-space:pre-wrap;';
+              status.parentNode.insertBefore(detailEl, status.nextSibling);
+            }
+            detailEl.textContent = 'Raisons des échecs :\n' + lignes.join('\n');
+          } else {
+            var ancienDetail = document.getElementById('send-echecs-detail');
+            if (ancienDetail) ancienDetail.textContent = '';
+          }
+
           chargerProspects();
         } else {
           status.textContent = data.error || 'Envoi impossible.';
