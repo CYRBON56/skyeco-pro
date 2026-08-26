@@ -602,6 +602,20 @@
             (data.ignoresOptOut ? ', ' + data.ignoresOptOut + ' ignoré(s) car désabonné(s)' : '') + '.';
           status.className = 'send-status ok';
 
+          if (data.quotaAtteint) {
+            var quotaEl = document.getElementById('send-quota-alerte');
+            if (!quotaEl) {
+              quotaEl = document.createElement('div');
+              quotaEl.id = 'send-quota-alerte';
+              quotaEl.style.cssText = 'font-size:0.85rem;font-weight:700;color:#991b1b;background:#fde8e8;border:1px solid #f5b5b5;border-radius:4px;padding:8px 12px;margin-top:8px;';
+              status.parentNode.insertBefore(quotaEl, status.nextSibling);
+            }
+            quotaEl.textContent = '⚠️ Quota journalier Resend atteint — l\'envoi s\'est arrêté automatiquement. Vérifie ton plan sur resend.com/settings/billing avant de relancer.';
+          } else {
+            var ancienQuota = document.getElementById('send-quota-alerte');
+            if (ancienQuota) ancienQuota.remove();
+          }
+
           // Détail des raisons d'échec, regroupées par message d'erreur
           if (data.echoues && Array.isArray(data.details)) {
             var compteurs = {};
