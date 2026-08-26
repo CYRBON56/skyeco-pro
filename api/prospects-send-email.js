@@ -53,20 +53,19 @@ function emailHtml(nom, token) {
                 Offre limit&eacute;e &mdash; jusqu'au 30 septembre
               </p>
               <p style="font-size:32px;line-height:36px;font-weight:900;color:#DE5A2C;letter-spacing:0.5px;text-transform:uppercase;margin:0 0 18px 0;">
-                Formulaire vitrine
+                &Ccedil;a sonne faux ?
               </p>
               <p style="font-size:24px;line-height:30px;font-weight:800;color:#ffffff;margin:0 0 18px 0;">
-                Chaque semaine, des clients vous cherchent<br>
-                <span style="color:#DE5A2C;">et repartent sans vous contacter.</span>
+                Bonjour${nom ? " " + nom : ""}, on sait ce que vous pensez.<br>
+                <span style="color:#DE5A2C;">&laquo;&nbsp;990&euro;, formulaire, SMS automatique... c'est louche&nbsp;&raquo;.</span>
               </p>
               <p style="font-size:14px;line-height:21px;color:#c3ccd6;margin:0 0 16px 0;">
-                Bonjour${nom ? " " + nom : ""}, un formulaire de devis directement sur votre site change tout :
-                vos visiteurs laissent leurs coordonn&eacute;es en 30 secondes, vous recevez un SMS, vous rappelez. Simple.
+                Normal. Sur le papier, &ccedil;a ressemble &agrave; toutes les promesses qu'on vous a d&eacute;j&agrave; vendues.
               </p>
               <p style="font-size:13px;line-height:20px;color:#8fa0b8;margin:0;border-left:2px solid #DE5A2C;padding-left:12px;">
-                Concr&egrave;tement, votre <strong style="color:#c3ccd6;">formulaire vitrine</strong> est une mini-page d&eacute;di&eacute;e &agrave; votre m&eacute;tier :
-                quand un client tape votre activit&eacute; sur Google, il tombe directement sur une page qui pr&eacute;sente votre savoir-faire &mdash;
-                et demande un rendez-vous en un clic.
+                Sauf qu'ici il n'y a rien &agrave; croire sur parole. Un client tape votre m&eacute;tier sur Google, tombe sur votre page, laisse ses
+                coordonn&eacute;es, vous recevez un SMS dans la minute. C'est tout. Pas de blabla marketing &mdash; juste le contact qui arrive
+                avant que le client n'appelle quelqu'un d'autre.
               </p>
             </td>
           </tr>
@@ -157,12 +156,11 @@ function emailHtml(nom, token) {
 function emailText(nom, token) {
   return (
     `SKYECO PRO — Offre limitée jusqu'au 30 septembre\n\n` +
-    `FORMULAIRE VITRINE\n\n` +
-    `Chaque semaine, des clients vous cherchent et repartent sans vous contacter.\n\n` +
-    `Bonjour${nom ? " " + nom : ""}, un formulaire de devis directement sur votre site change tout : ` +
-    `vos visiteurs laissent leurs coordonnees en 30 secondes, vous recevez un SMS, vous rappelez. Simple.\n\n` +
-    `Concretement, votre formulaire vitrine est une mini-page dediee a votre metier : quand un client tape votre activite sur Google, ` +
-    `il tombe directement sur une page qui presente votre savoir-faire - et demande un rendez-vous en un clic.\n\n` +
+    `ÇA SONNE FAUX ?\n\n` +
+    `Bonjour${nom ? " " + nom : ""}, on sait ce que vous pensez : "990 EUR, formulaire, SMS automatique... c'est louche".\n\n` +
+    `Normal. Sur le papier, ca ressemble a toutes les promesses qu'on vous a deja vendues.\n\n` +
+    `Sauf qu'ici il n'y a rien a croire sur parole. Un client tape votre metier sur Google, tombe sur votre page, laisse ses coordonnees, ` +
+    `vous recevez un SMS dans la minute. C'est tout. Pas de blabla marketing - juste le contact qui arrive avant que le client n'appelle quelqu'un d'autre.\n\n` +
     `FORMULE 03 — Formulaire vitrine, carrousel & video + Google Ads\n` +
     `1530 EUR (barre) -> 990 EUR HT (-540 EUR jusqu'au 30 septembre)\n` +
     `(paiement unique + abonnement Google Ads des 150 EUR HT/mois)\n` +
@@ -186,7 +184,7 @@ async function envoyerViaResend(to, nom, token) {
     body: JSON.stringify({
       from: FROM,
       to: [to],
-      subject: "Un site, oui. Mais qui vous trouve vraiment ?",
+      subject: "990€ pour trouver vos clients ? On sait, ça sonne faux.",
       html: emailHtml(nom, token),
       text: emailText(nom, token),
       headers: {
