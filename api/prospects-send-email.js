@@ -56,9 +56,14 @@ function emailHtml(nom, token) {
                 Chaque semaine, des clients vous cherchent<br>
                 <span style="color:#DE5A2C;">et repartent sans vous contacter.</span>
               </p>
-              <p style="font-size:14px;line-height:21px;color:#c3ccd6;margin:0;">
+              <p style="font-size:14px;line-height:21px;color:#c3ccd6;margin:0 0 16px 0;">
                 Bonjour${nom ? " " + nom : ""}, un formulaire de devis directement sur votre site change tout :
                 vos visiteurs laissent leurs coordonn&eacute;es en 30 secondes, vous recevez un SMS, vous rappelez. Simple.
+              </p>
+              <p style="font-size:13px;line-height:20px;color:#8fa0b8;margin:0;border-left:2px solid #DE5A2C;padding-left:12px;">
+                Concr&egrave;tement, votre <strong style="color:#c3ccd6;">formulaire vitrine</strong> est une mini-page d&eacute;di&eacute;e &agrave; votre m&eacute;tier :
+                quand un client tape votre activit&eacute; sur Google, il tombe directement sur une page qui pr&eacute;sente votre savoir-faire &mdash;
+                et demande un rendez-vous en un clic.
               </p>
             </td>
           </tr>
@@ -152,6 +157,8 @@ function emailText(nom, token) {
     `Chaque semaine, des clients vous cherchent et repartent sans vous contacter.\n\n` +
     `Bonjour${nom ? " " + nom : ""}, un formulaire de devis directement sur votre site change tout : ` +
     `vos visiteurs laissent leurs coordonnees en 30 secondes, vous recevez un SMS, vous rappelez. Simple.\n\n` +
+    `Concretement, votre formulaire vitrine est une mini-page dediee a votre metier : quand un client tape votre activite sur Google, ` +
+    `il tombe directement sur une page qui presente votre savoir-faire - et demande un rendez-vous en un clic.\n\n` +
     `FORMULE 03 — Site + formulaire, carrousel & video + Google Ads\n` +
     `1530 EUR (barre) -> 990 EUR HT (-540 EUR jusqu'au 30 septembre)\n` +
     `(paiement unique + abonnement Google Ads des 150 EUR HT/mois)\n` +
