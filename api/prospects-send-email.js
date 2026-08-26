@@ -50,16 +50,15 @@ function emailHtml(nom, token) {
           <tr>
             <td style="padding:40px 32px 28px 32px;font-family:Arial,Helvetica,sans-serif;">
               <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#DE5A2C;font-weight:bold;margin:0 0 14px 0;">
-                Formulaire de devis &amp; Google Ads pour le BTP
+                Offre limit&eacute;e &mdash; jusqu'au 30 septembre
               </p>
-              <p style="font-size:26px;line-height:32px;font-weight:800;color:#ffffff;margin:0 0 22px 0;">
-                Sans formulaire de devis direct,<br>
-                <span style="color:#DE5A2C;">vous n'existez pas.</span>
+              <p style="font-size:24px;line-height:30px;font-weight:800;color:#ffffff;margin:0 0 18px 0;">
+                Chaque semaine, des clients vous cherchent<br>
+                <span style="color:#DE5A2C;">et repartent sans vous contacter.</span>
               </p>
               <p style="font-size:14px;line-height:21px;color:#c3ccd6;margin:0;">
-                Bonjour${nom ? " " + nom : ""}, un site vitrine seul ne suffit pas &mdash; sans formulaire de devis ni campagne Google Ads,
-                vos clients potentiels vous trouvent difficilement et repartent sans laisser leurs coordonn&eacute;es.
-                Skyeco Pro ajoute les deux : un formulaire qui convertit vos visiteurs en demandes, et des campagnes Google Ads g&eacute;r&eacute;es pour vous.
+                Bonjour${nom ? " " + nom : ""}, un formulaire de devis directement sur votre site change tout :
+                vos visiteurs laissent leurs coordonn&eacute;es en 30 secondes, vous recevez un SMS, vous rappelez. Simple.
               </p>
             </td>
           </tr>
@@ -96,26 +95,33 @@ function emailHtml(nom, token) {
 
           <!-- CTA -->
           <tr>
-            <td align="center" style="padding:0 32px 24px 32px;">
+            <td align="center" style="padding:0 32px 10px 32px;">
               <table cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td bgcolor="#DE5A2C" style="border-radius:4px;">
-                    <a href="${BASE_URL}/l?p=${token}" style="display:block;padding:15px 36px;font-family:Arial,Helvetica,sans-serif;font-size:14px;letter-spacing:0.5px;text-transform:uppercase;color:#ffffff;text-decoration:none;font-weight:bold;">
-                      Voir la formule compl&egrave;te
+                    <a href="${BASE_URL}/l?p=${token}" style="display:block;padding:16px 40px;font-family:Arial,Helvetica,sans-serif;font-size:15px;letter-spacing:0.5px;text-transform:uppercase;color:#ffffff;text-decoration:none;font-weight:bold;">
+                      Je veux voir mon offre
                     </a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
+          <tr>
+            <td align="center" style="padding:0 32px 32px 32px;font-family:Arial,Helvetica,sans-serif;">
+              <p style="font-size:11px;color:#5a6b82;margin:0;">
+                Le bouton ne s'affiche pas ? <a href="${BASE_URL}/l?p=${token}" style="color:#8fa0b8;">Cliquez ici</a>
+              </p>
+            </td>
+          </tr>
 
           <!-- Voir un exemple (image + lien gros, clignotant) -->
           <tr>
             <td align="center" style="padding:0 32px 40px 32px;">
-              <a href="https://salesflow-ecosky.vercel.app/estimation.html" style="display:block;margin-bottom:14px;">
+              <a href="${BASE_URL}/l?p=${token}&dest=exemple" style="display:block;margin-bottom:14px;">
                 <img src="https://heviivnlswohnrzcguxv.supabase.co/storage/v1/object/public/ecosky.fr/21.png" alt="Exemple de site vitrine avec formulaire vitrine r&eacute;alis&eacute; par Skyeco Pro" width="536" style="width:100%;max-width:536px;height:auto;display:block;border:1px solid #2a3a54;border-radius:4px;">
               </a>
-              <a href="https://salesflow-ecosky.vercel.app/estimation.html" class="exemple-clignote" style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:800;color:#DE5A2C;text-decoration:underline;">
+              <a href="${BASE_URL}/l?p=${token}&dest=exemple" class="exemple-clignote" style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:800;color:#DE5A2C;text-decoration:underline;">
                 Voir un exemple &rarr;
               </a>
             </td>
@@ -142,11 +148,10 @@ function emailHtml(nom, token) {
 
 function emailText(nom, token) {
   return (
-    `SKYECO PRO — Formulaire de devis et Google Ads pour le BTP\n\n` +
-    `Sans formulaire de devis direct, vous n'existez pas.\n\n` +
-    `Bonjour${nom ? " " + nom : ""}, un site vitrine seul ne suffit pas — sans formulaire de devis ni campagne Google Ads, ` +
-    `vos clients potentiels vous trouvent difficilement et repartent sans laisser leurs coordonnees. ` +
-    `Skyeco Pro ajoute les deux : un formulaire qui convertit vos visiteurs en demandes, et des campagnes Google Ads gerees pour vous.\n\n` +
+    `SKYECO PRO — Offre limitée jusqu'au 30 septembre\n\n` +
+    `Chaque semaine, des clients vous cherchent et repartent sans vous contacter.\n\n` +
+    `Bonjour${nom ? " " + nom : ""}, un formulaire de devis directement sur votre site change tout : ` +
+    `vos visiteurs laissent leurs coordonnees en 30 secondes, vous recevez un SMS, vous rappelez. Simple.\n\n` +
     `FORMULE 03 — Site + formulaire, carrousel & video + Google Ads\n` +
     `1990 EUR (barre) -> 1530 EUR HT (-460 EUR jusqu'au 30 septembre)\n` +
     `(paiement unique + abonnement Google Ads des 150 EUR HT/mois)\n` +
@@ -154,8 +159,8 @@ function emailText(nom, token) {
     `- Notification SMS a chaque nouveau contact\n` +
     `- Gestion de vos campagnes Google Ads\n` +
     `- Dashboard de suivi de vos demandes\n\n` +
-    `Voir la formule complete : ${BASE_URL}/l?p=${token}\n` +
-    `Voir un exemple : https://salesflow-ecosky.vercel.app/estimation.html\n\n` +
+    `Je veux voir mon offre : ${BASE_URL}/l?p=${token}\n` +
+    `Voir un exemple : ${BASE_URL}/l?p=${token}&dest=exemple\n\n` +
     `Se desabonner en un clic : ${BASE_URL}/d?p=${token}`
   );
 }
