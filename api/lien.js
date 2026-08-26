@@ -16,13 +16,15 @@
 //   alter table prospects_sms add column if not exists clic_token text;
 //   create unique index if not exists prospects_sms_clic_token_idx on prospects_sms(clic_token);
 
-const DESTINATION = "https://skyeco-pro.vercel.app/tarifs.html";
+const TARIFS_URL = "https://skyeco-pro.vercel.app/tarifs.html";
+const EXEMPLE_URL = "https://salesflow-ecosky.vercel.app/estimation.html";
 
 export default async function handler(req, res) {
-  const { p } = req.query || {};
+  const { p, dest } = req.query || {};
+  const destination = dest === "exemple" ? EXEMPLE_URL : TARIFS_URL;
 
   if (!p) {
-    res.writeHead(302, { Location: DESTINATION });
+    res.writeHead(302, { Location: destination });
     return res.end();
   }
 
@@ -59,6 +61,6 @@ export default async function handler(req, res) {
     console.error("lien tracking error:", err);
   }
 
-  res.writeHead(302, { Location: DESTINATION });
+  res.writeHead(302, { Location: destination });
   return res.end();
 }
