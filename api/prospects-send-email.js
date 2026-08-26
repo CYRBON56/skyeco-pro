@@ -208,6 +208,37 @@ function genererToken() {
   return Buffer.from(bytes).toString("base64url").slice(0, 8);
 }
 
+// Découpe un tableau en lots, pour éviter les URL Supabase trop longues
+// (id=in.(...) avec des centaines/milliers d'UUID dépasse les limites de
+// l'API et renvoie "Bad Request").
+const TAILLE_LOT = 100;
+function decouperEnLots(tableau, taille = TAILLE_LOT) {
+  const lots = [];
+  for (let i = 0; i < tableau.length; i += taille) {
+    lots.push(tableau.slice(i, i + taille));
+  }
+  return lots;
+}
+
+// Lit les prospects par lots (au lieu d'une seule requête avec tous les IDs)
+// pour rester sous les limites de longueur d'URL de Supabase/Vercel.
+async function lireProspectsParLots(ids, supaHeaders) {
+  const tousLesProspects = [];
+  for (const lot of decouperEnLots(ids)) {
+    const idsFilter = lot.map((id) => `"${id}"`).join(",");
+    const resp = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/prospects_sms?id=in.(${idsFilter})&select=id,nom,email,opt_out,clic_token`,
+      { headers: supaHeaders }
+    );
+    if (!resp.ok) {
+      const detail = await resp.text();
+      throw new Error("Lecture Supabase impossible : " + detail);
+    }
+    tousLesProspects.push(...(await resp.json()));
+  }
+  return tousLesProspects;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ success: false, error: "Méthode non autorisée." });
@@ -229,16 +260,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    const idsFilter = ids.map((id) => `"${id}"`).join(",");
-    const resp = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/prospects_sms?id=in.(${idsFilter})&select=id,nom,email,opt_out,clic_token`,
-      { headers: supaHeaders }
-    );
-    if (!resp.ok) {
-      const detail = await resp.text();
-      throw new Error("Lecture Supabase impossible : " + detail);
-    }
-    const tousLesProspects = await resp.json();
+    const tousLesProspects = await lireProspectsParLots(ids, supaHeaders);
 
     const sansEmail = tousLesProspects.filter((p) => !p.email).map((p) => p.id);
     const prospects = tousLesProspects.filter((p) => p.email && !p.opt_out);
