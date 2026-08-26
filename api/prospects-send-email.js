@@ -55,19 +55,20 @@ function emailHtml(nom, token) {
               <p style="font-size:32px;line-height:36px;font-weight:900;color:#DE5A2C;letter-spacing:0.5px;text-transform:uppercase;margin:0 0 18px 0;">
                 Formulaire vitrine
               </p>
-              <p style="font-size:24px;line-height:30px;font-weight:800;color:#ffffff;margin:0 0 18px 0;">
-                Bonjour${nom ? " " + nom : ""}, 990&euro; pour trouver vos clients ?<br>
-                <span style="color:#DE5A2C;">On sait, &ccedil;a sonne faux.</span>
+              <p style="font-size:22px;line-height:29px;font-weight:800;color:#ffffff;margin:0 0 18px 0;">
+                Bonjour${nom ? " " + nom : ""}, voici ce que nous proposons pour votre activit&eacute;.
               </p>
               <p style="font-size:14px;line-height:21px;color:#c3ccd6;margin:0 0 16px 0;">
-                Normal. &laquo;&nbsp;Formulaire, SMS automatique, Google Ads inclus&nbsp;&raquo;, &ccedil;a ressemble &agrave; toutes les
-                promesses qu'on vous a d&eacute;j&agrave; vendues.
+                Chaque semaine, des clients recherchent votre m&eacute;tier sur Google. Sans formulaire de contact d&eacute;di&eacute;
+                sur votre site, une partie d'entre eux repart sans vous solliciter.
               </p>
               <p style="font-size:13px;line-height:20px;color:#8fa0b8;margin:0 0 16px 0;border-left:2px solid #DE5A2C;padding-left:12px;">
-                Sauf qu'ici il n'y a rien &agrave; croire sur parole. Un client tape votre m&eacute;tier sur Google, tombe sur votre
-                <strong style="color:#c3ccd6;">formulaire vitrine</strong> &mdash; une mini-page d&eacute;di&eacute;e &agrave; votre m&eacute;tier
-                &mdash; laisse ses coordonn&eacute;es, et vous recevez un <strong style="color:#c3ccd6;">SMS</strong> dans la minute. C'est tout.
-                Pas de blabla marketing, juste le contact qui arrive avant que le client n'appelle quelqu'un d'autre.
+                Concr&egrave;tement&nbsp;: une page d&eacute;di&eacute;e &agrave; votre m&eacute;tier, avec un
+                <strong style="color:#c3ccd6;">formulaire de demande de devis</strong>. D&egrave;s qu'un client le remplit, vous
+                recevez un <strong style="color:#c3ccd6;">SMS</strong> imm&eacute;diatement &mdash; il ne vous reste plus qu'&agrave; le rappeler.
+              </p>
+              <p style="font-size:14px;line-height:21px;color:#c3ccd6;margin:0;">
+                Voici le d&eacute;tail de l'offre. Dites-nous si cela peut vous convenir.
               </p>
             </td>
           </tr>
@@ -109,7 +110,7 @@ function emailHtml(nom, token) {
                 <tr>
                   <td bgcolor="#DE5A2C" style="border-radius:4px;">
                     <a href="${BASE_URL}/l?p=${token}" style="display:block;padding:16px 40px;font-family:Arial,Helvetica,sans-serif;font-size:15px;letter-spacing:0.5px;text-transform:uppercase;color:#ffffff;text-decoration:none;font-weight:bold;">
-                      Je veux voir mon offre
+                      D&eacute;couvrir l'offre en d&eacute;tail
                     </a>
                   </td>
                 </tr>
@@ -119,7 +120,7 @@ function emailHtml(nom, token) {
           <tr>
             <td align="center" style="padding:0 32px 32px 32px;font-family:Arial,Helvetica,sans-serif;">
               <p style="font-size:11px;color:#5a6b82;margin:0;">
-                Le bouton ne s'affiche pas ? <a href="${BASE_URL}/l?p=${token}" style="color:#8fa0b8;">Cliquez ici</a>
+                Le bouton ne s'affiche pas ? <a href="${BASE_URL}/l?p=${token}" style="color:#8fa0b8;">Voir l'offre ici</a>
               </p>
             </td>
           </tr>
@@ -131,7 +132,7 @@ function emailHtml(nom, token) {
                 <img src="https://heviivnlswohnrzcguxv.supabase.co/storage/v1/object/public/ecosky.fr/21.png" alt="Exemple de formulaire vitrine r&eacute;alis&eacute; par Skyeco Pro" width="536" style="width:100%;max-width:536px;height:auto;display:block;border:1px solid #2a3a54;border-radius:4px;">
               </a>
               <a href="${BASE_URL}/l?p=${token}&dest=exemple" class="exemple-clignote" style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:800;color:#DE5A2C;text-decoration:underline;">
-                Voir un exemple &rarr;
+                Voir un exemple concret &rarr;
               </a>
             </td>
           </tr>
@@ -159,11 +160,12 @@ function emailText(nom, token) {
   return (
     `SKYECO PRO — Offre limitée jusqu'au 30 septembre\n\n` +
     `FORMULAIRE VITRINE\n\n` +
-    `Bonjour${nom ? " " + nom : ""}, 990 EUR pour trouver vos clients ? On sait, ca sonne faux.\n\n` +
-    `Normal. "Formulaire, SMS automatique, Google Ads inclus", ca ressemble a toutes les promesses qu'on vous a deja vendues.\n\n` +
-    `Sauf qu'ici il n'y a rien a croire sur parole. Un client tape votre metier sur Google, tombe sur votre formulaire vitrine ` +
-    `(une mini-page dediee a votre metier), laisse ses coordonnees, et vous recevez un SMS dans la minute. C'est tout. ` +
-    `Pas de blabla marketing, juste le contact qui arrive avant que le client n'appelle quelqu'un d'autre.\n\n` +
+    `Bonjour${nom ? " " + nom : ""}, voici ce que nous proposons pour votre activite.\n\n` +
+    `Chaque semaine, des clients recherchent votre metier sur Google. Sans formulaire de contact dedie sur votre site, ` +
+    `une partie d'entre eux repart sans vous solliciter.\n\n` +
+    `Concretement : une page dediee a votre metier, avec un formulaire de demande de devis. Des qu'un client le remplit, ` +
+    `vous recevez un SMS immediatement - il ne vous reste plus qu'a le rappeler.\n\n` +
+    `Voici le detail de l'offre. Dites-nous si cela peut vous convenir.\n\n` +
     `FORMULE 03 — Formulaire vitrine, carrousel & video + Google Ads\n` +
     `1530 EUR (barre) -> 990 EUR HT (-540 EUR jusqu'au 30 septembre)\n` +
     `(paiement unique + abonnement Google Ads des 150 EUR HT/mois)\n` +
@@ -171,7 +173,7 @@ function emailText(nom, token) {
     `- Notification SMS immediate a chaque nouveau contact\n` +
     `- Gestion de vos campagnes Google Ads\n` +
     `- Dashboard de suivi de vos demandes\n\n` +
-    `Je veux voir mon offre : ${BASE_URL}/l?p=${token}\n` +
+    `Découvrir l'offre en détail : ${BASE_URL}/l?p=${token}\n` +
     `Voir un exemple : ${BASE_URL}/l?p=${token}&dest=exemple\n\n` +
     `Se desabonner en un clic : ${BASE_URL}/d?p=${token}`
   );
@@ -187,7 +189,7 @@ async function envoyerViaResend(to, nom, token) {
     body: JSON.stringify({
       from: FROM,
       to: [to],
-      subject: "990€ pour trouver vos clients ? On sait, ça sonne faux.",
+      subject: "Un formulaire de devis sur votre site, pour ne plus manquer de clients",
       html: emailHtml(nom, token),
       text: emailText(nom, token),
       headers: {
