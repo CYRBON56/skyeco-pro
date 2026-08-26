@@ -109,9 +109,12 @@ function emailHtml(nom, token) {
             </td>
           </tr>
 
-          <!-- Voir un exemple (gros, clignotant) -->
+          <!-- Voir un exemple (image + lien gros, clignotant) -->
           <tr>
             <td align="center" style="padding:0 32px 40px 32px;">
+              <a href="https://salesflow-ecosky.vercel.app/estimation.html" style="display:block;margin-bottom:14px;">
+                <img src="https://heviivnlswohnrzcguxv.supabase.co/storage/v1/object/public/ecosky.fr/21.png" alt="Exemple de site vitrine avec formulaire vitrine r&eacute;alis&eacute; par Skyeco Pro" width="536" style="width:100%;max-width:536px;height:auto;display:block;border:1px solid #2a3a54;border-radius:4px;">
+              </a>
               <a href="https://salesflow-ecosky.vercel.app/estimation.html" class="exemple-clignote" style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:800;color:#DE5A2C;text-decoration:underline;">
                 Voir un exemple &rarr;
               </a>
