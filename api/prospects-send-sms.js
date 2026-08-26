@@ -34,6 +34,49 @@ function genererToken() {
   return crypto.randomBytes(6).toString("base64url").slice(0, 8);
 }
 
+// Découpe un tableau en lots, pour éviter les URL Supabase trop longues
+// (id=in.(...) avec des centaines/milliers d'UUID dépasse les limites de
+// l'API et renvoie "Bad Request").
+const TAILLE_LOT = 100;
+function decouperEnLots(tableau, taille = TAILLE_LOT) {
+  const lots = [];
+  for (let i = 0; i < tableau.length; i += taille) {
+    lots.push(tableau.slice(i, i + taille));
+  }
+  return lots;
+}
+
+// Lit les prospects par lots (au lieu d'une seule requête avec tous les IDs)
+// pour rester sous les limites de longueur d'URL de Supabase/Vercel.
+async function lireProspectsParLots(ids, supaHeaders) {
+  const tousLesProspects = [];
+  for (const lot of decouperEnLots(ids)) {
+    const idsFilter = lot.map((id) => `"${id}"`).join(",");
+    const resp = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/prospects_sms?id=in.(${idsFilter})&select=id,nom,telephone_e164,opt_out,clic_token`,
+      { headers: supaHeaders }
+    );
+    if (!resp.ok) {
+      const detail = await resp.text();
+      throw new Error("Lecture Supabase impossible : " + detail);
+    }
+    tousLesProspects.push(...(await resp.json()));
+  }
+  return tousLesProspects;
+}
+
+// Marque un ensemble de prospects comme "envoyé", par lots.
+async function marquerEnvoyesParLots(ids, supaHeaders) {
+  for (const lot of decouperEnLots(ids)) {
+    const idsFilter = lot.map((id) => `"${id}"`).join(",");
+    await fetch(`${process.env.SUPABASE_URL}/rest/v1/prospects_sms?id=in.(${idsFilter})`, {
+      method: "PATCH",
+      headers: supaHeaders,
+      body: JSON.stringify({ sms_envoye: true, date_envoi: new Date().toISOString() }),
+    });
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ success: false, error: "Méthode non autorisée." });
@@ -56,13 +99,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    const idsFilter = ids.map((id) => `"${id}"`).join(",");
-    const resp = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/prospects_sms?id=in.(${idsFilter})&select=id,nom,telephone_e164,opt_out,clic_token`,
-      { headers: supaHeaders }
-    );
-    if (!resp.ok) throw new Error("Lecture Supabase impossible.");
-    const tousLesProspects = await resp.json();
+    const tousLesProspects = await lireProspectsParLots(ids, supaHeaders);
 
     // Ne jamais envoyer aux prospects qui ont répondu STOP.
     const prospects = tousLesProspects.filter((p) => !p.opt_out);
@@ -98,13 +135,9 @@ export default async function handler(req, res) {
       }
     }
 
-    const sentIds = results.filter((r) => r.success).map((r) => `"${r.id}"`);
+    const sentIds = results.filter((r) => r.success).map((r) => r.id);
     if (sentIds.length > 0) {
-      await fetch(`${process.env.SUPABASE_URL}/rest/v1/prospects_sms?id=in.(${sentIds.join(",")})`, {
-        method: "PATCH",
-        headers: supaHeaders,
-        body: JSON.stringify({ sms_envoye: true, date_envoi: new Date().toISOString() }),
-      });
+      await marquerEnvoyesParLots(sentIds, supaHeaders);
     }
 
     return res.status(200).json({
