@@ -122,6 +122,8 @@
       <div class="toolbar">
         <span class="left" id="selection-count">0 sélectionné(s)</span>
         <div>
+          <input type="number" id="select-n-input" min="1" step="1" placeholder="Ex: 1000" style="width:90px;padding:9px 10px;border:1px solid var(--line, #ccc);border-radius:4px;font-family:inherit;margin-right:4px;">
+          <button class="btn outline" id="select-n-btn">Sélectionner les N premiers</button>
           <button class="btn outline" id="select-all-btn">Tout sélectionner</button>
           <button class="btn outline" id="deselect-all-btn">Tout désélectionner</button>
           <button class="btn" id="send-btn" style="margin-left:8px;">Envoyer le SMS</button>
@@ -318,6 +320,19 @@
       })
       .catch(function(){});
   }
+
+  document.getElementById('select-n-btn').addEventListener('click', function(){
+    var n = parseInt(document.getElementById('select-n-input').value, 10);
+    if (!n || n < 1) {
+      document.getElementById('send-status').textContent = 'Indique un nombre valide.';
+      document.getElementById('send-status').className = 'send-status err';
+      return;
+    }
+    var cases = Array.from(document.querySelectorAll('.row-check')).filter(function(cb){ return cb.dataset.test !== '1'; });
+    cases.forEach(function(cb){ cb.checked = false; });
+    cases.slice(0, n).forEach(function(cb){ cb.checked = true; });
+    updateSelectionCount();
+  });
 
   document.getElementById('select-all-btn').addEventListener('click', function(){
     document.querySelectorAll('.row-check').forEach(function(cb){
