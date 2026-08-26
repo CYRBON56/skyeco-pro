@@ -120,6 +120,7 @@
       <div class="filtre-tabs" style="display:flex;gap:8px;margin:14px 0 10px 0;flex-wrap:wrap;">
         <button type="button" class="btn outline filtre-tab" data-filtre="attente" style="padding:8px 16px;font-size:0.85rem;">En attente d'envoi</button>
         <button type="button" class="btn outline filtre-tab" data-filtre="envoyes" style="padding:8px 16px;font-size:0.85rem;">Déjà envoyés (email)</button>
+        <button type="button" class="btn outline filtre-tab" data-filtre="sansReaction" style="padding:8px 16px;font-size:0.85rem;">Envoyé, sans réaction</button>
         <button type="button" class="btn outline filtre-tab" data-filtre="cliqueActif" style="padding:8px 16px;font-size:0.85rem;">Cliqué, resté actif</button>
         <button type="button" class="btn outline filtre-tab" data-filtre="cliqueStop" style="padding:8px 16px;font-size:0.85rem;">Cliqué puis Stop</button>
         <button type="button" class="btn outline filtre-tab" data-filtre="tous" style="padding:8px 16px;font-size:0.85rem;">Tous</button>
@@ -207,15 +208,17 @@
     var labels = {
       attente: 'En attente d\'envoi',
       envoyes: 'Déjà envoyés (email)',
+      sansReaction: 'Envoyé, sans réaction',
       cliqueActif: 'Cliqué, resté actif',
       cliqueStop: 'Cliqué puis Stop',
       tous: 'Tous'
     };
     var enAttenteN = prospects.filter(function(p){ return !p.email_envoye; }).length;
     var envoyesN = prospects.filter(function(p){ return !!p.email_envoye; }).length;
+    var sansReactionN = prospects.filter(function(p){ return !!p.email_envoye && !p.lien_clique && !p.opt_out; }).length;
     var cliqueActifN = prospects.filter(function(p){ return p.lien_clique && !p.opt_out; }).length;
     var cliqueStopN = prospects.filter(function(p){ return p.lien_clique && p.opt_out; }).length;
-    var compteurs = { attente: enAttenteN, envoyes: envoyesN, cliqueActif: cliqueActifN, cliqueStop: cliqueStopN, tous: prospects.length };
+    var compteurs = { attente: enAttenteN, envoyes: envoyesN, sansReaction: sansReactionN, cliqueActif: cliqueActifN, cliqueStop: cliqueStopN, tous: prospects.length };
     document.querySelectorAll('.filtre-tab').forEach(function(btn){
       var f = btn.dataset.filtre;
       btn.textContent = labels[f] + ' (' + compteurs[f] + ')';
@@ -248,6 +251,7 @@
       if (estContactTest(p)) return true; // le contact test reste visible dans tous les onglets
       if (filtreVue === 'attente') return !p.email_envoye;
       if (filtreVue === 'envoyes') return !!p.email_envoye;
+      if (filtreVue === 'sansReaction') return !!p.email_envoye && !p.lien_clique && !p.opt_out;
       if (filtreVue === 'cliqueActif') return !!p.lien_clique && !p.opt_out;
       if (filtreVue === 'cliqueStop') return !!p.lien_clique && !!p.opt_out;
       return true; // 'tous'
@@ -256,6 +260,7 @@
     if (prospectsVue.length === 0) {
       container.innerHTML = '<p class="empty">' +
         (filtreVue === 'envoyes' ? 'Aucun email envoyé pour le moment.' :
+         filtreVue === 'sansReaction' ? 'Aucun prospect sans réaction pour le moment.' :
          filtreVue === 'cliqueActif' ? 'Aucun prospect ayant cliqué sans se désabonner pour le moment.' :
          filtreVue === 'cliqueStop' ? 'Aucun prospect ayant cliqué puis stoppé pour le moment.' :
          'Aucun prospect dans cette vue.') +
@@ -302,8 +307,8 @@
         nomAffiche = '<span style="display:inline-block;background:#DE5A2C;color:#fff;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:3px;margin-right:8px;vertical-align:middle;">🧪 TEST</span>' + nomAffiche;
       }
       var dejaEnvoye = !!p.email_envoye;
-      var caseDesactivee = (dejaEnvoye && filtreVue !== 'attente') || !!p.opt_out;
-      return '<tr' + (estTest ? ' style="background:#fff7e6;"' : (p.opt_out ? ' style="opacity:0.5;"' : (dejaEnvoye ? ' style="opacity:0.65;"' : ''))) + '>' +
+      var caseDesactivee = (dejaEnvoye && filtreVue !== 'attente' && filtreVue !== 'sansReaction') || !!p.opt_out;
+      return '<tr' + (estTest ? ' style="background:#fff7e6;"' : (p.opt_out ? ' style="opacity:0.5;"' : (caseDesactivee ? ' style="opacity:0.65;"' : ''))) + '>' +
         '<td><input type="checkbox" class="row-check" data-id="' + p.id + '"' +
           (estTest ? ' data-test="1"' : '') +
           (caseDesactivee ? ' disabled title="' + (p.opt_out ? 'Prospect désabonné (STOP) — jamais recontacté.' : 'Email déjà envoyé — repassez sur l\'onglet En attente pour resélectionner volontairement.') + '"' : '') +
