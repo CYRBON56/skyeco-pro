@@ -3,5 +3,8 @@
     { "source": "/l", "destination": "/api/lien" },
     { "source": "/o", "destination": "/api/ouverture" },
     { "source": "/d", "destination": "/api/desabonnement" }
+  ],
+  "crons": [
+    { "path": "/api/envoi-auto-quotidien", "schedule": "0 7 * * *" }
   ]
 }
